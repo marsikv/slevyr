@@ -1,0 +1,180 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=windows-1250"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <title>Sledování výroby</title>
+    <!-- jQuery + UI -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <!--<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>-->
+    <!-- local js -->
+    <script src="scripts\script.js"></script>
+
+    <!-- fonts -->
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+
+    <!-- style -->
+    <link rel="stylesheet" href="style.css" type="text/css"/>
+</head>
+<body>
+
+<div>
+    <h2>Linka montáž ventilů</h2>
+    <!--<div id="isMockupMode"></div>
+    <div id="isRefreshTimerOn"></div>-->
+    <table id="linka1" style="width: 400px; float: left;" border="2">
+        <thead>
+        <!--<tr style="border-color: white; background-color: gray;">
+            <td>Nastaven&iacute;</td>
+            <td>Hodnota</td>
+            <td>V&yacute;sledek</td>
+        </tr>-->
+        </thead>
+        <!--<caption>&nbsp;</caption>-->
+        <tbody>
+        <tr>
+            <td>Typ směnnosti</td>
+            <td><input type="text" id="typSmennosti" value="A" size="5"/></td>
+            <td style="text-align: center;" rowspan="4"><input id="TypSmennosti" type="button" value="Set"/></td>
+        </tr>
+        <tr>
+            <td style="background-color: darkorange;">C&iacute;l 1. směny [%]</td>
+            <td><input type="text" id="Cil1Smeny" value="1000" size="5"/></td>
+        </tr>
+        <tr>
+            <td style="background-color: darkorange;">C&iacute;l 2. směny [%]</td>
+            <td><input type="text" id="Cil2Smeny" value="2000" size="5"/></td>
+        </tr>
+        <tr>
+            <td style="background-color: darkorange;">C&iacute;l 3. směny [%]</td>
+            <td><input type="text" id="Cil3Smeny" value="3000" size="5"/></td>
+        </tr>
+        <tr>
+            <td>C&iacute;l def. 1. směny</td>
+            <td><input type="text" id="Def1Smeny" value="1,5" size="5"/></td>
+            <td style="text-align: center;" rowspan="3"><input id="NastavDefektivitu" type="button" value="Set"/></td>
+        </tr>
+        <tr>
+            <td>C&iacute;l def. 2. směny</td>
+            <td><input type="text" id="Def2Smeny" value="1,5" size="5"/></td>
+        </tr>
+        <tr>
+            <td>C&iacute;l def. 3. směny</td>
+            <td><input type="text" id="Def3Smeny" value="1,5" size="5"/></td>
+        </tr>
+        <tr>
+            <td>Přest&aacute;vka 1. směny</td>
+            <td><input type="text" id="Prestavka1Smeny" value="10:00" size="5"/></td>
+            <td style="text-align: center;" rowspan="3"><input type="button" value="Set"/></td>
+        </tr>
+        <tr>
+            <td>Přest&aacute;vka 2. směny</td>
+            <td><input type="text" id="Prestavka2Smeny" value="10:00" size="5"/></td>
+        </tr>
+        <tr>
+            <td>Přest&aacute;vka 3. směny</td>
+            <td><input type="text" id="Prestavka3Smeny" value="10:00" size="5"/></td>
+        </tr>
+        <tr>
+            <td style="background-color: darkslategrey;">Write protect EEprom</td>
+            <td><input type="text" id="writeProtectEEprom" value="NE" size="5"/></td>
+            <td style="text-align: center;" rowspan="8"><input id="NastavStatus" type="button" value="Set"/></td>
+        </tr>
+        <tr>
+            <td style="background-color: darkslategrey;">Počet dobrých kusů k z.</td>
+            <td><input type="text" id="minOK" value="5" size="5"/></td>
+        </tr>
+        <tr>
+            <td style="background-color: darkslategrey;">Počet špatných kusů k z.</td>
+            <td><input type="text" id="minNG" value="5" size="5"/></td>
+        </tr>
+        <tr>
+            <td style="background-color: darkslategrey;">Bootloader zapnout</td>
+            <td><input type="text" id="bootloaderOn" value="NE" size="5"/></td>
+        </tr>
+        <tr>
+            <td style="background-color: darkslategrey;">Rozlišení čidel teploty</td>
+            <td><input type="text" id="rozliseniCidelTeploty" value="12" size="5"/></td>
+        </tr>
+        <tr>
+            <td style="background-color: darkslategrey;">Pracovní jas LCD panelů</td>
+            <td><input type="text" id="pracovniJasLed" value="30" size="5"/></td>
+        </tr>
+        <tr>
+            <td style="background-color: darkslategrey;">Adresa Led panelu</td>
+            <td><input type="text" id="addrParovanyLED" value="10" size="5"/></td>
+        </tr>
+        <tr>
+            <td style="background-color: darkslategrey;">Adresa ř&iacute;d&iacute;c&iacute; jednotky</td>
+            <td><input type="text" id="addrId" value="100" size="5"/></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="tabule">
+        <table style="width: 400px; float: left;">
+            <tbody>
+                <tr >
+                    <td>Cíl kusů</td>
+                    <td id="cilTabule">-</td>
+                </tr>
+                <tr >
+                    <td>Rozdíl</td>
+                    <td id="rozdilTabule">-</td>
+                </tr>
+                <tr >
+                    <td>Cíl def.</td>
+                    <td id="cilDefTabule">-</td>
+                </tr>
+                <tr >
+                    <td>Aktuální def.</td>
+                    <td id="aktualniDefTabule">-</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+<div class="stavOkNg">
+    <table style="width: 400px; float: left;" border="2">
+        <tbody>
+            <tr >
+                <td>Aktu&aacute;ln&iacute; počet dobr&yacute;ch kusů</td>
+                <td id="okNumValue">-</td>
+                <td id="okNgRefreshTime" rowspan="4">-</td>
+            </tr>
+            <tr >
+                <td>Aktu&aacute;ln&iacute; počet &scaron;patn&yacute;ch kusů</td>
+                <td id="ngNumValue">-</td>
+            </tr>
+            <tr >
+                <td>Čas cyklu posledního OK kusu</td>
+                <td id="casOkValue">-</td>
+            </tr>
+            <tr >
+                <td>Čas cyklu posledního NG kusu</td>
+                <td id="casNgValue">-</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+    <div id="levyDolni">
+        <!--<h3>Refresh</h3>-->
+        <input type="button" value="Refresh" id="RefreshStatus"/> <b id="isTimerOn" /> <b id="isMockupMode" />        
+    </div>
+
+    <div id="pravyDolni">
+        <a href="settings.html">&rArr;&nbsp;Nastavení</a>
+    </div>
+
+<div id="patka" style="position: absolute; top: 940px">
+    <p id="stav"/>
+</div>
+
+</body>
+</html>
