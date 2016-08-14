@@ -3,34 +3,25 @@ var isTimerEnabled = false;
 var timerRefreshPeriod = 10000;
 var refreshTimer;
 
-    $(document).ready(function () {
+$(document).ready(function () {
         readRunConfig();
+        loadParamsFromFile();
        
-        $("#RefreshStatus").click(refreshStatus);
+        $("#SaveParams").click(saveParamsToFile);
+
         $("#NastavCileSmen").click(nastavCileSmen);
+        $("#NastavPrestavky").click(nastavPrestavkySmen);
         $("#NastavDefektivitu").click(nastavDefektivitu);
         $("#NastavStatus").click(nastavStatus);
+
         $("#SyncTime").click(nastavAktualniCas);
     });
 
     function readRunConfig() {
-        //alert('readConfig');
+        alert('readConfig');
+        $('#stav').text('');
         $.getJSON(uri + '/getConfig?')
             .done(function (data) {
-                isTimerEnabled = data.IsRefreshTimerOn;
-                timerRefreshPeriod = data.RefreshTimerPeriod;
-
-                if (isTimerEnabled && (timerRefreshPeriod > 0)) {
-                    //alert('set timer to ' + timerRefreshPeriod);
-                    if (refreshTimer) window.clearInterval(refreshTimer);                    
-                    refreshTimer = window.setInterval(refreshStatus, timerRefreshPeriod * 1000);
-                }
-                else {
-                    if (refreshTimer) {
-                        //alert('clear timer');
-                        window.clearInterval(refreshTimer);
-                    }
-                }
 
                 if (data.IsMockupMode) {
                     closePort();
@@ -39,13 +30,6 @@ var refreshTimer;
                     openPort();
                     $("#isMockupMode").text("");
                 }
-                if (isTimerEnabled) {
-                    $("#isTimerOn").text(" [timer on]");
-
-                } else {
-                    $("#isTimerOn").text("");
-                }
-
             })
             .fail(function (jqXHR, textStatus, err) {
                 $('#stav').text('Error: ' + err);
@@ -53,33 +37,79 @@ var refreshTimer;
             });
     }
 
-    function refreshStatus() {
+    function readLinkaParams() {
+        alert('readLinkaParamsX');
         var addr = $('#addrId').val();
-        //alert('status, addr=' + addr);
-        $.getJSON(uri + '/refreshStatus?addr=' + addr)
+        $.getJSON(uri + '/getLinkaParams?', {
+            addr: addr
+            })
             .done(function (data) {
-                //alert('status,okNumValue =' + data.Ok);
-                $('#okNumValue').text(data.Ok);
-                $('#ngNumValue').text(data.Ng);
-                $('#okNgRefreshTime').text(new Date().toLocaleTimeString());
-                $('#casOkValue').text(data.CasOk);
-                $('#casNgValue').text(data.CasNg);
 
-                $('#cilTabule').text(data.CilTabule);
-                $('#rozdilTabule').text(data.RozdilTabule);
-                $('#cilDefTabule').text(data.DefectTabule + "%");
-                //$('#aktualniDefTabule').text(data.ActDefectTabule);
+                $('#TypSmennosti').text(data.typSmennosti);
+                $('#Cil1Smeny').text(data.cil1Smeny);
+                $('#Cil2Smeny').text(data.cil2Smeny);
+                $('#Cil3Smeny').text(data.cil3Smeny);
+                $('#Def1Smeny').text(data.def1Smeny);
+                $('#Def2Smeny').text(data.def2Smeny);
+                $('#Def3Smeny').text(data.def3Smeny);
 
+                $('#Prestavka1Smeny').text(data.prestavka1Smeny);
+                $('#Prestavka2Smeny').text(data.prestavka2Smeny);
+                $('#Prestavka3Smeny').text(data.prestavka3Smeny);
+
+                $('#WriteProtectEEprom').text(data.writeProtectEEprom);
+
+                $('#MinOk').text(data.minOK);
+
+                $('#MinNg').text(data.minNG);
+
+                $('#BootloaderOn').text(data.bootloaderOn);
+                $('#rozliseniCidelTeploty').text(data.rozliseniCidelTeploty);
+                $('#PracovniJasLed').text(data.pracovniJasLed);
+                $('#addrParovanyLED').text(data.addrParovanyLED);
+
+            })
+            .fail(function (jqXHR, textStatus, err) {
+                $('#stav').text('Error: ' + err);
+                alert("readLinkaParams - error");
+            });
+    }
+
+    function saveParamsToFile() {
+        alert('saveParamsToFile');
+        $.getJSON(uri + '/saveLinkaParams',
+            {
+                addr:  $('#addrId').val(),
+                typSmennosti: $('#TypSmennosti').val(),
+                cil1Smeny: $('#Cil1Smeny').val(),
+                cil2Smeny: $('#Cil2Smeny').val(),
+                cil3Smeny: $('#Cil3Smeny').val(),
+                def1Smeny: $('#Def1Smeny').val(),
+                def2Smeny: $('#Def2Smeny').val(),
+                def3Smeny: $('#Def3Smeny').val(),
+                prestavka1Smeny: $('#Prestavka1Smeny').val(),
+                prestavka2Smeny: $('#Prestavka2Smeny').val(),
+                prestavka3Smeny: $('#Prestavka3Smeny').val(),
+
+                writeProtectEEprom: $('#WriteProtectEEprom').val(),
+                minOK: $('#MinOk').val(),
+                minNG: $('#MinNg').val(),
+                bootloaderOn: $('#BootloaderOn').val(),
+                parovanyLED: $('#addrParovanyLED').val(),
+                rozliseniCidel: $('#rozliseniCidelTeploty').val(),
+                pracovniJasLed: $('#PracovniJasLed').val()
+            })
+            .done(function (data) {
                 $('#stav').text('');
             })
             .fail(function (jqXHR, textStatus, err) {
                 $('#stav').text('Error: ' + err);
-                alert("refreshStatus - error");
+                alert("nastavStatus - error");
             });
     }
 
     function nastavCileSmen() {
-        //alert('nastavCileSmen');
+        alert('nastavCileSmen');
         var addr = $('#addrId').val();
         var varianta  = $('#typSmennosti').val();
         var cil1Smeny = $('#Cil1Smeny').val();
@@ -102,8 +132,32 @@ var refreshTimer;
             });
     }
 
+    function nastavPrestavkySmen() {
+        alert('nastavPrestavkySmen');
+        var addr = $('#addrId').val();
+        var varianta = $('#typSmennosti').val();
+        var p1Smeny = $('#Prest1Smeny').val();
+        var p2Smeny = $('#Prest2Smeny').val();
+        var p3Smeny = $('#Prest3Smeny').val();
+        $.getJSON(uri + '/NastavPrestavkySmen',
+            {
+                addr: addr,
+                varianta: varianta,
+                prest1: p1Smeny,
+                prest2: p2Smeny,
+                prest3: p3Smeny
+            })
+            .done(function (data) {
+                $('#stav').text('');
+            })
+            .fail(function (jqXHR, textStatus, err) {
+                $('#stav').text('Error: ' + err);
+                alert("nastavPrestavkySmen - error");
+            });
+    }
+
     function nastavCitaceOkNg() {
-        //alert('nastavCitaceOkNg');
+        alert('nastavCitaceOkNg');
         var addr = $('#addrId').val();
         var ok = $('#ok').val();
         var ng = $('#ng').val();
@@ -123,7 +177,7 @@ var refreshTimer;
     }
 
     function nastavDefektivitu() {
-        //alert('nastavDefektivitu');
+        alert('nastavDefektivitu');
         var addr = $('#addrId').val();
         var varianta = $('#typSmennosti').val();
         var def1Smeny = $('#Def1Smeny').val();
@@ -147,17 +201,17 @@ var refreshTimer;
     }
 
     function nastavStatus() {
-        //alert('nastavStatus');
+        alert('nastavStatus');
         $.getJSON(uri + '/nastavStatus',
             {
                 addr: $('#addrId').val(),
-                writeProtectEEprom: $('#writeProtectEEprom').val(),
-                minOK: $('#minOK').val(),
-                minNG: $('#minNG').val(),
-                bootloaderOn: $('#bootloaderOn').val(),
+                writeProtectEEprom: $('#WriteProtectEEprom').val(),
+                minOK: $('#MinOk').val(),
+                minNG: $('#MinNg').val(),
+                bootloaderOn: $('#BootloaderOn').val(),
                 parovanyLED: $('#addrParovanyLED').val(),
                 rozliseniCidel: $('#rozliseniCidelTeploty').val(),
-                pracovniJasLed: $('#pracovniJasLed').val()
+                pracovniJasLed: $('#PracovniJasLed').val()
             })
             .done(function (data) {
                 $('#stav').text('');
@@ -169,7 +223,7 @@ var refreshTimer;
     }
 
     function nastavAktualniCas() {
-        //alert('nastavAktualniCas');
+        alert('nastavAktualniCas');
         $.getJSON(uri + '/nastavAktualniCas',
             {
                 addr: $('#addrId').val()
@@ -182,7 +236,6 @@ var refreshTimer;
                 alert("'); - error");
             });
     }
-
 
     function openPort() {
         //alert("openPort");
@@ -213,3 +266,9 @@ var refreshTimer;
                 alert("'); - error");
             });
     }
+
+    function loadParamsFromFile() {
+    }
+
+ 
+

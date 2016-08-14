@@ -9,7 +9,7 @@ using Microsoft.Owin.FileSystems;
 using Microsoft.Owin.StaticFiles;
 using Owin;
 
-namespace SledovaniVyrobyWebAppHost
+namespace Slevyr.WebAppHost
 {
     public class Startup
     {
@@ -18,6 +18,7 @@ namespace SledovaniVyrobyWebAppHost
         public void Configuration(IAppBuilder appBuilder)
         {
             // Configure Web API for self-host. 
+            
             HttpConfiguration config = new HttpConfiguration();
             config.Routes.MapHttpRoute(
                 name: "DefaultApi",
@@ -30,6 +31,7 @@ namespace SledovaniVyrobyWebAppHost
             //config.Formatters.JsonFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/html"))
 
             appBuilder.UseWebApi(config);
+            
 
             //A. nacitam z adresare www, ktery je soucasti solution
             //var physicalFileSystem = new PhysicalFileSystem(@"./WWW1");
@@ -47,10 +49,15 @@ namespace SledovaniVyrobyWebAppHost
             options.StaticFileOptions.ServeUnknownFileTypes = true;
             options.DefaultFilesOptions.DefaultFileNames = new[]
             {
-                "index.html"
+                "menu.html"
             };
 
             appBuilder.UseFileServer(options);
+
+            //appBuilder.UseStaticFiles(new StaticFileOptions()
+            //{
+            //    FileSystem = new PhysicalFileSystem(contentDir)
+            //});
         }
     }
 }

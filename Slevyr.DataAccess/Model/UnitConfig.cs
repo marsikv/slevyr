@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SledovaniVyrobyWebAppHost.Model
+namespace Slevyr.DataAccess.Model
 {
     public class UnitConfig
     {

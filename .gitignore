@@ -1,0 +1,6 @@
+packages/
+SerialPortWraper/
+SledovaniVyrobyService/obj/
+SledovaniVyrobyWebAppHost/obj/
+UnitTest/obj/
+TestConsoleApp/obj/

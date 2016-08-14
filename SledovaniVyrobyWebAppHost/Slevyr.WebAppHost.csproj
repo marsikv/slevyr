@@ -7,8 +7,8 @@
     <ProjectGuid>{E4561E1C-A1D9-4FD0-8A64-6D529D9B9BC4}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SledovaniVyrobyWebAppHost</RootNamespace>
-    <AssemblyName>SledovaniVyrobyWebAppHost</AssemblyName>
+    <RootNamespace>Slevyr.WebAppHost</RootNamespace>
+    <AssemblyName>Slevyr.WebAppHost</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -52,12 +52,16 @@
       <HintPath>..\packages\Microsoft.Owin.Hosting.2.0.2\lib\net45\Microsoft.Owin.Hosting.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.Owin.Security, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.3.0.1\lib\net45\Microsoft.Owin.Security.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.Owin.StaticFiles, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Owin.StaticFiles.3.0.1\lib\net45\Microsoft.Owin.StaticFiles.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.6.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
@@ -92,7 +96,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Mock.cs" />
-    <Compile Include="Model\RunConfig.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
@@ -102,10 +105,11 @@
     </Compile>
     <Compile Include="Startup.cs" />
     <Compile Include="SlevyController.cs" />
-    <Compile Include="Model\UnitConfig.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="NLog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -120,19 +124,31 @@
       <Project>{7599014B-8D6D-4EC2-8DC9-9EE745C0E154}</Project>
       <Name>SerialPortWraper</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SledovaniVyrobyService\SledovaniVyrobyService.csproj">
-      <Project>{821041da-6f11-4e36-b43d-774451b32486}</Project>
-      <Name>SledovaniVyrobyService</Name>
+    <ProjectReference Include="..\Slevyr.DataAccess\Slevyr.DataAccess.csproj">
+      <Project>{519b308b-de6d-4f6c-a8be-7115cca35831}</Project>
+      <Name>Slevyr.DataAccess</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="WWW1\index.html">
+    <Content Include="WWW1\index - Copy.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="WWW1\scripts\settingScripts.js">
+    <Content Include="WWW1\LinkaParams.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="WWW1\scripts\script.js">
+    <Content Include="WWW1\LinkaTabule.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="WWW1\menu.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="WWW1\scripts\linkaTabuleScripts.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="WWW1\scripts\mainSettingScripts.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="WWW1\scripts\linkaParamScripts.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="WWW1\settings.html">

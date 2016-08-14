@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SledovaniVyroby.SerialPortWraper;
-using SledovaniVyroby.SledovaniVyrobyService;
+using Slevyr.DataAccess.Model;
+
 
 namespace UnitTest
 {

@@ -1,4 +1,4 @@
-﻿namespace SledovaniVyrobyWebAppHost.Model
+﻿namespace Slevyr.DataAccess.Model
 {
     public class RunConfig
     {

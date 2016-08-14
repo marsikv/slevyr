@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using NLog;
 using SledovaniVyroby.SerialPortWraper;
-using SledovaniVyroby.SledovaniVyrobyService;
-using SledovaniVyrobyWebAppHost.Model;
-using SledovaniVyrobyWebAppHost.Properties;
+using Slevyr.DataAccess.Model;
+using Slevyr.DataAccess.Services;
+using Slevyr.WebAppHost.Properties;
 
-namespace SledovaniVyrobyWebAppHost
+namespace Slevyr.WebAppHost
 {
     /*
     oprávnění pro různé uživatele, příkazy jsou v Hex: 
@@ -26,14 +29,12 @@ namespace SledovaniVyrobyWebAppHost
     public class SlevyController : ApiController
     {
         #region Fields
-        static readonly SerialPortWraper SerialPort;
 
-        static readonly Dictionary<int,UnitMonitor> UnitDictionary;
+        static readonly RunConfig RunConfig;
 
-        static readonly RunConfig RunConfig = new RunConfig();
+        static readonly SerialPortConfig PortConfig;
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        //private static readonly Logger MefLogger = LogManager.GetLogger("MefLogger");
 
         #endregion
 
@@ -45,7 +46,14 @@ namespace SledovaniVyrobyWebAppHost
 
             //Nektere parametry nacitam z konfigurace
 
-            var portCfg = new SerialPortConfig()
+            RunConfig = new RunConfig
+            {
+                IsMockupMode = Settings.Default.MockupMode,
+                IsRefreshTimerOn = Settings.Default.IsRefreshTimerOn,
+                RefreshTimerPeriod = Settings.Default.RefreshTimerPeriod
+            };
+
+            PortConfig = new SerialPortConfig()
             {
                 Port = Settings.Default.Port,
                 BaudRate = Settings.Default.BaudRate,
@@ -55,21 +63,11 @@ namespace SledovaniVyrobyWebAppHost
                 ReceiveLength = 11
             };
 
-            SerialPort = new SerialPortWraper(portCfg);
+            var unitAddrs = Settings.Default.UnitAddrs.Split(';').Select(s => Int32.Parse(s));
 
-            RunConfig.IsMockupMode = Settings.Default.MockupMode;
-            RunConfig.IsRefreshTimerOn = Settings.Default.IsRefreshTimerOn;
-            RunConfig.RefreshTimerPeriod = Settings.Default.RefreshTimerPeriod;
+            SlevyrService.Init(PortConfig, RunConfig, unitAddrs);
 
-            //adresy jednotek jsou ve formatu delimited string
-            //100;101
-            UnitDictionary =
-                Settings.Default.UnitAddrs.Split(';')
-                //.Select(x => x.Split(':'))
-                .ToDictionary(y => Int32.Parse(y), y => new UnitMonitor(Byte.Parse(y), SerialPort, RunConfig.IsMockupMode));
-
-            Logger.Info("unit count: " + UnitDictionary.Count);
-            //Console.WriteLine("unit count: " + UnitDictionary.Count);
+            Logger.Info("unit count: " + SlevyrService.UnitCount);
         }
 
         #endregion
@@ -105,8 +103,10 @@ namespace SledovaniVyrobyWebAppHost
             try
             {
                 if (RunConfig.IsMockupMode) return true;
-                if (!SerialPort.IsOpen) SerialPort.Open();
-                return SerialPort.IsOpen;
+                SlevyrService.OpenPort();
+               
+                Logger.Info($"Port name:{PortConfig.Port} isOpen:{SlevyrService.SerialPortIsOpen}");
+                return SlevyrService.SerialPortIsOpen;
             }
             catch (Exception ex)
             {
@@ -120,9 +120,9 @@ namespace SledovaniVyrobyWebAppHost
         {
             Logger.Info("+");
 
-            if (RunConfig.IsMockupMode) return true;
-            if (SerialPort.IsOpen) SerialPort.Close();
-            return !SerialPort.IsOpen;
+            SlevyrService.ClosePort();
+
+            return !SlevyrService.SerialPortIsOpen;
         }
 
         #endregion
@@ -137,7 +137,7 @@ namespace SledovaniVyrobyWebAppHost
 
             try
             {
-                return UnitDictionary[addr].UnitStatus;
+                return SlevyrService.Status(addr);
             }
             catch (KeyNotFoundException)
             {
@@ -153,28 +153,35 @@ namespace SledovaniVyrobyWebAppHost
 
             try
             {
-                short ok, ng;
-                Single casOk, casNg;
-                Logger.Info( "   ReadStavCitacu");
-                UnitDictionary[addr].ReadStavCitacu(out ok, out ng);
-                Logger.Info($"   ok:{ok} ng:{ng}");
-                Logger.Info( "   ReadCasOK");
-                UnitDictionary[addr].ReadCasOK(out casOk);
-                Logger.Info($"   casOk:{casOk}");
-                Logger.Info( "   ReadCasNG");
-                UnitDictionary[addr].ReadCasNG(out casNg);
-                Logger.Info($"   casNg:{casNg}");
-
-                //prepocitat pro zobrazeni tabule
-                UnitDictionary[addr].UnitStatus.RecalcTabule();
-
-                return UnitDictionary[addr].UnitStatus;
+                return SlevyrService.RefreshStatus(addr);
             }
             catch (KeyNotFoundException)
             {
                 throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
             }
         }
+
+        [HttpGet]
+        public void SaveLinkaParams([FromUri] byte addr,
+            [FromUri] char varianta, [FromUri] short cil1, [FromUri] short cil2, [FromUri] short cil3,
+            [FromUri]string def1, [FromUri]string def2, [FromUri]string def3,
+            [FromUri] int prest1, [FromUri] int prest2, [FromUri] int prest3,
+            [FromUri] string writeProtectEEprom, [FromUri] byte minOK, [FromUri] byte minNG, [FromUri] string bootloaderOn, [FromUri] byte parovanyLED,
+            [FromUri] byte rozliseniCidel, [FromUri] byte pracovniJasLed)
+        {
+            Logger.Info($"addr:{addr}");
+
+            //SlevyrService.SaveLinkaParams();
+
+            try
+            {
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+        }
+
 
         [HttpGet]
         public bool NastavStatus([FromUri] byte addr, [FromUri] string writeProtectEEprom, [FromUri] byte minOK, [FromUri] byte minNG, [FromUri] string bootloaderOn, [FromUri] byte parovanyLED,
@@ -186,11 +193,10 @@ namespace SledovaniVyrobyWebAppHost
 
             try
             {
-                byte writeProtectEEpromVal = (byte) (String.Equals(writeProtectEEprom, "ANO",
-                    StringComparison.InvariantCultureIgnoreCase) ? 0 : 1);
-                byte bootloaderOnVal = (byte)(String.Equals(bootloaderOn, "ANO",
-                    StringComparison.InvariantCultureIgnoreCase) ? 0 : 1);
-                return UnitDictionary[addr].SetStatus(writeProtectEEpromVal, minOK,minNG,bootloaderOnVal,parovanyLED,rozliseniCidel,pracovniJasLed);
+                bool writeProtectEEpromVal = String.Equals(writeProtectEEprom, "ANO",StringComparison.InvariantCultureIgnoreCase) ;
+                bool bootloaderOnVal = String.Equals(bootloaderOn, "ANO",StringComparison.InvariantCultureIgnoreCase);
+
+                return SlevyrService.NastavStatus(addr, writeProtectEEpromVal, minOK, minNG, bootloaderOnVal, parovanyLED, rozliseniCidel, pracovniJasLed);
             }
             catch (KeyNotFoundException)
             {
@@ -199,20 +205,41 @@ namespace SledovaniVyrobyWebAppHost
         }
 
         [HttpGet]
-        public bool NastavCileSmen([FromUri] byte addr, [FromUri] char varianta, [FromUri] short cil1, [FromUri] short cil2, [FromUri] short cil3)
+        public bool NastavPrestavkySmen([FromUri] byte addr, [FromUri] char varianta, [FromUri] int prest1, [FromUri] int prest2, [FromUri] int prest3)
         {
-            Logger.Info($"addr:{addr} var:{varianta} cil1:{cil1} cil2:{cil2} cil3:{cil3}");
+            Logger.Info($"addr:{addr}  prest1:{prest1} prest2:{prest2} prest2:{prest2}");
 
             if (RunConfig.IsMockupMode) return true;
 
             try
             {
-                return UnitDictionary[addr].SetCileSmen(varianta,cil1,cil2,cil3);
+                return SlevyrService.NastavPrestavky(addr,varianta, (short)prest1, (short)prest2, (short)prest3);
             }
             catch (KeyNotFoundException)
             {
                 throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
             }
+        }
+
+
+        [HttpGet]
+        public bool NastavCileSmen([FromUri] byte addr, [FromUri] char varianta, [FromUri] short cil1, [FromUri] short cil2, [FromUri] short cil3)
+        {
+            Logger.Info($"addr:{addr} var:{varianta} cil1:{cil1} cil2:{cil2} cil3:{cil3}");
+
+            bool res = false;
+
+            if (RunConfig.IsMockupMode) return true;
+
+            try
+            {
+                return SlevyrService.NastavCileSmen(addr, varianta, cil1, cil2, cil3);
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+            return res;
         }
 
         [HttpGet]
@@ -224,7 +251,7 @@ namespace SledovaniVyrobyWebAppHost
 
             try
             {
-                return UnitDictionary[addr].SetCitace(ok, ng);
+                return SlevyrService.NastavOkNg(addr, ok, ng);
             }
             catch (KeyNotFoundException)
             {
@@ -241,7 +268,7 @@ namespace SledovaniVyrobyWebAppHost
 
             try
             {
-                return UnitDictionary[addr].SetCas(new DateTime());
+                return SlevyrService.NastavAktualniCas(addr);
             }
             catch (KeyNotFoundException)
             {
@@ -260,8 +287,9 @@ namespace SledovaniVyrobyWebAppHost
             double def2Val;
             double def3Val;
 
-            if (!(double.TryParse(def1, out def1Val) &&
-            double.TryParse(def2, out def2Val) && double.TryParse(def3, out def3Val)))
+            if (!(double.TryParse(def1, out def1Val) && 
+                double.TryParse(def2, out def2Val) && 
+                double.TryParse(def3, out def3Val)))
             {
                 throw new ArgumentException("Neplatná hodnota pro cíl");
             }
@@ -269,7 +297,7 @@ namespace SledovaniVyrobyWebAppHost
             try
             {
                 Logger.Info($"cil1:{def1Val}");
-                return UnitDictionary[addr].SetDefektivita(varianta, (short)(def1Val*10), (short)(def2Val * 10), (short)(def3Val * 10));
+                return SlevyrService.NastavDefektivitu(addr, varianta, (short)(def1Val * 10), (short)(def2Val * 10), (short)(def3Val * 10));
             }
             catch (KeyNotFoundException)
             {
@@ -286,16 +314,8 @@ namespace SledovaniVyrobyWebAppHost
 
             try
             {
-                var um = UnitDictionary[addr];
 
-                var res = um.SetHandshake(value ? (byte)1 : (byte)255, 0);
-
-                if (res && value)
-                {
-
-                }
-
-                return res;
+                return SlevyrService.NastavHandshake(addr, value);
             }
             catch (KeyNotFoundException)
             {
@@ -318,7 +338,7 @@ namespace SledovaniVyrobyWebAppHost
 
             try
             {
-                return UnitDictionary[addr].RefreshStavCitacu();
+                return SlevyrService.CtiStavCitacu(addr);
             }
             catch (KeyNotFoundException)
             {
@@ -343,7 +363,7 @@ namespace SledovaniVyrobyWebAppHost
             {
                 float ok;
                 float ng;
-                return UnitDictionary[addr].ReadCasOK(out ok) && UnitDictionary[addr].ReadCasNG(out ng);
+                return SlevyrService.CtiCyklusOkNg(addr);
             }
             catch (KeyNotFoundException)
             {

@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=windows-1250"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <title>Sledování výroby</title>
+    <!-- jQuery + UI -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <!--<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>-->
+    <!-- local js -->
+    <script src="scripts\linkaTabuleScripts.js"></script>
+
+    <!-- fonts -->
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+
+    <!-- style -->
+    <link rel="stylesheet" href="style.css" type="text/css"/>
+</head>
+<body>
+
+<div>
+    <h2 id="LinkaHeader" style="width: 400px; float: left;">Linka montáž ventilů</h2>
+    <br/>
+    <input type="text" id="LinkaNameId" value="EBS" size="60" />
+    <input type="text" id="addrId" value="100" size="5" />
+</div>
+
+ 
+<div class="tabule">
+    <table style="width: 400px; float: left;">
+        <tbody>
+        <tr >
+            <td>Cíl kusů</td>
+            <td id="cilTabule">-</td>
+        </tr>
+        <tr >
+            <td>Rozdíl</td>
+            <td id="rozdilTabule">-</td>
+        </tr>
+        <tr >
+            <td>Cíl def.</td>
+            <td id="cilDefTabule">-</td>
+        </tr>
+        <tr >
+            <td>Aktuální def.</td>
+            <td id="aktualniDefTabule">-</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="stavOkNg">
+    <table style="width: 400px; float: left;" border="2">
+        <tbody>
+            <tr >
+                <td>Aktu&aacute;ln&iacute; počet dobr&yacute;ch kusů</td>
+                <td id="okNumValue">-</td>
+                <td id="okNgRefreshTime" rowspan="4">-</td>
+            </tr>
+            <tr >
+                <td>Aktu&aacute;ln&iacute; počet &scaron;patn&yacute;ch kusů</td>
+                <td id="ngNumValue">-</td>
+            </tr>
+            <tr >
+                <td>Čas cyklu posledního OK kusu</td>
+                <td id="casOkValue">-</td>
+            </tr>
+            <tr >
+                <td>Čas cyklu posledního NG kusu</td>
+                <td id="casNgValue">-</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+    <div id="levyDolni">
+        <input type="button" value=" Refresh " id="RefreshStatus"/> <b id="isTimerOn" /> <b id="isMockupMode" />        
+    </div>
+
+<div id="patka" style="position: absolute; top: 940px">
+    <p id="stav"/>
+</div>
+
+</body>
+</html>

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace SledovaniVyrobyWebAppHost.Properties {
+namespace Slevyr.WebAppHost.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -34,28 +34,10 @@ namespace SledovaniVyrobyWebAppHost.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("COM3")]
-        public string Port {
-            get {
-                return ((string)(this["Port"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("19200")]
         public int BaudRate {
             get {
                 return ((int)(this["BaudRate"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool MockupMode {
-            get {
-                return ((bool)(this["MockupMode"]));
             }
         }
         
@@ -77,6 +59,36 @@ namespace SledovaniVyrobyWebAppHost.Properties {
             }
             set {
                 this["RefreshTimerPeriod"] = value;
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("COM4")]
+        public string Port {
+            get {
+                return ((string)(this["Port"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool MockupMode {
+            get {
+                return ((bool)(this["MockupMode"]));
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("c:\\tmp\\")]
+        public string JsonFilePath {
+            get {
+                return ((string)(this["JsonFilePath"]));
+            }
+            set {
+                this["JsonFilePath"] = value;
             }
         }
     }

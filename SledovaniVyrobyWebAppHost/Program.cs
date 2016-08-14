@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Owin.Hosting;
 
-namespace SledovaniVyrobyWebAppHost
+namespace Slevyr.WebAppHost
 {
     /*
 
@@ -52,7 +52,7 @@ namespace SledovaniVyrobyWebAppHost
 
                 Console.WriteLine("Stiskem klávesy se služba ukončí !\n");
 
-                Process.Start(baseAddress+"index.html");
+                Process.Start(baseAddress+"menu.html");
 
                 Console.ReadLine();
 

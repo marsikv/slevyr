@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SledovaniVyroby.SledovaniVyrobyService;
+using Slevyr.DataAccess.Model;
 
-namespace SledovaniVyrobyWebAppHost
+namespace Slevyr.WebAppHost
 {
     public static class Mock
     {

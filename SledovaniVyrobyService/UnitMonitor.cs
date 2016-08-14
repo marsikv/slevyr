@@ -10,6 +10,8 @@ namespace SledovaniVyroby.SledovaniVyrobyService
     {
         #region fields
 
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         const int BuffLength = 11;
         const int MaxTimeToWait = 5000;  //cas v [ms]
         const int RelaxTime = 200;  //cas v [ms]
@@ -90,22 +92,36 @@ namespace SledovaniVyroby.SledovaniVyrobyService
 
         private bool SendCommand()
         {
+            Logger.Debug("Send");
             lock (lockobj)
             {
+                
                 if (!_sp.IsOpen) return false;
 
                 //odeslat pripraveny command s parametry
                 _sp.Write(_inBuff, 0, BuffLength);
 
+                Logger.Debug("  after write");
+
                 //kontrola odeslání
                 var task = _sp.ReadAsync(11);
+
+                Logger.Debug("  after readAsync");
+
                 task.Wait(MaxTimeToWait);
+
+                Logger.Debug("  after task wait");
+
                 _outBuff = task.Result;
             }
 
             Thread.Sleep(RelaxTime);
 
-            return CheckSendOk();
+            var res = CheckSendOk();
+
+            Logger.Debug("  after send check:"+res);
+
+            return res;
         }
 
         private void ReceiveResults()
@@ -154,6 +170,8 @@ namespace SledovaniVyroby.SledovaniVyrobyService
        
         public bool SetCileSmen(char varianta, short cil1, short cil2, short cil3)
         {
+            bool res = false;
+
             PrepareInput(18);
 
             _inBuff[4] = (byte)varianta;
@@ -170,12 +188,14 @@ namespace SledovaniVyroby.SledovaniVyrobyService
             {
                 //načtení výsledku
                 ReceiveResults();
-                return CheckResponseOk();
+                res = CheckResponseOk();
             }
             else
             {
-                return false;
+                //return false;
             }
+
+            return res;
         }
 
         public bool SetDefektivita(char varianta, short def1, short def2, short def3)

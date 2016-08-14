@@ -5,7 +5,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using SledovaniVyroby.SerialPortWraper;
-using SledovaniVyroby.SledovaniVyrobyService;
+using Slevyr.DataAccess.Model;
+
 
 namespace TestConsoleApp
 {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SledovaniVyroby.SledovaniVyrobyService;
+using Slevyr.DataAccess.Services;
 
 namespace UnitTest
 {

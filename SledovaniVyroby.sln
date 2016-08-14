@@ -1,17 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTest", "UnitTest\UnitTest.csproj", "{A48E8EE8-72C9-4427-9D64-82F27F8CE225}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SledovaniVyrobyService", "SledovaniVyrobyService\SledovaniVyrobyService.csproj", "{821041DA-6F11-4E36-B43D-774451B32486}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerialPortWraper", "SerialPortWraper\SerialPortWraper.csproj", "{7599014B-8D6D-4EC2-8DC9-9EE745C0E154}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SledovaniVyrobyWebAppHost", "SledovaniVyrobyWebAppHost\SledovaniVyrobyWebAppHost.csproj", "{E4561E1C-A1D9-4FD0-8A64-6D529D9B9BC4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Slevyr.WebAppHost", "SledovaniVyrobyWebAppHost\Slevyr.WebAppHost.csproj", "{E4561E1C-A1D9-4FD0-8A64-6D529D9B9BC4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsoleApp", "TestConsoleApp\TestConsoleApp.csproj", "{798FEAB9-E7F9-47C7-9771-9370F4C3957C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Slevyr.DataAccess", "Slevyr.DataAccess\Slevyr.DataAccess.csproj", "{519B308B-DE6D-4F6C-A8BE-7115CCA35831}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,6 @@ Global
 		{A48E8EE8-72C9-4427-9D64-82F27F8CE225}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A48E8EE8-72C9-4427-9D64-82F27F8CE225}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A48E8EE8-72C9-4427-9D64-82F27F8CE225}.Release|Any CPU.Build.0 = Release|Any CPU
-		{821041DA-6F11-4E36-B43D-774451B32486}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{821041DA-6F11-4E36-B43D-774451B32486}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{821041DA-6F11-4E36-B43D-774451B32486}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{821041DA-6F11-4E36-B43D-774451B32486}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7599014B-8D6D-4EC2-8DC9-9EE745C0E154}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7599014B-8D6D-4EC2-8DC9-9EE745C0E154}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7599014B-8D6D-4EC2-8DC9-9EE745C0E154}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -39,6 +35,10 @@ Global
 		{798FEAB9-E7F9-47C7-9771-9370F4C3957C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{798FEAB9-E7F9-47C7-9771-9370F4C3957C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{798FEAB9-E7F9-47C7-9771-9370F4C3957C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{519B308B-DE6D-4F6C-A8BE-7115CCA35831}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{519B308B-DE6D-4F6C-A8BE-7115CCA35831}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{519B308B-DE6D-4F6C-A8BE-7115CCA35831}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{519B308B-DE6D-4F6C-A8BE-7115CCA35831}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
