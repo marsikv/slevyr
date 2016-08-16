@@ -104,7 +104,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Startup.cs" />
-    <Compile Include="SlevyController.cs" />
+    <Compile Include="SlevyrController.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
@@ -130,31 +130,31 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="WWW1\index - Copy.html">
+    <Content Include="WWW\index - Copy.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="WWW1\LinkaParams.html">
+    <Content Include="WWW\LinkaParams.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="WWW1\LinkaTabule.html">
+    <Content Include="WWW\LinkaTabule.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="WWW1\menu.html">
+    <Content Include="WWW\menu.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="WWW1\scripts\linkaTabuleScripts.js">
+    <Content Include="WWW\scripts\linkaTabuleScripts.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="WWW1\scripts\mainSettingScripts.js">
+    <Content Include="WWW\scripts\mainSettingScripts.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="WWW1\scripts\linkaParamScripts.js">
+    <Content Include="WWW\scripts\linkaParamScripts.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="WWW1\settings.html">
+    <Content Include="WWW\settings.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="WWW1\style.css">
+    <Content Include="WWW\style.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -1,4 +1,4 @@
-var uri = 'api/slevy';
+var uri = 'api/slevyr';
 
     $(document).ready(function () {
         readRunConfig();

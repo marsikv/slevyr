@@ -5,5 +5,6 @@
         public bool IsMockupMode;
         public bool IsRefreshTimerOn;
         public int RefreshTimerPeriod;
+        public string DataFilePath;
     }
 }

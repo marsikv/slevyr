@@ -1,4 +1,4 @@
-var uri = 'api/slevy';
+var uri = 'api/slevyr';
 var isTimerEnabled = false;
 var timerRefreshPeriod = 10000;
 var refreshTimer;

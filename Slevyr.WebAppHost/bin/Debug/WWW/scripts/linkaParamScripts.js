@@ -1,4 +1,4 @@
-var uri = 'api/slevy';
+var uri = 'api/slevyr';
 var isTimerEnabled = false;
 var timerRefreshPeriod = 10000;
 var refreshTimer;
@@ -77,10 +77,12 @@ $(document).ready(function () {
 
     function saveParamsToFile() {
         alert('saveParamsToFile');
-        $.getJSON(uri + '/saveLinkaParams',
+        $.getJSON(uri + '/saveUnitConfig',
             {
-                addr:  $('#addrId').val(),
-                typSmennosti: $('#TypSmennosti').val(),
+                //Addr:  $('#addrId').val(),
+                //typSmennosti: $('#TypSmennosti').val(),
+                Addr:  '999',
+                typSmennosti: 'aaa',
                 cil1Smeny: $('#Cil1Smeny').val(),
                 cil2Smeny: $('#Cil2Smeny').val(),
                 cil3Smeny: $('#Cil3Smeny').val(),
@@ -91,13 +93,13 @@ $(document).ready(function () {
                 prestavka2Smeny: $('#Prestavka2Smeny').val(),
                 prestavka3Smeny: $('#Prestavka3Smeny').val(),
 
-                writeProtectEEprom: $('#WriteProtectEEprom').val(),
-                minOK: $('#MinOk').val(),
-                minNG: $('#MinNg').val(),
-                bootloaderOn: $('#BootloaderOn').val(),
-                parovanyLED: $('#addrParovanyLED').val(),
-                rozliseniCidel: $('#rozliseniCidelTeploty').val(),
-                pracovniJasLed: $('#PracovniJasLed').val()
+                WriteProtectEEprom: $('#WriteProtectEEprom').val(),
+                MinOK: $('#MinOk').val(),
+                MinNG: $('#MinNg').val(),
+                BootloaderOn: $('#BootloaderOn').val(),
+                ParovanyLED: $('#addrParovanyLED').val(),
+                RozliseniCidel: $('#rozliseniCidel').val(),
+                PracovniJasLed: $('#PracovniJasLed').val()
             })
             .done(function (data) {
                 $('#stav').text('');

@@ -26,7 +26,7 @@ namespace Slevyr.WebAppHost
         nastavit cas 
     */
 
-    public class SlevyController : ApiController
+    public class SlevyrController : ApiController
     {
         #region Fields
 
@@ -40,7 +40,7 @@ namespace Slevyr.WebAppHost
 
         #region ctor
 
-        static SlevyController()
+        static SlevyrController()
         {
             Logger.Info("+");
 
@@ -50,7 +50,8 @@ namespace Slevyr.WebAppHost
             {
                 IsMockupMode = Settings.Default.MockupMode,
                 IsRefreshTimerOn = Settings.Default.IsRefreshTimerOn,
-                RefreshTimerPeriod = Settings.Default.RefreshTimerPeriod
+                RefreshTimerPeriod = Settings.Default.RefreshTimerPeriod,
+                DataFilePath = Settings.Default.JsonFilePath
             };
 
             PortConfig = new SerialPortConfig()
@@ -154,27 +155,6 @@ namespace Slevyr.WebAppHost
             try
             {
                 return SlevyrService.RefreshStatus(addr);
-            }
-            catch (KeyNotFoundException)
-            {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
-            }
-        }
-
-        [HttpGet]
-        public void SaveLinkaParams([FromUri] byte addr,
-            [FromUri] char varianta, [FromUri] short cil1, [FromUri] short cil2, [FromUri] short cil3,
-            [FromUri]string def1, [FromUri]string def2, [FromUri]string def3,
-            [FromUri] int prest1, [FromUri] int prest2, [FromUri] int prest3,
-            [FromUri] string writeProtectEEprom, [FromUri] byte minOK, [FromUri] byte minNG, [FromUri] string bootloaderOn, [FromUri] byte parovanyLED,
-            [FromUri] byte rozliseniCidel, [FromUri] byte pracovniJasLed)
-        {
-            Logger.Info($"addr:{addr}");
-
-            //SlevyrService.SaveLinkaParams();
-
-            try
-            {
             }
             catch (KeyNotFoundException)
             {
@@ -374,5 +354,32 @@ namespace Slevyr.WebAppHost
 
         #endregion
 
+        [HttpGet]
+        public void SaveUnitConfig([FromUri] byte addr,
+            [FromUri] char typSmennosti, [FromUri] short cil1Smeny, [FromUri] short cil2Smeny, [FromUri] short cil3Smeny,
+            [FromUri]string def1Smeny, [FromUri]string def2Smeny, [FromUri]string def3Smeny,
+            [FromUri] int prestavka1Smeny, [FromUri] int prestavka2Smeny, [FromUri] int prestavka3Smeny,
+            [FromUri] string writeProtectEEprom, [FromUri] byte minOK, [FromUri] byte minNG, [FromUri] string bootloaderOn, 
+            [FromUri] byte parovanyLED,
+            [FromUri] byte rozliseniCidel, [FromUri] byte pracovniJasLed)
+        {
+            Logger.Info($"Addr:{addr}");
+
+            try
+            {
+                SlevyrService.SaveUnitConfig(addr, typSmennosti,
+                    cil1Smeny, cil2Smeny, cil3Smeny,
+                    def1Smeny, def2Smeny, def3Smeny,
+                    prestavka1Smeny, prestavka2Smeny, prestavka3Smeny,
+                    writeProtectEEprom, minOK, minNG, bootloaderOn, parovanyLED, rozliseniCidel, pracovniJasLed);
+
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+        }
+
+       
     }
 }

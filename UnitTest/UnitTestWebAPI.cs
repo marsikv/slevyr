@@ -27,7 +27,7 @@ namespace UnitTest
         {
             using (HttpClient client = new HttpClient())
             {
-                var response = client.GetAsync(baseAddress + "api/slevy/status?addr=100").Result;
+                var response = client.GetAsync(baseAddress + "api/slevy/status?Addr=100").Result;
                 Assert.IsNotNull(response);
                 Assert.IsNotNull(response.Content.ReadAsStringAsync().Result);
                 Console.WriteLine("status: " + response.Content.ReadAsStringAsync().Result);
@@ -39,7 +39,7 @@ namespace UnitTest
         {
             using (HttpClient client = new HttpClient())
             {
-                var response = client.GetAsync(baseAddress + "api/slevy/nastavOkNg?addr=100&ok=10&ng=5").Result;
+                var response = client.GetAsync(baseAddress + "api/slevy/nastavOkNg?Addr=100&ok=10&ng=5").Result;
                 Assert.IsNotNull(response);
                 Assert.IsNotNull(response.Content.ReadAsStringAsync().Result);
                 Console.WriteLine("nastav ok a ng:" + response.Content.ReadAsStringAsync().Result);
@@ -51,7 +51,7 @@ namespace UnitTest
         {
             using (HttpClient client = new HttpClient())
             {
-                var response = client.GetAsync(baseAddress + "api/slevy/refreshStavCitacu?addr=100").Result;
+                var response = client.GetAsync(baseAddress + "api/slevy/refreshStavCitacu?Addr=100").Result;
                 Assert.IsNotNull(response);
                 Assert.IsNotNull(response.Content.ReadAsStringAsync().Result);
                 Console.WriteLine("refresh citace: " + response.Content.ReadAsStringAsync().Result);

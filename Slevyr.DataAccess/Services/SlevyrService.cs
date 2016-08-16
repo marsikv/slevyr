@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using NLog;
 using SledovaniVyroby.SerialPortWraper;
 using Slevyr.DataAccess.Model;
@@ -103,9 +105,9 @@ namespace Slevyr.DataAccess.Services
 
         #region UnitStatus operations
 
-        //public static UnitMonitor GetUnit(int addr)
+        //public static UnitMonitor GetUnit(int Addr)
         //{
-        //    return _unitDictionary[addr];
+        //    return _unitDictionary[Addr];
         //}
 
         public static UnitStatus Status(byte addr)
@@ -256,7 +258,7 @@ namespace Slevyr.DataAccess.Services
 
         #region save/load
 
-        public static void SaveLinkaParams(byte addr,
+        public static void SaveUnitConfig(byte addr,
              char varianta,  short cil1,  short cil2,  short cil3,
              string def1, string def2, string def3,
              int prest1,  int prest2,  int prest3,
@@ -265,15 +267,13 @@ namespace Slevyr.DataAccess.Services
         {
             Logger.Info($"addr:{addr}");
 
-            /*
-
             UnitConfig unitConfig = new UnitConfig()
             {
                 WriteProtectEEprom = writeProtectEEprom.Equals("True", StringComparison.InvariantCultureIgnoreCase) || writeProtectEEprom.Equals("ano", StringComparison.InvariantCultureIgnoreCase),
-                MinOk = minOK,
-                MinNg = minNG,
+                MinOK = minOK,
+                MinNG = minNG,
                 BootloaderOn = bootloaderOn.Equals("True", StringComparison.InvariantCultureIgnoreCase) || bootloaderOn.Equals("ano", StringComparison.InvariantCultureIgnoreCase),
-                ParovanyLed = parovanyLED,
+                ParovanyLED = parovanyLED,
                 RozliseniCidel = rozliseniCidel,
                 PracovniJasLed = pracovniJasLed,
                 Addr = addr,
@@ -283,20 +283,14 @@ namespace Slevyr.DataAccess.Services
             serializer.Converters.Add(new JavaScriptDateTimeConverter());
             serializer.NullValueHandling = NullValueHandling.Ignore;
 
-            using (StreamWriter sw = new StreamWriter(Path.Combine(Settings.Default.JsonFilePath, $"linka{addr}.json")))
+            Directory.CreateDirectory(_runConfig.DataFilePath);
+
+            using (StreamWriter sw = new StreamWriter(Path.Combine(_runConfig.DataFilePath, $"unitCfg_{addr}.json")))
             using (JsonWriter writer = new JsonTextWriter(sw))
             {
                 serializer.Serialize(writer, unitConfig);
             }
-
-            try
-            {
-            }
-            catch (KeyNotFoundException)
-            {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
-            }
-            */
+            
         }
 
         #endregion

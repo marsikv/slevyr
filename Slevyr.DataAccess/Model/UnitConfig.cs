@@ -14,13 +14,13 @@ namespace Slevyr.DataAccess.Model
         public TimeSpan Prestavka1Smeny = new TimeSpan(10,30,0);
         public TimeSpan Prestavka2Smeny = new TimeSpan(16, 0, 0);
         public TimeSpan Prestavka3Smeny = new TimeSpan(22, 30, 0);
-        public byte addr = 100;
-        public bool writeProtectEEprom = false;
-        public byte minOK = 5;
-        public byte minNG = 5;
-        public bool bootloaderOn = false;
-        public byte parovanyLED;
-        public byte rozliseniCidel;
-        public byte pracovniJasLed;
+        public byte Addr = 100;
+        public bool WriteProtectEEprom = false;
+        public byte MinOK = 5;
+        public byte MinNG = 5;
+        public bool BootloaderOn = false;
+        public byte ParovanyLED;
+        public byte RozliseniCidel;
+        public byte PracovniJasLed;
     }
 }
