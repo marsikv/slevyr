@@ -2,12 +2,17 @@ var uri = 'api/slevyr';
 var isTimerEnabled = false;
 var timerRefreshPeriod = 10000;
 var refreshTimer;
+var addr = null;
 
     $(document).ready(function () {
         readRunConfig();
+
+        //readUnitConfig();
        
         $("#RefreshStatus").click(refreshStatus);
-        
+
+        $("#AddrIdDropDown").change(onAddrIdChange);
+
     });
 
     function readRunConfig() {
@@ -29,19 +34,29 @@ var refreshTimer;
                     }
                 }
 
-                if (data.IsMockupMode) {
-                    closePort();
-                    $("#isMockupMode").text(" [mockup]");
-                } else {
-                    openPort();
-                    $("#isMockupMode").text("");
-                }
+                //if (data.IsMockupMode) {
+                //    closePort();
+                //    $("#isMockupMode").text(" [mockup]");
+                //} else {
+                //    openPort();
+                //    $("#isMockupMode").text("");
+                //}
+
                 if (isTimerEnabled) {
                     $("#isTimerOn").text(" [timer on]");
 
                 } else {
                     $("#isTimerOn").text("");
                 }
+
+                $.each(data.UnitAddrs, function (key,value) {
+                    $('#AddrIdDropDown')
+                        .append($("<option></option>")
+                                   .attr("value", value)
+                                   .text(value));
+                });
+
+                onAddrIdChange();
 
             })
             .fail(function (jqXHR, textStatus, err) {
@@ -50,9 +65,39 @@ var refreshTimer;
             });
     }
 
+    function readUnitConfig() {
+        clearStatus();
+        if (typeof addr != 'undefined' &&  addr != null && addr.length > 1)
+        $.getJSON(uri + '/LoadUnitConfig?', {addr: addr})
+            .done(function (data) {
+                $('#LinkaName').text(data.UnitName);
+            })
+            .fail(function (jqXHR, textStatus, err) {
+                $('#stav').text('Error: ' + err);
+                alert("loadParams - error");
+            });
+    }   
+
+    function onAddrIdChange() {
+        addr = $("#AddrIdDropDown option:selected").val();
+        readUnitConfig();
+    }
+
+    function clearStatus() {
+        $('#okNumValue').text(data.Ok);
+        $('#ngNumValue').text(data.Ng);
+        $('#okNgRefreshTime').text(new Date().toLocaleTimeString());
+        $('#casOkValue').text(data.CasOk);
+        $('#casNgValue').text(data.CasNg);
+
+        $('#cilTabule').text(data.CilTabule);
+        $('#rozdilTabule').text(data.RozdilTabule);
+        $('#cilDefTabule').text(data.DefectTabule + "%");
+    }
+
     function refreshStatus() {
-        var addr = $('#addrId').val();
-        alert('status, Addr=' + addr);
+        clearStatus();
+        //alert('status, Addr=' + addr);
         $.getJSON(uri + '/refreshStatus?Addr=' + addr)
             .done(function (data) {
                 //alert('status,okNumValue =' + data.Ok);
@@ -74,9 +119,6 @@ var refreshTimer;
                 alert("refreshStatus - error");
             });
     }
-
-
-  
 
     //function openPort() {
     //    //alert("openPort");

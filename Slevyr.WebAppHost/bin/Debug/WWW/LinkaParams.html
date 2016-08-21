@@ -22,12 +22,11 @@
 </head>
 <body>
 
-    <div>
-        <h2 id="LinkaHeader" style="width: 400px; float: left;">Linka montáž ventilů</h2>
-        <br/>
-        <input type="text" id="LinkaNameId" value="EBS" size="60" />
-        <input type="text" id="addrId" value="100" size="5" />
+    <div style="text-align: center;">
+        <h2 id="LinkaName" style="width: 400px; float: left;">-</h2>
+        <br />
 
+        <select id="AddrIdDropDown"></select>
     </div>
 
 <div>
@@ -119,6 +118,7 @@
 
 <div id="levyDolni">
     <input type="button" value="Uložit" id="SaveParams"/>
+    <input type="button" value="Načíst" id="LoadParams" />
 </div>
 
 <div id="patka" style="position: absolute; top: 800px">

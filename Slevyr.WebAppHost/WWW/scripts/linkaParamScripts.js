@@ -2,12 +2,15 @@ var uri = 'api/slevyr';
 var isTimerEnabled = false;
 var timerRefreshPeriod = 10000;
 var refreshTimer;
+var addr = null;
 
 $(document).ready(function () {
         readRunConfig();
-        loadParamsFromFile();
+
+        $("#AddrIdDropDown").change(onAddrIdChange);
        
-        $("#SaveParams").click(saveParamsToFile);
+        $("#SaveParams").click(saveUnitConfig);
+        $("#LoadParams").click(readUnitConfig);
 
         $("#NastavCileSmen").click(nastavCileSmen);
         $("#NastavPrestavky").click(nastavPrestavkySmen);
@@ -18,7 +21,7 @@ $(document).ready(function () {
     });
 
     function readRunConfig() {
-        alert('readConfig');
+        //alert('readConfig');
         $('#stav').text('');
         $.getJSON(uri + '/getConfig?')
             .done(function (data) {
@@ -30,89 +33,113 @@ $(document).ready(function () {
                     openPort();
                     $("#isMockupMode").text("");
                 }
+
+                $.each(data.UnitAddrs, function (key, value) {
+                    $('#AddrIdDropDown')
+                        .append($("<option></option>")
+                                   .attr("value", value)
+                                   .text(value));
+                });
+
+                onAddrIdChange();
+
             })
             .fail(function (jqXHR, textStatus, err) {
                 $('#stav').text('Error: ' + err);
                 alert("refreshStatus - error");
             });
+    }    
+
+    function onAddrIdChange() {
+        addr = $("#AddrIdDropDown option:selected").val();
+        readUnitConfig();
     }
 
-    function readLinkaParams() {
-        alert('readLinkaParamsX');
-        var addr = $('#addrId').val();
-        $.getJSON(uri + '/getLinkaParams?', {
+    function readUnitConfig() {
+        //alert('readUnitConfig'+addr);
+        //var addr = $('#addrId').val();
+        if (typeof addr != 'undefined' && addr != null && addr.length > 1)
+        $.getJSON(uri + '/LoadUnitConfig', {
             addr: addr
             })
             .done(function (data) {
 
-                $('#TypSmennosti').text(data.typSmennosti);
-                $('#Cil1Smeny').text(data.cil1Smeny);
-                $('#Cil2Smeny').text(data.cil2Smeny);
-                $('#Cil3Smeny').text(data.cil3Smeny);
-                $('#Def1Smeny').text(data.def1Smeny);
-                $('#Def2Smeny').text(data.def2Smeny);
-                $('#Def3Smeny').text(data.def3Smeny);
+                $('#TypSmennosti').val(data.TypSmennosti);
+                $('#LinkaName').text(data.UnitName);
+                $('#LinkaNameEdit').val(data.UnitName);                
+                $('#Cil1Smeny').val(data.Cil1Smeny);
+                $('#Cil2Smeny').val(data.Cil2Smeny);
+                $('#Cil3Smeny').val(data.Cil3Smenyil3Smeny);
+                $('#Def1Smeny').val(data.Def1Smeny);
+                $('#Def2Smeny').val(data.Def2Smeny);
+                $('#Def3Smeny').val(data.Def3Smeny);
 
-                $('#Prestavka1Smeny').text(data.prestavka1Smeny);
-                $('#Prestavka2Smeny').text(data.prestavka2Smeny);
-                $('#Prestavka3Smeny').text(data.prestavka3Smeny);
+                $('#Prestavka1Smeny').val(data.p1Smeny);
+                $('#Prestavka2Smeny').val(data.p2Smeny);
+                $('#Prestavka3Smeny').val(data.p3Smeny);
 
-                $('#WriteProtectEEprom').text(data.writeProtectEEprom);
+                $('#WriteProtectEEprom').val(data.WriteProtectEEprom);
 
-                $('#MinOk').text(data.minOK);
+                $('#MinOk').val(data.MinOk);
 
-                $('#MinNg').text(data.minNG);
+                $('#MinNg').val(data.MinNG);
 
-                $('#BootloaderOn').text(data.bootloaderOn);
-                $('#rozliseniCidelTeploty').text(data.rozliseniCidelTeploty);
-                $('#PracovniJasLed').text(data.pracovniJasLed);
-                $('#addrParovanyLED').text(data.addrParovanyLED);
+                $('#BootloaderOn').val(data.BootloaderOn);
+                $('#rozliseniCidelTeploty').val(data.RozliseniCidel);
+                $('#PracovniJasLed').val(data.PracovniJasLed);
+                $('#addrParovanyLED').val(data.ParovanyLED);
 
             })
             .fail(function (jqXHR, textStatus, err) {
                 $('#stav').text('Error: ' + err);
-                alert("readLinkaParams - error");
+                alert("readUnitConfig - error");
             });
     }
 
-    function saveParamsToFile() {
-        alert('saveParamsToFile');
-        $.getJSON(uri + '/saveUnitConfig',
-            {
-                //Addr:  $('#addrId').val(),
-                //typSmennosti: $('#TypSmennosti').val(),
-                Addr:  '999',
-                typSmennosti: 'aaa',
-                cil1Smeny: $('#Cil1Smeny').val(),
-                cil2Smeny: $('#Cil2Smeny').val(),
-                cil3Smeny: $('#Cil3Smeny').val(),
-                def1Smeny: $('#Def1Smeny').val(),
-                def2Smeny: $('#Def2Smeny').val(),
-                def3Smeny: $('#Def3Smeny').val(),
-                prestavka1Smeny: $('#Prestavka1Smeny').val(),
-                prestavka2Smeny: $('#Prestavka2Smeny').val(),
-                prestavka3Smeny: $('#Prestavka3Smeny').val(),
+    function saveUnitConfig() {
+        //alert('saveUnitConfig');
 
-                WriteProtectEEprom: $('#WriteProtectEEprom').val(),
-                MinOK: $('#MinOk').val(),
-                MinNG: $('#MinNg').val(),
-                BootloaderOn: $('#BootloaderOn').val(),
-                ParovanyLED: $('#addrParovanyLED').val(),
-                RozliseniCidel: $('#rozliseniCidel').val(),
-                PracovniJasLed: $('#PracovniJasLed').val()
-            })
-            .done(function (data) {
-                $('#stav').text('');
-            })
-            .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                alert("nastavStatus - error");
-            });
+        var model = {
+            Addr: addr,
+            UnitName: $('#LinkaNameEdit').val(),
+            typSmennosti: $('#TypSmennosti').val(),
+            cil1Smeny: $('#Cil1Smeny').val(),
+            cil2Smeny: $('#Cil2Smeny').val(),
+            cil3Smeny: $('#Cil3Smeny').val(),
+            def1Smeny: $('#Def1Smeny').val(),
+            def2Smeny: $('#Def2Smeny').val(),
+            def3Smeny: $('#Def3Smeny').val(),
+            prestavka1Smeny: $('#Prestavka1Smeny').val(),
+            prestavka2Smeny: $('#Prestavka2Smeny').val(),
+            prestavka3Smeny: $('#Prestavka3Smeny').val(),
+
+            WriteProtectEEprom: $('#WriteProtectEEprom').val(),
+            MinOK: $('#MinOk').val(),
+            MinNG: $('#MinNg').val(),
+            BootloaderOn: $('#BootloaderOn').val(),
+            ParovanyLED: $('#addrParovanyLED').val(),
+            RozliseniCidel: $('#rozliseniCidel').val(),
+            PracovniJasLed: $('#PracovniJasLed').val()
+        };
+
+        $.ajax({
+            type: "POST",
+            data: JSON.stringify(model),
+            url: uri + "/saveUnitConfig",
+            contentType: "application/json"
+        }).done(function (res) {
+            $('#stav').text('');
+            console.log('res', res);
+            // Do something with the result :)
+        }).fail(function (jqXHR, textStatus, err) {
+            $('#stav').text('Error: ' + err);
+            alert("saveUnitConfig - error");
+        });       
     }
 
     function nastavCileSmen() {
         alert('nastavCileSmen');
-        var addr = $('#addrId').val();
+        //var addr = $('#addrId').val();
         var varianta  = $('#typSmennosti').val();
         var cil1Smeny = $('#Cil1Smeny').val();
         var cil2Smeny = $('#Cil2Smeny').val();
@@ -136,7 +163,7 @@ $(document).ready(function () {
 
     function nastavPrestavkySmen() {
         alert('nastavPrestavkySmen');
-        var addr = $('#addrId').val();
+        //var addr = $('#addrId').val();
         var varianta = $('#typSmennosti').val();
         var p1Smeny = $('#Prest1Smeny').val();
         var p2Smeny = $('#Prest2Smeny').val();
@@ -160,7 +187,7 @@ $(document).ready(function () {
 
     function nastavCitaceOkNg() {
         alert('nastavCitaceOkNg');
-        var addr = $('#addrId').val();
+        //var addr = $('#addrId').val();
         var ok = $('#ok').val();
         var ng = $('#ng').val();
         $.getJSON(uri + '/NastavOkNg',
@@ -180,7 +207,7 @@ $(document).ready(function () {
 
     function nastavDefektivitu() {
         alert('nastavDefektivitu');
-        var addr = $('#addrId').val();
+        //var addr = $('#addrId').val();
         var varianta = $('#typSmennosti').val();
         var def1Smeny = $('#Def1Smeny').val();
         var def2Smeny = $('#Def2Smeny').val();
@@ -206,7 +233,7 @@ $(document).ready(function () {
         alert('nastavStatus');
         $.getJSON(uri + '/nastavStatus',
             {
-                addr: $('#addrId').val(),
+                addr: addr,
                 writeProtectEEprom: $('#WriteProtectEEprom').val(),
                 minOK: $('#MinOk').val(),
                 minNG: $('#MinNg').val(),
@@ -228,7 +255,7 @@ $(document).ready(function () {
         alert('nastavAktualniCas');
         $.getJSON(uri + '/nastavAktualniCas',
             {
-                addr: $('#addrId').val()
+                addr: addr
             })
             .done(function (data) {
                 $('#stav').text('');
@@ -269,8 +296,6 @@ $(document).ready(function () {
             });
     }
 
-    function loadParamsFromFile() {
-    }
-
+   
  
 

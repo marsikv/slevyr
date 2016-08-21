@@ -4,6 +4,8 @@ namespace Slevyr.DataAccess.Model
 {
     public class UnitConfig
     {
+        public byte Addr = 100;
+        public string UnitName;
         public char TypSmennosti = 'A';
         public short Cil1Smeny = 1000;
         public short Cil2Smeny = 2000;
@@ -14,7 +16,6 @@ namespace Slevyr.DataAccess.Model
         public TimeSpan Prestavka1Smeny = new TimeSpan(10,30,0);
         public TimeSpan Prestavka2Smeny = new TimeSpan(16, 0, 0);
         public TimeSpan Prestavka3Smeny = new TimeSpan(22, 30, 0);
-        public byte Addr = 100;
         public bool WriteProtectEEprom = false;
         public byte MinOK = 5;
         public byte MinNG = 5;

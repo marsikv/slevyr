@@ -110,9 +110,9 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="NLog.config">
+    <Content Include="NLog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -130,9 +130,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="WWW\index - Copy.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="WWW\LinkaParams.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

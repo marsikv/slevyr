@@ -16,7 +16,7 @@ namespace Slevyr.DataAccess.Services
         #region Fields
         static SerialPortWraper _serialPort;
 
-        static IEnumerable<int> _unitAddrs;
+        //static IEnumerable<int> _unitAddrs;
 
         static Dictionary<int, UnitMonitor> _unitDictionary;
 
@@ -42,7 +42,7 @@ namespace Slevyr.DataAccess.Services
 
         #region init method
 
-        public static void Init(SerialPortConfig portCfg, RunConfig runConfig, IEnumerable<int> unitAddrs)
+        public static void Init(SerialPortConfig portCfg, RunConfig runConfig)
         {
             Logger.Info("+");
 
@@ -50,10 +50,10 @@ namespace Slevyr.DataAccess.Services
 
             _runConfig = runConfig;
 
-            _unitAddrs = unitAddrs;
+            //_unitAddrs = unitAddrs;
 
             _unitDictionary = new Dictionary<int, UnitMonitor>();
-            foreach (var a in unitAddrs)
+            foreach (var a in runConfig.UnitAddrs)
             {
                 _unitDictionary.Add(a, new UnitMonitor((byte)a, _serialPort, _runConfig.IsMockupMode));
             }
@@ -69,7 +69,7 @@ namespace Slevyr.DataAccess.Services
 
         #endregion
 
-        public static IEnumerable<int> UnitAddresses => _unitAddrs;
+        public static IEnumerable<int> UnitAddresses => _runConfig.UnitAddrs;
 
         public static int UnitCount => _unitDictionary.Count;
 
@@ -258,42 +258,39 @@ namespace Slevyr.DataAccess.Services
 
         #region save/load
 
-        public static void SaveUnitConfig(byte addr,
-             char varianta,  short cil1,  short cil2,  short cil3,
-             string def1, string def2, string def3,
-             int prest1,  int prest2,  int prest3,
-             string writeProtectEEprom,  byte minOK,  byte minNG,  string bootloaderOn,  byte parovanyLED,
-             byte rozliseniCidel,  byte pracovniJasLed)
+        public static void SaveUnitConfig(UnitConfig unitCfg)
         {
-            Logger.Info($"addr:{addr}");
-
-            UnitConfig unitConfig = new UnitConfig()
-            {
-                WriteProtectEEprom = writeProtectEEprom.Equals("True", StringComparison.InvariantCultureIgnoreCase) || writeProtectEEprom.Equals("ano", StringComparison.InvariantCultureIgnoreCase),
-                MinOK = minOK,
-                MinNG = minNG,
-                BootloaderOn = bootloaderOn.Equals("True", StringComparison.InvariantCultureIgnoreCase) || bootloaderOn.Equals("ano", StringComparison.InvariantCultureIgnoreCase),
-                ParovanyLED = parovanyLED,
-                RozliseniCidel = rozliseniCidel,
-                PracovniJasLed = pracovniJasLed,
-                Addr = addr,
-            };
-
+            Logger.Info($"addr:{unitCfg.Addr}");
+          
             JsonSerializer serializer = new JsonSerializer();
             serializer.Converters.Add(new JavaScriptDateTimeConverter());
             serializer.NullValueHandling = NullValueHandling.Ignore;
 
             Directory.CreateDirectory(_runConfig.DataFilePath);
 
-            using (StreamWriter sw = new StreamWriter(Path.Combine(_runConfig.DataFilePath, $"unitCfg_{addr}.json")))
+            using (StreamWriter sw = new StreamWriter(Path.Combine(_runConfig.DataFilePath, $"unitCfg_{unitCfg.Addr}.json")))
             using (JsonWriter writer = new JsonTextWriter(sw))
             {
-                serializer.Serialize(writer, unitConfig);
-            }
-            
+                serializer.Serialize(writer, unitCfg);
+            }            
         }
 
         #endregion
 
+        public static UnitConfig LoadUnitConfig(byte addr)
+        {
+            Logger.Info($"addr:{addr}");
+
+            var fileName = Path.Combine(_runConfig.DataFilePath, $"unitCfg_{addr}.json");
+
+            if (!File.Exists(fileName)) return null;
+
+            using (StreamReader file = File.OpenText(fileName))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                return (UnitConfig)serializer.Deserialize(file, typeof(UnitConfig));
+            }
+            
+        }
     }
 }

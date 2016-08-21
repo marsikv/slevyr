@@ -22,12 +22,11 @@
 </head>
 <body>
 
-    <div>
-        <h2 id="LinkaHeader" style="width: 400px; float: left;">Linka montáž ventilů</h2>
-        <br/>
-        <input type="text" id="LinkaNameId" value="EBS" size="60" />
-        <input type="text" id="addrId" value="100" size="5" />
+    <div style="text-align: center;">
+        <h2 id="LinkaName" style="width: 400px; float: left;">-</h2>
+        <br />
 
+        <select id="AddrIdDropDown"></select>
     </div>
 
 <div>
@@ -83,7 +82,7 @@
         <tr>
             <td style="background-color: darkslategrey;">Write protect EEprom</td>
             <td><input type="text" id="writeProtectEEprom" value="NE" size="5"/></td>
-            <td style="text-align: center;" rowspan="8"><input id="NastavStatus" type="button" value="Set"/></td>
+            <td style="text-align: center;" rowspan="7"><input id="NastavStatus" type="button" value="Set"/></td>
         </tr>
         <tr>
             <td style="background-color: darkslategrey;">Počet dobrých kusů k z.</td>
@@ -109,16 +108,18 @@
             <td style="background-color: darkslategrey;">Adresa Led panelu</td>
             <td><input type="text" id="addrParovanyLED" value="10" size="5"/></td>
         </tr>
-        <!--<tr>
-            <td style="background-color: darkslategrey;">Adresa ř&iacute;d&iacute;c&iacute; jednotky</td>
-            <td><input type="text" id="addrId" value="100" size="5"/></td>
-        </tr>-->
+        <tr>
+            <td style="background-color: darkslategrey;">Název jednotky</td>
+            <td><input type="text" id="LinkaNameEdit" value="-" size="5"/></td>
+            <td style="text-align: center;"></td>
+        </tr>
         </tbody>
     </table>
 </div>
 
 <div id="levyDolni">
     <input type="button" value="Uložit" id="SaveParams"/>
+    <input type="button" value="Načíst" id="LoadParams" />
 </div>
 
 <div id="patka" style="position: absolute; top: 800px">

@@ -44,14 +44,15 @@ namespace Slevyr.WebAppHost
         {
             Logger.Info("+");
 
-            //Nektere parametry nacitam z konfigurace
+            var unitAddrs = Settings.Default.UnitAddrs.Split(';').Select(s => Int32.Parse(s));
 
             RunConfig = new RunConfig
             {
                 IsMockupMode = Settings.Default.MockupMode,
                 IsRefreshTimerOn = Settings.Default.IsRefreshTimerOn,
                 RefreshTimerPeriod = Settings.Default.RefreshTimerPeriod,
-                DataFilePath = Settings.Default.JsonFilePath
+                DataFilePath = Settings.Default.JsonFilePath,
+                UnitAddrs = unitAddrs,
             };
 
             PortConfig = new SerialPortConfig()
@@ -64,9 +65,7 @@ namespace Slevyr.WebAppHost
                 ReceiveLength = 11
             };
 
-            var unitAddrs = Settings.Default.UnitAddrs.Split(';').Select(s => Int32.Parse(s));
-
-            SlevyrService.Init(PortConfig, RunConfig, unitAddrs);
+            SlevyrService.Init(PortConfig, RunConfig);
 
             Logger.Info("unit count: " + SlevyrService.UnitCount);
         }
@@ -354,24 +353,15 @@ namespace Slevyr.WebAppHost
 
         #endregion
 
-        [HttpGet]
-        public void SaveUnitConfig([FromUri] byte addr,
-            [FromUri] char typSmennosti, [FromUri] short cil1Smeny, [FromUri] short cil2Smeny, [FromUri] short cil3Smeny,
-            [FromUri]string def1Smeny, [FromUri]string def2Smeny, [FromUri]string def3Smeny,
-            [FromUri] int prestavka1Smeny, [FromUri] int prestavka2Smeny, [FromUri] int prestavka3Smeny,
-            [FromUri] string writeProtectEEprom, [FromUri] byte minOK, [FromUri] byte minNG, [FromUri] string bootloaderOn, 
-            [FromUri] byte parovanyLED,
-            [FromUri] byte rozliseniCidel, [FromUri] byte pracovniJasLed)
+
+        [HttpPost]
+        public void SaveUnitConfig([FromBody] UnitConfig unitCfg)
         {
-            Logger.Info($"Addr:{addr}");
+            Logger.Info($"Addr:{unitCfg.Addr}");
 
             try
             {
-                SlevyrService.SaveUnitConfig(addr, typSmennosti,
-                    cil1Smeny, cil2Smeny, cil3Smeny,
-                    def1Smeny, def2Smeny, def3Smeny,
-                    prestavka1Smeny, prestavka2Smeny, prestavka3Smeny,
-                    writeProtectEEprom, minOK, minNG, bootloaderOn, parovanyLED, rozliseniCidel, pracovniJasLed);
+                SlevyrService.SaveUnitConfig(unitCfg);
 
             }
             catch (KeyNotFoundException)
@@ -380,6 +370,23 @@ namespace Slevyr.WebAppHost
             }
         }
 
-       
+        [HttpGet]
+        public UnitConfig LoadUnitConfig([FromUri] byte addr)
+        {
+            Logger.Info($"Addr:{addr}");
+
+            try
+            {
+                var res = SlevyrService.LoadUnitConfig(addr);
+                return res;
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+        }
+
+
+
     }
 }
