@@ -44,7 +44,7 @@ namespace UnitTest
         {
             _portCfg = new SerialPortConfig()
             {
-                Port = "COM3",
+                Port = "COM4",
                 BaudRate = 19200,
                 Parity = System.IO.Ports.Parity.None,
                 DataBits = 8,
@@ -350,5 +350,32 @@ namespace UnitTest
             }
             Console.WriteLine($"TestMethodZapsatNacistCitace - OK");
         }
+
+        [TestMethod]
+        public void TestMethodNastavCileSmen()
+        {
+            using (var serialPort = new SerialPortWraper(_portCfg))
+            {
+                serialPort.Open();
+                Assert.IsTrue(serialPort.IsOpen, $"port {_portCfg.Port} nelze otevřít");
+
+                UnitMonitor m = new UnitMonitor(100);
+                m.SerialPort = serialPort;
+
+                short okVal = 123;
+                short ngVal = 54;
+
+                var res = m.SetDefektivita('A',1000,1001,1002);
+
+                Assert.IsTrue(res);
+
+                serialPort.Close();
+                Assert.IsFalse(serialPort.IsOpen, $"port {_portCfg.Port} nelze uzařít");
+
+                Thread.Sleep(500);
+            }
+            Console.WriteLine($"TestMethodZapsatNacistCitace - OK");
+        }
+
     }
 }

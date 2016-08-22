@@ -131,6 +131,11 @@ namespace Slevyr.DataAccess.Model
                 var task = _sp.ReadAsync(11);
                 Logger.Debug(" -r");
                 task.Wait(MaxTimeToWait);
+                if (!task.IsCompleted)
+                {
+                    Logger.Debug(" -timeout");
+                    return;
+                }
                 Logger.Debug(" -w");
                 _outBuff = task.Result;
                 Logger.Debug(" -res");
@@ -188,10 +193,9 @@ namespace Slevyr.DataAccess.Model
 
             if (SendCommand())
             {
-                res = true;
                 //načtení výsledku
-                //? ReceiveResults();
-                //? res = CheckResponseOk();
+                ReceiveResults();
+                res = CheckResponseOk();
             }
             else
             {
@@ -219,9 +223,8 @@ namespace Slevyr.DataAccess.Model
             {
                 //načtení výsledku
 
-                //ReceiveResults();
-                //return CheckResponseOk();
-                return true;
+                ReceiveResults();
+                return CheckResponseOk();
             }
             else
             {
