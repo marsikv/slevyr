@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 using System.Web.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -147,14 +148,14 @@ namespace Slevyr.WebAppHost
         }
 
         [HttpGet]
-        public UnitStatus RefreshStatus([FromUri] byte addr)
+        public async Task<UnitStatus> RefreshStatus([FromUri] byte addr)
         {
             Logger.Info($"+ {addr}");
             if (RunConfig.IsMockupMode) return Mock.MockUnitStatus();
 
             try
             {
-                return SlevyrService.RefreshStatus(addr);
+                return await SlevyrService.RefreshStatus(addr);
             }
             catch (KeyNotFoundException)
             {
@@ -164,7 +165,7 @@ namespace Slevyr.WebAppHost
 
 
         [HttpGet]
-        public bool NastavStatus([FromUri] byte addr, [FromUri] string writeProtectEEprom, [FromUri] byte minOK, [FromUri] byte minNG, [FromUri] string bootloaderOn, [FromUri] byte parovanyLED,
+        public async Task<bool> NastavStatus([FromUri] byte addr, [FromUri] string writeProtectEEprom, [FromUri] byte minOK, [FromUri] byte minNG, [FromUri] string bootloaderOn, [FromUri] byte parovanyLED,
             [FromUri] byte rozliseniCidel, [FromUri] byte pracovniJasLed)
         {
             Logger.Info($"addr:{addr} writeProtectEEprom:{writeProtectEEprom} minOK:{minOK} minNG:{minNG} parovanyLED:{parovanyLED}");
@@ -176,7 +177,7 @@ namespace Slevyr.WebAppHost
                 bool writeProtectEEpromVal = String.Equals(writeProtectEEprom, "ANO",StringComparison.InvariantCultureIgnoreCase) ;
                 bool bootloaderOnVal = String.Equals(bootloaderOn, "ANO",StringComparison.InvariantCultureIgnoreCase);
 
-                return SlevyrService.NastavStatus(addr, writeProtectEEpromVal, minOK, minNG, bootloaderOnVal, parovanyLED, rozliseniCidel, pracovniJasLed);
+                return await SlevyrService.NastavStatus(addr, writeProtectEEpromVal, minOK, minNG, bootloaderOnVal, parovanyLED, rozliseniCidel, pracovniJasLed);
             }
             catch (KeyNotFoundException)
             {
@@ -185,7 +186,7 @@ namespace Slevyr.WebAppHost
         }
 
         [HttpGet]
-        public bool NastavPrestavkySmen([FromUri] byte addr, [FromUri] char varianta, [FromUri] int prest1, [FromUri] int prest2, [FromUri] int prest3)
+        public async Task<bool> NastavPrestavkySmen([FromUri] byte addr, [FromUri] char varianta, [FromUri] int prest1, [FromUri] int prest2, [FromUri] int prest3)
         {
             Logger.Info($"addr:{addr}  prest1:{prest1} prest2:{prest2} prest2:{prest2}");
 
@@ -193,7 +194,7 @@ namespace Slevyr.WebAppHost
 
             try
             {
-                return SlevyrService.NastavPrestavky(addr,varianta, (short)prest1, (short)prest2, (short)prest3);
+                return await SlevyrService.NastavPrestavky(addr,varianta, (short)prest1, (short)prest2, (short)prest3);
             }
             catch (KeyNotFoundException)
             {
@@ -203,7 +204,7 @@ namespace Slevyr.WebAppHost
 
 
         [HttpGet]
-        public bool NastavCileSmen([FromUri] byte addr, [FromUri] char varianta, [FromUri] short cil1, [FromUri] short cil2, [FromUri] short cil3)
+        public async Task<bool> NastavCileSmen([FromUri] byte addr, [FromUri] char varianta, [FromUri] short cil1, [FromUri] short cil2, [FromUri] short cil3)
         {
             Logger.Info($"addr:{addr} var:{varianta} cil1:{cil1} cil2:{cil2} cil3:{cil3}");
 
@@ -213,7 +214,7 @@ namespace Slevyr.WebAppHost
 
             try
             {
-                return SlevyrService.NastavCileSmen(addr, varianta, cil1, cil2, cil3);
+                return await SlevyrService.NastavCileSmen(addr, varianta, cil1, cil2, cil3);
             }
             catch (KeyNotFoundException)
             {
@@ -223,7 +224,7 @@ namespace Slevyr.WebAppHost
         }
 
         [HttpGet]
-        public bool NastavOkNg([FromUri] byte addr, [FromUri] short ok, [FromUri] short ng)
+        public async Task<bool> NastavOkNg([FromUri] byte addr, [FromUri] short ok, [FromUri] short ng)
         {
             Logger.Info($"addr:{addr} ok:{ok} ng:{ng}");
 
@@ -231,7 +232,7 @@ namespace Slevyr.WebAppHost
 
             try
             {
-                return SlevyrService.NastavOkNg(addr, ok, ng);
+                return await SlevyrService.NastavOkNg(addr, ok, ng);
             }
             catch (KeyNotFoundException)
             {
@@ -240,7 +241,7 @@ namespace Slevyr.WebAppHost
         }
 
         [HttpGet]
-        public bool NastavAktualniCas([FromUri] byte addr)
+        public async Task<bool> NastavAktualniCas([FromUri] byte addr)
         {
             Logger.Info("+");
 
@@ -248,7 +249,7 @@ namespace Slevyr.WebAppHost
 
             try
             {
-                return SlevyrService.NastavAktualniCas(addr);
+                return await SlevyrService.NastavAktualniCas(addr);
             }
             catch (KeyNotFoundException)
             {
@@ -257,7 +258,7 @@ namespace Slevyr.WebAppHost
         }
 
         [HttpGet]
-        public bool NastavDefektivitu([FromUri] byte addr, [FromUri]char varianta, [FromUri]string def1, [FromUri]string def2, [FromUri]string def3)
+        public async Task<bool> NastavDefektivitu([FromUri] byte addr, [FromUri]char varianta, [FromUri]string def1, [FromUri]string def2, [FromUri]string def3)
         {
             Logger.Info($"addr:{addr} varianta:{varianta} def1:{def1} def2:{def2} def3:{def3}");
 
@@ -277,7 +278,7 @@ namespace Slevyr.WebAppHost
             try
             {
                 Logger.Info($"cil1:{def1Val}");
-                return SlevyrService.NastavDefektivitu(addr, varianta, (short)(def1Val * 10), (short)(def2Val * 10), (short)(def3Val * 10));
+                return await SlevyrService.NastavDefektivitu(addr, varianta, (short)(def1Val * 10), (short)(def2Val * 10), (short)(def3Val * 10));
             }
             catch (KeyNotFoundException)
             {
@@ -286,7 +287,7 @@ namespace Slevyr.WebAppHost
         }
 
         [HttpGet]
-        public bool NastavHandshake([FromUri] byte addr, [FromUri] bool value)
+        public async Task<bool> NastavHandshake([FromUri] byte addr, [FromUri] bool value)
         {
             Logger.Info($"addr:{addr} val:{value}");
 
@@ -295,7 +296,7 @@ namespace Slevyr.WebAppHost
             try
             {
 
-                return SlevyrService.NastavHandshake(addr, value);
+                return await SlevyrService.NastavHandshake(addr, value);
             }
             catch (KeyNotFoundException)
             {
@@ -305,7 +306,7 @@ namespace Slevyr.WebAppHost
         }
 
         [HttpGet]
-        public bool CtiStavCitacu([FromUri] byte addr)
+        public async Task<bool> CtiStavCitacu([FromUri] byte addr)
         {
             Logger.Info("+");
 
@@ -318,7 +319,7 @@ namespace Slevyr.WebAppHost
 
             try
             {
-                return SlevyrService.CtiStavCitacu(addr);
+                return await SlevyrService.CtiStavCitacu(addr);
             }
             catch (KeyNotFoundException)
             {
@@ -328,7 +329,7 @@ namespace Slevyr.WebAppHost
         }
 
         [HttpGet]
-        public bool CtiCyklusOkNg([FromUri] byte addr)
+        public async Task<bool> CtiCyklusOkNg([FromUri] byte addr)
         {
             Logger.Info("+");
 
@@ -341,9 +342,7 @@ namespace Slevyr.WebAppHost
 
             try
             {
-                float ok;
-                float ng;
-                return SlevyrService.CtiCyklusOkNg(addr);
+                return await SlevyrService.CtiCyklusOkNg(addr);
             }
             catch (KeyNotFoundException)
             {

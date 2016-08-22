@@ -44,7 +44,7 @@ namespace UnitTest
         {
             _portCfg = new SerialPortConfig()
             {
-                Port = "COM3",
+                Port = "COM4",
                 BaudRate = 19200,
                 Parity = System.IO.Ports.Parity.None,
                 DataBits = 8,
@@ -120,7 +120,7 @@ namespace UnitTest
         }
 
         [TestMethod]
-        public void TestMethodNastavCileSmen18()
+        public async Task TestMethodNastavCileSmen18()
         {
             using (var serialPort = new SerialPortWraper(_portCfg))
             {
@@ -131,7 +131,7 @@ namespace UnitTest
                 UnitMonitor m = new UnitMonitor(100);
                 m.SerialPort = serialPort;
 
-                var res = m.SetCileSmen('A', 100, 50, 10);
+                var res = await m.SetCileSmen('A', 100, 50, 10);
 
                 Assert.IsTrue(res);
 
@@ -144,7 +144,7 @@ namespace UnitTest
         }
 
         [TestMethod]
-        public void TestMethodNastavSmennost16()
+        public async void TestMethodNastavSmennost16()
         {
             using (var serialPort = new SerialPortWraper(_portCfg))
             {
@@ -154,7 +154,7 @@ namespace UnitTest
                 UnitMonitor m = new UnitMonitor(100);
                 m.SerialPort = serialPort;
 
-                var res = m.SetSmennost('A');
+                var res = await m.SetSmennost('A');
 
                 Assert.IsTrue(res);
 
@@ -168,7 +168,7 @@ namespace UnitTest
 
 
         [TestMethod]
-        public void TestMethodZapsatCitace4()
+        public async void TestMethodZapsatCitace4()
         {
             Console.WriteLine($"TestMethodZapsatCitace4 - start");
             using (var serialPort = new SerialPortWraper(_portCfg))
@@ -188,7 +188,7 @@ namespace UnitTest
                 UnitMonitor m = new UnitMonitor(100);
                 m.SerialPort = serialPort;
 
-                var res = m.SetCitace(99, 33);
+                var res = await m.SetCitace(99, 33);
 
                 Assert.IsTrue(res);
 
@@ -202,7 +202,7 @@ namespace UnitTest
 
 
         [TestMethod]
-        public void TestMethodReset7()
+        public async void TestMethodReset7()
         {
             using (var serialPort = new SerialPortWraper(_portCfg))
             {
@@ -212,7 +212,7 @@ namespace UnitTest
                 UnitMonitor m = new UnitMonitor(100);
                 m.SerialPort = serialPort;
 
-                Assert.IsTrue(m.Reset());
+                Assert.IsTrue(await m.Reset());
 
                 serialPort.Close();
                 Assert.IsFalse(serialPort.IsOpen, $"port {_portCfg.Port} nelze uzařít");
@@ -223,7 +223,7 @@ namespace UnitTest
         }
 
         [TestMethod]
-        public void TestMethodVratitZaklNastaveni9()
+        public async void TestMethodVratitZaklNastaveni9()
         {
             using (var serialPort = new SerialPortWraper(_portCfg))
             {
@@ -238,16 +238,9 @@ namespace UnitTest
 
                 //PrintByteArray(task.Result);
 
-                byte minOk;
-                byte minNg;
-                byte adrLocal;
-                byte verzeSw1;
-                byte verzeSw2;
-                byte verzeSw3;
+                ZaklNastaveniDto zaklNastaveni = await m.ReadZaklNastaveni();
 
-                Assert.IsTrue(m.ReadZaklNastaveni(out minOk,out minNg, out adrLocal, out verzeSw1, out verzeSw2, out verzeSw3));
-
-                Console.WriteLine($"minOK={minOk} minNG={minNg} verzeSw1={verzeSw1}");
+                Console.WriteLine($"minOK={zaklNastaveni.MinOk} minNG={zaklNastaveni.MinNg} verzeSw1={zaklNastaveni.VerzeSw1}");
 
                 serialPort.Close();
                 Assert.IsFalse(serialPort.IsOpen, $"port {_portCfg.Port} nelze uzařít");
@@ -258,7 +251,7 @@ namespace UnitTest
         }
 
         //[TestMethod]
-        public void TestMethodNastavJas()
+        public async void TestMethodNastavJas()
         {
             using (var serialPort = new SerialPortWraper(_portCfg))
             {
@@ -268,7 +261,7 @@ namespace UnitTest
                 UnitMonitor m = new UnitMonitor(100);
                 m.SerialPort = serialPort;
 
-                var res = m.SetJasLcd(10);
+                var res = await m.SetJasLcd(10);
 
                 Assert.IsTrue(res);
 
@@ -281,7 +274,7 @@ namespace UnitTest
         }
 
         [TestMethod]
-        public void TestMethodVratitStavCitacu96()
+        public async void TestMethodVratitStavCitacu96()
         {
             using (var serialPort = new SerialPortWraper(_portCfg))
             {
@@ -296,14 +289,13 @@ namespace UnitTest
 
                 //PrintByteArray(task.Result);
 
-                short ok;
-                short ng;
-
                 Console.WriteLine($"TestMethodVratitZaklNastaveni9 - OK");
 
-                Assert.IsTrue(m.ReadStavCitacu(out ok, out ng));
+                StavCitacuDto stavCitacu = await m.ReadStavCitacu();
 
-                Console.WriteLine($"OK={ok} NG={ng}");
+                Assert.IsTrue(stavCitacu != null);
+
+                Console.WriteLine($"OK={stavCitacu.Ok} NG={stavCitacu.Ng}");
 
                 serialPort.Close();
                 Assert.IsFalse(serialPort.IsOpen, $"port {_portCfg.Port} nelze uzařít");
@@ -314,7 +306,7 @@ namespace UnitTest
         }
 
         [TestMethod]
-        public void TestMethodZapsatNacistCitace()
+        public async void TestMethodZapsatNacistCitace()
         {
             using (var serialPort = new SerialPortWraper(_portCfg))
             {
@@ -327,7 +319,7 @@ namespace UnitTest
                 short okVal = 123;
                 short ngVal = 54;
 
-                var res = m.SetCitace(okVal, ngVal);
+                var res = await m.SetCitace(okVal, ngVal);
 
                 Assert.IsTrue(res);
 
@@ -336,12 +328,14 @@ namespace UnitTest
 
                 Thread.Sleep(500);
 
-                Assert.IsTrue(m.ReadStavCitacu(out ok, out ng));
+                StavCitacuDto stavCitacu = await m.ReadStavCitacu();
 
-                Console.WriteLine($"OK={ok} NG={ng}");
+                Assert.IsTrue(stavCitacu != null);
 
-                Assert.AreEqual(ok, okVal);
-                Assert.AreEqual(ng, ngVal);
+                Console.WriteLine($"OK={stavCitacu.Ok} NG={stavCitacu.Ng}");
+
+                Assert.AreEqual(stavCitacu.Ok, okVal);
+                Assert.AreEqual(stavCitacu.Ng, ngVal);
 
                 serialPort.Close();
                 Assert.IsFalse(serialPort.IsOpen, $"port {_portCfg.Port} nelze uzařít");

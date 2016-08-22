@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using NLog;
@@ -121,22 +122,15 @@ namespace Slevyr.DataAccess.Services
         }
 
 
-        public static UnitStatus RefreshStatus(byte addr)
+        public static async Task<UnitStatus> RefreshStatus(byte addr)
         {
             Logger.Info($"+ {addr}");
             if (_runConfig.IsMockupMode) return Mock.MockUnitStatus();
 
-            short ok, ng;
-            Single casOk, casNg;
-            Logger.Info("   ReadStavCitacu");
-            _unitDictionary[addr].ReadStavCitacu(out ok, out ng);
-            Logger.Info($"   ok:{ok} ng:{ng}");
-            Logger.Info("   ReadCasOK");
-            _unitDictionary[addr].ReadCasOK(out casOk);
-            Logger.Info($"   casOk:{casOk}");
-            Logger.Info("   ReadCasNG");
-            _unitDictionary[addr].ReadCasNG(out casNg);
-            Logger.Info($"   casNg:{casNg}");
+            await _unitDictionary[addr].RefreshStavCitacu();
+            Logger.Info("   -stavCitacu");
+            await _unitDictionary[addr].RefreshCas();
+            Logger.Info("   -casOkNg");
 
             //prepocitat pro zobrazeni tabule
             _unitDictionary[addr].UnitStatus.RecalcTabule();
@@ -145,7 +139,7 @@ namespace Slevyr.DataAccess.Services
         }
 
 
-        public static bool NastavStatus(byte addr, bool writeProtectEEprom, byte minOK, byte minNG, bool bootloaderOn, byte parovanyLED,
+        public static async Task<bool> NastavStatus(byte addr, bool writeProtectEEprom, byte minOK, byte minNG, bool bootloaderOn, byte parovanyLED,
             byte rozliseniCidel, byte pracovniJasLed)
         {
             Logger.Info($"addr:{addr} writeProtectEEprom:{writeProtectEEprom} minOK:{minOK} minNG:{minNG} parovanyLED:{parovanyLED}");
@@ -154,60 +148,60 @@ namespace Slevyr.DataAccess.Services
 
             byte writeProtectEEpromVal = (byte)(writeProtectEEprom ? 0 : 1);
             byte bootloaderOnVal = (byte)(bootloaderOn ? 0 : 1);
-            return _unitDictionary[addr].SetStatus(writeProtectEEpromVal, minOK, minNG, bootloaderOnVal, parovanyLED, rozliseniCidel, pracovniJasLed);
+            return await _unitDictionary[addr].SetStatus(writeProtectEEpromVal, minOK, minNG, bootloaderOnVal, parovanyLED, rozliseniCidel, pracovniJasLed);
         }
 
 
-        public static bool NastavCileSmen(byte addr, char varianta, short cil1, short cil2, short cil3)
+        public static async Task<bool> NastavCileSmen(byte addr, char varianta, short cil1, short cil2, short cil3)
         {
             Logger.Info($"addr:{addr} var:{varianta} cil1:{cil1} cil2:{cil2} cil3:{cil3}");
 
             if (_runConfig.IsMockupMode) return true;
 
-            return _unitDictionary[addr].SetCileSmen(varianta, cil1, cil2, cil3);
+            return await _unitDictionary[addr].SetCileSmen(varianta, cil1, cil2, cil3);
         }
 
-        public static bool NastavPrestavky(byte addr, char varianta, short prest1, short prest2, short prest3)
+        public static async Task<bool> NastavPrestavky(byte addr, char varianta, short prest1, short prest2, short prest3)
         {
             Logger.Info($"addr:{addr} var:{varianta} prest1:{prest1} prest2:{prest2} prest3:{prest3}");
 
             if (_runConfig.IsMockupMode) return true;
 
-            return _unitDictionary[addr].SetPrestavky(varianta, (short)prest1, (short)prest2, (short)prest3);
+            return await _unitDictionary[addr].SetPrestavky(varianta, (short)prest1, (short)prest2, (short)prest3);
         }
 
-        public static bool NastavOkNg(byte addr, short ok, short ng)
+        public static async Task<bool> NastavOkNg(byte addr, short ok, short ng)
         {
             Logger.Info($"addr:{addr} ok:{ok} ng:{ng}");
 
             if (_runConfig.IsMockupMode) return true;
 
-            return _unitDictionary[addr].SetCitace(ok, ng);
+            return await _unitDictionary[addr].SetCitace(ok, ng);
         }
 
 
-        public static bool NastavAktualniCas(byte addr)
+        public static async Task<bool> NastavAktualniCas(byte addr)
         {
             Logger.Info("+");
 
             if (_runConfig.IsMockupMode) return true;
 
-            return _unitDictionary[addr].SetCas(new DateTime());
+            return await _unitDictionary[addr].SetCas(new DateTime());
         }
 
 
-        public static bool NastavDefektivitu(byte addr, char varianta, short def1Val, short def2Val, short def3Val)
+        public static async Task<bool> NastavDefektivitu(byte addr, char varianta, short def1Val, short def2Val, short def3Val)
         {
             Logger.Info($"addr:{addr} varianta:{varianta} def1:{def1Val} def2:{def2Val} def3:{def3Val}");
 
             if (_runConfig.IsMockupMode) return true;
             
             Logger.Info($"cil1:{def1Val}");
-            return _unitDictionary[addr].SetDefektivita(varianta, def1Val, def2Val, def3Val );
+            return await _unitDictionary[addr].SetDefektivita(varianta, def1Val, def2Val, def3Val );
         }
 
 
-        public static bool NastavHandshake(byte addr, bool value)
+        public static async Task<bool> NastavHandshake(byte addr, bool value)
         {
             Logger.Info($"addr:{addr} val:{value}");
 
@@ -215,13 +209,13 @@ namespace Slevyr.DataAccess.Services
 
             var um = _unitDictionary[addr];
 
-            var res = um.SetHandshake(value ? (byte)1 : (byte)255, 0);
+            var res = await um.SetHandshake(value ? (byte)1 : (byte)255, 0);
 
             return res;
         }
 
 
-        public static bool CtiStavCitacu(byte addr)
+        public static async Task<bool> CtiStavCitacu(byte addr)
         {
             Logger.Info("+");
 
@@ -232,12 +226,12 @@ namespace Slevyr.DataAccess.Services
                 return true;
             }
 
-            return _unitDictionary[addr].RefreshStavCitacu();
+            return await _unitDictionary[addr].RefreshStavCitacu();
 
         }
 
 
-        public static bool CtiCyklusOkNg(byte addr)
+        public static async Task<bool> CtiCyklusOkNg(byte addr)
         {
             Logger.Info("+");
 
@@ -248,9 +242,7 @@ namespace Slevyr.DataAccess.Services
                 return true;
             }
 
-            float ok;
-            float ng;
-            return _unitDictionary[addr].ReadCasOK(out ok) && _unitDictionary[addr].ReadCasNG(out ng);
+            return await _unitDictionary[addr].RefreshCas();
 
         }
 
