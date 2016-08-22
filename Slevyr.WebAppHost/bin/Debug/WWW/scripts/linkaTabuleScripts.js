@@ -66,6 +66,7 @@ var addr = null;
     }
 
     function readUnitConfig() {
+        clearStatus();
         if (typeof addr != 'undefined' &&  addr != null && addr.length > 1)
         $.getJSON(uri + '/LoadUnitConfig?', {addr: addr})
             .done(function (data) {
@@ -82,7 +83,20 @@ var addr = null;
         readUnitConfig();
     }
 
+    function clearStatus() {
+        $('#okNumValue').text("-");
+        $('#ngNumValue').text("-");
+        $('#okNgRefreshTime').text("-");
+        $('#casOkValue').text("-");
+        $('#casNgValue').text("-");
+
+        $('#cilTabule').text("-");
+        $('#rozdilTabule').text("-");
+        $('#cilDefTabule').text("-");
+    }
+
     function refreshStatus() {
+        clearStatus();
         //alert('status, Addr=' + addr);
         $.getJSON(uri + '/refreshStatus?Addr=' + addr)
             .done(function (data) {

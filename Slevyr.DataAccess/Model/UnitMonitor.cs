@@ -104,13 +104,16 @@ namespace Slevyr.DataAccess.Model
                 Logger.Debug(" -w");
                 //kontrola odeslání
                 var task = _sp.ReadAsync(11);
-                Logger.Debug(" r");
+                Logger.Debug(" -r");
                 task.Wait(MaxTimeToWait);
-                Logger.Debug(" w");
+                Logger.Debug(" -w");
                 _outBuff = task.Result;
+                Logger.Debug(" -res");
             }
 
             Thread.Sleep(RelaxTime);
+
+            Logger.Debug(" CheckSendOk");
 
             var res = CheckSendOk();
             Logger.Debug($"- {res}");
@@ -126,13 +129,13 @@ namespace Slevyr.DataAccess.Model
 
                 //precte vysledky
                 var task = _sp.ReadAsync(11);
-                Logger.Debug(" r");
+                Logger.Debug(" -r");
                 task.Wait(MaxTimeToWait);
-                Logger.Debug(" w");
+                Logger.Debug(" -w");
                 _outBuff = task.Result;
-                Logger.Debug(" res");
-                Logger.Debug(" pred sleep");
+                Logger.Debug(" -res");
                 Thread.Sleep(RelaxTime);
+                Logger.Debug(" -sleep");
             }
 
             Logger.Debug("-");
@@ -185,9 +188,10 @@ namespace Slevyr.DataAccess.Model
 
             if (SendCommand())
             {
+                res = true;
                 //načtení výsledku
-                ReceiveResults();
-                res = CheckResponseOk();
+                //? ReceiveResults();
+                //? res = CheckResponseOk();
             }
             else
             {
@@ -214,8 +218,10 @@ namespace Slevyr.DataAccess.Model
             if (SendCommand())
             {
                 //načtení výsledku
-                ReceiveResults();
-                return CheckResponseOk();
+
+                //ReceiveResults();
+                //return CheckResponseOk();
+                return true;
             }
             else
             {

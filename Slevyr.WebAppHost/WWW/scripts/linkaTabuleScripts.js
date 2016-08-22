@@ -84,15 +84,15 @@ var addr = null;
     }
 
     function clearStatus() {
-        $('#okNumValue').text(data.Ok);
-        $('#ngNumValue').text(data.Ng);
-        $('#okNgRefreshTime').text(new Date().toLocaleTimeString());
-        $('#casOkValue').text(data.CasOk);
-        $('#casNgValue').text(data.CasNg);
+        $('#okNumValue').text("-");
+        $('#ngNumValue').text("-");
+        $('#okNgRefreshTime').text("-");
+        $('#casOkValue').text("-");
+        $('#casNgValue').text("-");
 
-        $('#cilTabule').text(data.CilTabule);
-        $('#rozdilTabule').text(data.RozdilTabule);
-        $('#cilDefTabule').text(data.DefectTabule + "%");
+        $('#cilTabule').text("-");
+        $('#rozdilTabule').text("-");
+        $('#cilDefTabule').text("-");
     }
 
     function refreshStatus() {

@@ -7,10 +7,10 @@ var addr = null;
 $(document).ready(function () {
         readRunConfig();
 
-        //loadParamsFromFile();
+        $("#AddrIdDropDown").change(onAddrIdChange);
        
-        $("#SaveParams").click(saveParams);
-        $("#LoadParams").click(loadParams);
+        $("#SaveParams").click(saveUnitConfig);
+        $("#LoadParams").click(readUnitConfig);
 
         $("#NastavCileSmen").click(nastavCileSmen);
         $("#NastavPrestavky").click(nastavPrestavkySmen);
@@ -48,45 +48,35 @@ $(document).ready(function () {
                 $('#stav').text('Error: ' + err);
                 alert("refreshStatus - error");
             });
-    }
-
-    function readUnitConfig() {
-        if (typeof addr != 'undefined' && addr != null && addr.length > 1)
-            $.getJSON(uri + '/LoadUnitConfig?', { addr: addr })
-                .done(function (data) {
-                    $('#LinkaName').text(data.UnitName);
-                })
-                .fail(function (jqXHR, textStatus, err) {
-                    $('#stav').text('Error: ' + err);
-                    alert("loadParams - error");
-                });
-    }
+    }    
 
     function onAddrIdChange() {
         addr = $("#AddrIdDropDown option:selected").val();
         readUnitConfig();
     }
 
-    function loadParams() {
-        alert('loadParams');
+    function readUnitConfig() {
+        //alert('readUnitConfig'+addr);
         //var addr = $('#addrId').val();
+        if (typeof addr != 'undefined' && addr != null && addr.length > 1)
         $.getJSON(uri + '/LoadUnitConfig', {
             addr: addr
             })
             .done(function (data) {
 
                 $('#TypSmennosti').val(data.TypSmennosti);
-                $('#LinkaName').val(data.UnitName);
+                $('#LinkaName').text(data.UnitName);
+                $('#LinkaNameEdit').val(data.UnitName);                
                 $('#Cil1Smeny').val(data.Cil1Smeny);
                 $('#Cil2Smeny').val(data.Cil2Smeny);
-                $('#Cil3Smeny').val(data.Cil3Smenyil3Smeny);
+                $('#Cil3Smeny').val(data.Cil3Smeny);
                 $('#Def1Smeny').val(data.Def1Smeny);
                 $('#Def2Smeny').val(data.Def2Smeny);
                 $('#Def3Smeny').val(data.Def3Smeny);
 
-                $('#Prestavka1Smeny').val(data.p1Smeny);
-                $('#Prestavka2Smeny').val(data.p2Smeny);
-                $('#Prestavka3Smeny').val(data.p3Smeny);
+                $('#Prestavka1Smeny').val(data.Prestavka1SmenyW3);
+                $('#Prestavka2Smeny').val(data.Prestavka2SmenyW3);
+                $('#Prestavka3Smeny').val(data.Prestavka3SmenyW3);
 
                 $('#WriteProtectEEprom').val(data.WriteProtectEEprom);
 
@@ -102,16 +92,16 @@ $(document).ready(function () {
             })
             .fail(function (jqXHR, textStatus, err) {
                 $('#stav').text('Error: ' + err);
-                alert("loadParams - error");
+                alert("readUnitConfig - error");
             });
     }
 
-    function saveParams() {
-        alert('saveParams');
+    function saveUnitConfig() {
+        //alert('saveUnitConfig');
 
         var model = {
             Addr: addr,
-            UnitName: $('#LinkaName').val(),
+            UnitName: $('#LinkaNameEdit').val(),
             typSmennosti: $('#TypSmennosti').val(),
             cil1Smeny: $('#Cil1Smeny').val(),
             cil2Smeny: $('#Cil2Smeny').val(),
@@ -119,9 +109,9 @@ $(document).ready(function () {
             def1Smeny: $('#Def1Smeny').val(),
             def2Smeny: $('#Def2Smeny').val(),
             def3Smeny: $('#Def3Smeny').val(),
-            prestavka1Smeny: $('#Prestavka1Smeny').val(),
-            prestavka2Smeny: $('#Prestavka2Smeny').val(),
-            prestavka3Smeny: $('#Prestavka3Smeny').val(),
+            prestavka1SmenyW3: $('#Prestavka1Smeny').val(),
+            prestavka2SmenyW3: $('#Prestavka2Smeny').val(),
+            prestavka3SmenyW3: $('#Prestavka3Smeny').val(),
 
             WriteProtectEEprom: $('#WriteProtectEEprom').val(),
             MinOK: $('#MinOk').val(),
@@ -139,11 +129,12 @@ $(document).ready(function () {
             contentType: "application/json"
         }).done(function (res) {
             $('#stav').text('');
+            $('#LinkaName').text(model.UnitName);
             console.log('res', res);
             // Do something with the result :)
         }).fail(function (jqXHR, textStatus, err) {
             $('#stav').text('Error: ' + err);
-            alert("saveParams - error");
+            alert("saveUnitConfig - error");
         });       
     }
 
@@ -175,9 +166,9 @@ $(document).ready(function () {
         alert('nastavPrestavkySmen');
         //var addr = $('#addrId').val();
         var varianta = $('#typSmennosti').val();
-        var p1Smeny = $('#Prest1Smeny').val();
-        var p2Smeny = $('#Prest2Smeny').val();
-        var p3Smeny = $('#Prest3Smeny').val();
+        var p1Smeny = $('#Prestavka1Smeny').val();
+        var p2Smeny = $('#Prestavka2Smeny').val();
+        var p3Smeny = $('#Prestavka3Smeny').val();
         $.getJSON(uri + '/NastavPrestavkySmen',
             {
                 addr: addr,

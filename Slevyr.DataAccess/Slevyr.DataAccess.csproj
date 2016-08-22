@@ -53,6 +53,7 @@
     <Compile Include="Model\UnitMonitor.cs" />
     <Compile Include="Model\UnitStatus.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\Rfc3339DateTime.cs" />
     <Compile Include="Services\Helper.cs" />
     <Compile Include="Services\Mock.cs" />
     <Compile Include="Services\SlevyrService.cs" />

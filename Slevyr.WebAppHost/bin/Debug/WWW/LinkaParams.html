@@ -68,21 +68,21 @@
         </tr>
         <tr>
             <td>Přest&aacute;vka 1. směny</td>
-            <td><input type="text" id="Prest1Smeny" value="10:00" size="5"/></td>
+            <td><input type="time" step="1" id="Prestavka1Smeny" value="10:00" size="5"/></td>
             <td style="text-align: center;" rowspan="3"><input id="NastavPrestavky" type="button" value="Set"/></td>
         </tr>
         <tr>
             <td>Přest&aacute;vka 2. směny</td>
-            <td><input type="text" id="Prest2Smeny" value="10:00" size="5"/></td>
+            <td><input type="time" step="1" id="Prestavka2Smeny" value="10:00" size="5"/></td>
         </tr>
         <tr>
             <td>Přest&aacute;vka 3. směny</td>
-            <td><input type="text" id="Prest3Smeny" value="10:00" size="5"/></td>
+            <td><input type="time" step="1" id="Prestavka3Smeny" value="10:00" size="5"/></td>
         </tr>
         <tr>
             <td style="background-color: darkslategrey;">Write protect EEprom</td>
             <td><input type="text" id="writeProtectEEprom" value="NE" size="5"/></td>
-            <td style="text-align: center;" rowspan="8"><input id="NastavStatus" type="button" value="Set"/></td>
+            <td style="text-align: center;" rowspan="7"><input id="NastavStatus" type="button" value="Set"/></td>
         </tr>
         <tr>
             <td style="background-color: darkslategrey;">Počet dobrých kusů k z.</td>
@@ -108,10 +108,11 @@
             <td style="background-color: darkslategrey;">Adresa Led panelu</td>
             <td><input type="text" id="addrParovanyLED" value="10" size="5"/></td>
         </tr>
-        <!--<tr>
-            <td style="background-color: darkslategrey;">Adresa ř&iacute;d&iacute;c&iacute; jednotky</td>
-            <td><input type="text" id="addrId" value="100" size="5"/></td>
-        </tr>-->
+        <tr>
+            <td style="background-color: darkslategrey;">Název jednotky</td>
+            <td colspan="2"><input type="text" id="LinkaNameEdit" value="-" /></td>
+            <!--<td style="text-align: center;"></td>-->
+        </tr>
         </tbody>
     </table>
 </div>

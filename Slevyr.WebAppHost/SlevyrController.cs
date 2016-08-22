@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -266,9 +267,9 @@ namespace Slevyr.WebAppHost
             double def2Val;
             double def3Val;
 
-            if (!(double.TryParse(def1, out def1Val) && 
-                double.TryParse(def2, out def2Val) && 
-                double.TryParse(def3, out def3Val)))
+            if (!(double.TryParse(def1, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out def1Val) && 
+                double.TryParse(def2, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out def2Val) && 
+                double.TryParse(def3, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out def3Val)))
             {
                 throw new ArgumentException("Neplatná hodnota pro cíl");
             }
