@@ -139,8 +139,7 @@ $(document).ready(function () {
     }
 
     function nastavCileSmen() {
-        alert('nastavCileSmen');
-        //var addr = $('#addrId').val();
+        //alert('nastavCileSmen');
         var varianta  = $('#typSmennosti').val();
         var cil1Smeny = $('#Cil1Smeny').val();
         var cil2Smeny = $('#Cil2Smeny').val();
@@ -163,8 +162,7 @@ $(document).ready(function () {
     }
 
     function nastavPrestavkySmen() {
-        alert('nastavPrestavkySmen');
-        //var addr = $('#addrId').val();
+        //alert('nastavPrestavkySmen');
         var varianta = $('#typSmennosti').val();
         var p1Smeny = $('#Prestavka1Smeny').val();
         var p2Smeny = $('#Prestavka2Smeny').val();
@@ -187,8 +185,7 @@ $(document).ready(function () {
     }
 
     function nastavCitaceOkNg() {
-        alert('nastavCitaceOkNg');
-        //var addr = $('#addrId').val();
+        //alert('nastavCitaceOkNg');
         var ok = $('#ok').val();
         var ng = $('#ng').val();
         $.getJSON(uri + '/NastavOkNg',
@@ -207,8 +204,7 @@ $(document).ready(function () {
     }
 
     function nastavDefektivitu() {
-        alert('nastavDefektivitu');
-        //var addr = $('#addrId').val();
+        //alert('nastavDefektivitu');
         var varianta = $('#typSmennosti').val();
         var def1Smeny = $('#Def1Smeny').val();
         var def2Smeny = $('#Def2Smeny').val();
@@ -231,7 +227,7 @@ $(document).ready(function () {
     }
 
     function nastavStatus() {
-        alert('nastavStatus');
+        //alert('nastavStatus');
         $.getJSON(uri + '/nastavStatus',
             {
                 addr: addr,
