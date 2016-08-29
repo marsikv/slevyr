@@ -23,15 +23,15 @@
 <body>
 <div>
     <h2>Nastavení</h2>
-    <table style="width: 400px; float: left;" border="2">
+    <table style="width: 400px; float: left;" border="2">           
         <thead>
         </thead>
         <caption>&nbsp;</caption>
         <tbody>
-        <tr>
+        <!--<tr>
             <td>Mockup mode</td>
             <td><input id="isMockupMode" type="checkbox" value="Set"/></td>
-        </tr>
+        </tr>-->
         <tr>
             <td>Refresh timer</td>
             <td><input id="isTimerOn" type="checkbox" value="Set"/></td>
@@ -39,6 +39,14 @@
         <tr>
             <td>Refresh timer period [s]</td>
             <td><input type="text" id="timerPeriod" value="10" size="5"/></td>
+        </tr>
+        <tr>
+            <td>Relax time [ms]</td>
+            <td><input type="text" id="relaxTime" value="10" size="5"/></td>
+        </tr>
+        <tr>
+            <td>COM Port read timeout [ms]</td>
+            <td><input type="text" id="portReadTimeout" value="10" size="5"/></td>
         </tr>
         </tbody>
     </table>
@@ -56,13 +64,13 @@
 </div>
 
 <div id="pravyDolni">
-    <a href="index.html">&lArr;&nbsp;Zpět </a>
+    <a href="menu.html">&lArr;&nbsp;Zpět </a>
 </div>
 
 
-    <div id="patka" style="position: absolute; top: 225px">
-        <p id="error" />
-    </div>
+<div id="patka" style="position: absolute; top: 300px">
+    <p id="error"/>
+</div>
 
 </body>
 </html>

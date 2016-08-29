@@ -9,13 +9,15 @@ var uri = 'api/slevyr';
         //alert('readConfig');
         $.getJSON(uri + '/getConfig?')
             .done(function (data) {
-                $('#isMockupMode').prop('checked',data.IsMockupMode);
+                //$('#isMockupMode').prop('checked',data.IsMockupMode);
                 $('#isTimerOn').prop('checked',data.IsRefreshTimerOn);
                 $('#timerPeriod').val(data.RefreshTimerPeriod);
+                $('#relaxTime').val(data.RelaxTime);
+                $('#portReadTimeout').val(data.PortReadTimeout);
             })
             .fail(function (jqXHR, textStatus, err) {
                 $('#error').text('Error: ' + err);
-                alert("refreshStatus - error");
+                alert("getConfig - error");
             });
     }
 
@@ -24,9 +26,12 @@ var uri = 'api/slevyr';
         //alert('applySettings');
         $.getJSON(uri + '/setConfig',
             {
-                isMockupMode: $('#isMockupMode').prop('checked'),
+                //isMockupMode: $('#isMockupMode').prop('checked'),
+                isMockupMode: false,
                 isTimerOn: $('#isTimerOn').prop('checked'),
-                timerPeriod: $('#timerPeriod').val()
+                RefreshTimerPeriod: $('#timerPeriod').val(),
+                RelaxTime: $('#relaxTime').val(),
+                PortReadTimeout: $('#portReadTimeout').val(),
             })
             .done(function (data) {
                 $('#error').text('');

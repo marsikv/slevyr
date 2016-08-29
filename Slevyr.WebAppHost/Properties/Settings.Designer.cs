@@ -25,7 +25,7 @@ namespace Slevyr.WebAppHost.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
         public int RefreshTimerPeriod {
             get {
                 return ((int)(this["RefreshTimerPeriod"]));
@@ -44,18 +44,6 @@ namespace Slevyr.WebAppHost.Properties {
             }
             set {
                 this["JsonFilePath"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("100;101")]
-        public string UnitAddrs {
-            get {
-                return ((string)(this["UnitAddrs"]));
-            }
-            set {
-                this["UnitAddrs"] = value;
             }
         }
         
@@ -104,6 +92,42 @@ namespace Slevyr.WebAppHost.Properties {
             }
             set {
                 this["MockupMode"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("200")]
+        public int RelaxTime {
+            get {
+                return ((int)(this["RelaxTime"]));
+            }
+            set {
+                this["RelaxTime"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5000")]
+        public int PortReadTimeout {
+            get {
+                return ((int)(this["PortReadTimeout"]));
+            }
+            set {
+                this["PortReadTimeout"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100;10;171;172;173;174")]
+        public string UnitAddrs {
+            get {
+                return ((string)(this["UnitAddrs"]));
+            }
+            set {
+                this["UnitAddrs"] = value;
             }
         }
     }

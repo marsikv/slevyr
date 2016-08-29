@@ -55,7 +55,7 @@ namespace Slevyr.DataAccess.Services
             _unitDictionary = new Dictionary<int, UnitMonitor>();
             foreach (var a in runConfig.UnitAddrs)
             {
-                _unitDictionary.Add(a, new UnitMonitor((byte)a, _serialPort, _runConfig.IsMockupMode));
+                _unitDictionary.Add(a, new UnitMonitor((byte)a, _serialPort, _runConfig.IsMockupMode, _runConfig.PortReadTimeout, _runConfig.RelaxTime));
             }
 
             Logger.Info("unit count: " + _unitDictionary.Count);

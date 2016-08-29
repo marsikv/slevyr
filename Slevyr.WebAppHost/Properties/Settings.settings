@@ -3,13 +3,10 @@
   <Profiles />
   <Settings>
     <Setting Name="RefreshTimerPeriod" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">100</Value>
+      <Value Profile="(Default)">10</Value>
     </Setting>
     <Setting Name="JsonFilePath" Type="System.String" Scope="User">
       <Value Profile="(Default)">data</Value>
-    </Setting>
-    <Setting Name="UnitAddrs" Type="System.String" Scope="User">
-      <Value Profile="(Default)">100;101</Value>
     </Setting>
     <Setting Name="BaudRate" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">19200</Value>
@@ -22,6 +19,15 @@
     </Setting>
     <Setting Name="MockupMode" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="RelaxTime" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">200</Value>
+    </Setting>
+    <Setting Name="PortReadTimeout" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">5000</Value>
+    </Setting>
+    <Setting Name="UnitAddrs" Type="System.String" Scope="User">
+      <Value Profile="(Default)">100;10;171;172;173;174</Value>
     </Setting>
   </Settings>
 </SettingsFile>
