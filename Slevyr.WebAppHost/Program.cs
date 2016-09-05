@@ -6,11 +6,12 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Owin.Hosting;
+using NLog;
+using Slevyr.WebAppHost.Properties;
 
 namespace Slevyr.WebAppHost
 {
     /*
-
         http://localhost:5000/api/slevy/nastavOkNg?ok=10&ng=5
 
         http://localhost:5000/api/slevy/nastavDefektivitu?varianta=A&def1=1&def2=33&def3=44
@@ -20,13 +21,15 @@ namespace Slevyr.WebAppHost
         http://localhost:5000/api/slevy/status
 
         http://localhost:5000/api/slevy/closePort
-
     */
+
     class Program
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         static void Main()
         {
-            string baseAddress = "http://localhost:5000/";
+            string baseAddress = Settings.Default.BaseAddress;
 
             // Start OWIN host 
             using (WebApp.Start<Startup>(url: baseAddress))
@@ -46,9 +49,7 @@ namespace Slevyr.WebAppHost
                 }
 
 
-                //response = client.GetAsync(baseAddress + "api/slevy/openPort").Result;
-                //Console.WriteLine("port open:"+response.Content.ReadAsStringAsync().Result);
-
+                Logger.Info($"\nWebApp Started on {baseAddress}\n");
 
                 Console.WriteLine("Stiskem klávesy se služba ukončí !\n");
 

@@ -29,5 +29,8 @@
     <Setting Name="UnitAddrs" Type="System.String" Scope="User">
       <Value Profile="(Default)">100;10;171;172;173;174</Value>
     </Setting>
+    <Setting Name="BaseAddress" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://localhost:5000/</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

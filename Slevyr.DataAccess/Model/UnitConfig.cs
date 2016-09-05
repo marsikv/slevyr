@@ -1,60 +1,99 @@
 ﻿using System;
+using System.IO;
+using System.Security.Cryptography.X509Certificates;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using NLog;
 using Slevyr.DataAccess.Services;
 
 namespace Slevyr.DataAccess.Model
 {
     public class UnitConfig
     {
-        private DateTime _prestavka1Smeny = DateTime.Now.ToUniversalTime();
-        private DateTime _prestavka2Smeny = DateTime.Now.ToUniversalTime();
-        private DateTime _prestavka3Smeny = DateTime.Now.ToUniversalTime();
-
-        public byte Addr = 100;
+        public byte Addr;
         public string UnitName;
         public string TypSmennosti = "A";  //stacil by char
-        public short Cil1Smeny = 1000;
-        public short Cil2Smeny = 2000;
-        public short Cil3Smeny = 3000;
-        public float Def1Smeny = 1.5f;
-        public float Def2Smeny = 1.5f;
-        public float Def3Smeny = 1.5f;
-        public bool WriteProtectEEprom = false;
-        public byte MinOK = 5;
-        public byte MinNG = 5;
-        public bool BootloaderOn = false;
+        public int Cil1Smeny;
+        public int Cil2Smeny;
+        public int Cil3Smeny;
+        public float Def1Smeny;
+        public float Def2Smeny;
+        public float Def3Smeny;
+        public string Prestavka1Smeny;
+        public string Prestavka2Smeny;
+        public string Prestavka3Smeny;
+        public string Zacatek1Smeny;
+        public string Zacatek2Smeny;
+        public string Zacatek3Smeny;
+        public bool WriteProtectEEprom;
+        public byte MinOK;
+        public byte MinNG;
+        public bool BootloaderOn;
         public byte ParovanyLED;
         public byte RozliseniCidel;
         public byte PracovniJasLed;
 
-        public string Prestavka1SmenyW3
+        public TimeSpan Prestavka1SmenyTime => string.IsNullOrWhiteSpace(Prestavka1Smeny) ? TimeSpan.Zero : TimeSpan.Parse(Prestavka1Smeny);
+        public TimeSpan Prestavka2SmenyTime => string.IsNullOrWhiteSpace(Prestavka2Smeny) ? TimeSpan.Zero : TimeSpan.Parse(Prestavka2Smeny);
+        public TimeSpan Prestavka3SmenyTime => string.IsNullOrWhiteSpace(Prestavka3Smeny) ? TimeSpan.Zero : TimeSpan.Parse(Prestavka3Smeny);
+
+        public TimeSpan Zacatek1SmenyTime => string.IsNullOrWhiteSpace(Zacatek1Smeny) ? TimeSpan.Zero : TimeSpan.Parse(Zacatek1Smeny);
+        public TimeSpan Zacatek2SmenyTime => string.IsNullOrWhiteSpace(Zacatek2Smeny) ? TimeSpan.Zero : TimeSpan.Parse(Zacatek2Smeny);
+        public TimeSpan Zacatek3SmenyTime => string.IsNullOrWhiteSpace(Zacatek3Smeny) ? TimeSpan.Zero : TimeSpan.Parse(Zacatek3Smeny);
+
+
+        public void SaveToFile(string dataFilePath)
         {
-            get { return ToRFC3339(_prestavka1Smeny); }
-            set { _prestavka1Smeny = FromRFC3339(value); }
+            JsonSerializer serializer = new JsonSerializer();
+            serializer.Converters.Add(new JavaScriptDateTimeConverter());
+            serializer.NullValueHandling = NullValueHandling.Ignore;
+
+            Directory.CreateDirectory(dataFilePath);
+
+            using (StreamWriter sw = new StreamWriter(Path.Combine(dataFilePath, $"unitCfg_{Addr}.json")))
+            using (JsonWriter writer = new JsonTextWriter(sw))
+            {
+                serializer.Serialize(writer, this);
+            }
         }
 
-        public string Prestavka2SmenyW3
+        public void LoadFromFile(byte addr, string dataFilePath)
         {
-            get { return ToRFC3339(_prestavka2Smeny); }
-            set { _prestavka2Smeny = FromRFC3339(value); }
-        }
+            var fileName = Path.Combine(dataFilePath, $"unitCfg_{addr}.json");
 
-        public string Prestavka3SmenyW3
-        {
-            get { return ToRFC3339(_prestavka3Smeny); }
-            set { _prestavka3Smeny = FromRFC3339(value); }
-        }
+            if (!File.Exists(fileName)) return;
 
+            using (StreamReader file = File.OpenText(fileName))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                var res = (UnitConfig)serializer.Deserialize(file, typeof(UnitConfig));
 
-        private DateTime FromRFC3339(string ds)
-        {
-            return Rfc3339DateTime.Parse(ds);
-        }
+                if (res == null) return;
 
-        
+                Addr = res.Addr;
+                UnitName = res.UnitName;
+                TypSmennosti = res.TypSmennosti;
+                Cil1Smeny = res.Cil1Smeny;
+                Cil2Smeny = res.Cil2Smeny;
+                Cil3Smeny = res.Cil3Smeny;
+                Def1Smeny = res.Def1Smeny;
+                Def2Smeny = res.Def2Smeny;
+                Def3Smeny = res.Def3Smeny;
+                Prestavka1Smeny = res.Prestavka1Smeny;
+                Prestavka2Smeny = res.Prestavka2Smeny;
+                Prestavka3Smeny = res.Prestavka3Smeny;
+                Zacatek1Smeny = res.Zacatek1Smeny;
+                Zacatek2Smeny = res.Zacatek2Smeny;
+                Zacatek3Smeny = res.Zacatek3Smeny;
+                WriteProtectEEprom = res.WriteProtectEEprom;
+                MinOK = res.MinOK;
+                MinNG = res.MinNG;
+                BootloaderOn = res.BootloaderOn;
+                ParovanyLED = res.ParovanyLED;
+                RozliseniCidel = res.RozliseniCidel;
+                PracovniJasLed = res.PracovniJasLed;
 
-        private string ToRFC3339(DateTime dt)
-        {
-            return Rfc3339DateTime.ToString(dt);
+            }
         }
     }
 }

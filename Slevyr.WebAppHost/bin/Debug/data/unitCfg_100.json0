@@ -1,0 +1,1 @@
+{"Addr":100,"UnitName":"TEST","TypSmennosti":"A","Cil1Smeny":1000,"Cil2Smeny":2000,"Cil3Smeny":3000,"Def1Smeny":15.0,"Def2Smeny":15.0,"Def3Smeny":15.0,"Prestavka1Smeny":"10:30:00","Prestavka2Smeny":"16:00:00","Prestavka3Smeny":"22:30:00","WriteProtectEEprom":false,"MinOK":5,"MinNG":5,"BootloaderOn":false,"ParovanyLED":10,"RozliseniCidel":12,"PracovniJasLed":0}

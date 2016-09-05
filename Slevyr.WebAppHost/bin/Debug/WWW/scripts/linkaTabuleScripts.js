@@ -84,15 +84,16 @@ var addr = null;
     }
 
     function clearStatus() {
-        $('#okNumValue').text("-");
-        $('#ngNumValue').text("-");
-        $('#okNgRefreshTime').text("-");
-        $('#casOkValue').text("-");
-        $('#casNgValue').text("-");
+        $('#stav').text('Pracuji...');
+        //$('#okNumValue').text("-");
+        //$('#ngNumValue').text("-");
+        //$('#okNgRefreshTime').text("-");
+        //$('#casOkValue').text("-");
+        //$('#casNgValue').text("-");
 
-        $('#cilTabule').text("-");
-        $('#rozdilTabule').text("-");
-        $('#cilDefTabule').text("-");
+        //$('#cilTabule').text("-");
+        //$('#rozdilTabule').text("-");
+        //$('#cilDefTabule').text("-");
     }
 
     function refreshStatus() {
@@ -107,10 +108,10 @@ var addr = null;
                 $('#casOkValue').text(data.CasOk);
                 $('#casNgValue').text(data.CasNg);
 
-                $('#cilTabule').text(data.CilTabule);
+                $('#cilTabule').text(data.CilKusuTabule);
                 $('#rozdilTabule').text(data.RozdilTabule);
-                $('#cilDefTabule').text(data.DefectTabule + "%");
-                //$('#aktualniDefTabule').text(data.ActDefectTabule);
+                $('#cilDefTabule').text(data.CilDefectTabule + "%");
+                $('#aktualniDefTabule').text(data.AktualDefectTabule);
 
                 $('#stav').text('');
             })

@@ -16,8 +16,6 @@ namespace Slevyr.DataAccess.Services
         #region Fields
         static SerialPortWraper _serialPort;
 
-        //static IEnumerable<int> _unitAddrs;
-
         static Dictionary<int, UnitMonitor> _unitDictionary;
 
         static RunConfig _runConfig = new RunConfig();
@@ -105,17 +103,12 @@ namespace Slevyr.DataAccess.Services
 
         #region UnitStatus operations
 
-        //public static UnitMonitor GetUnit(int Addr)
-        //{
-        //    return _unitDictionary[Addr];
-        //}
-
         public static UnitStatus Status(byte addr)
         {
             Logger.Info("+");
-            if (_runConfig.IsMockupMode) return Mock.MockUnitStatus();
+            //if (_runConfig.IsMockupMode) return Mock.MockUnitStatus();
 
-            _unitDictionary[addr].UnitStatus.RecalcTabule();
+            _unitDictionary[addr].RecalcTabule();
 
             return _unitDictionary[addr].UnitStatus;
         }
@@ -124,7 +117,7 @@ namespace Slevyr.DataAccess.Services
         public static UnitStatus RefreshStatus(byte addr)
         {
             Logger.Info($"+ {addr}");
-            if (_runConfig.IsMockupMode) return Mock.MockUnitStatus();
+            //if (_runConfig.IsMockupMode) return Mock.MockUnitStatus();
 
             short ok, ng;
             Single casOk, casNg;
@@ -139,7 +132,9 @@ namespace Slevyr.DataAccess.Services
             Logger.Info($"   casNg:{casNg}");
 
             //prepocitat pro zobrazeni tabule
-            _unitDictionary[addr].UnitStatus.RecalcTabule();
+            _unitDictionary[addr].RecalcTabule();
+
+            _unitDictionary[addr].UnitStatus.Time = DateTime.Now;
 
             return _unitDictionary[addr].UnitStatus;
         }
@@ -167,13 +162,13 @@ namespace Slevyr.DataAccess.Services
             return _unitDictionary[addr].SetCileSmen(varianta, cil1, cil2, cil3);
         }
 
-        public static bool NastavPrestavky(byte addr, char varianta, short prest1, short prest2, short prest3)
+        public static bool NastavPrestavky(byte addr, char varianta, TimeSpan prest1, TimeSpan prest2, TimeSpan prest3)
         {
             Logger.Info($"addr:{addr} var:{varianta} prest1:{prest1} prest2:{prest2} prest3:{prest3}");
 
             if (_runConfig.IsMockupMode) return true;
 
-            return _unitDictionary[addr].SetPrestavky(varianta, (short)prest1, (short)prest2, (short)prest3);
+            return _unitDictionary[addr].SetPrestavky(varianta, prest1, prest2, prest3);
         }
 
         public static bool NastavOkNg(byte addr, short ok, short ng)
@@ -261,18 +256,9 @@ namespace Slevyr.DataAccess.Services
         public static void SaveUnitConfig(UnitConfig unitCfg)
         {
             Logger.Info($"addr:{unitCfg.Addr}");
-          
-            JsonSerializer serializer = new JsonSerializer();
-            serializer.Converters.Add(new JavaScriptDateTimeConverter());
-            serializer.NullValueHandling = NullValueHandling.Ignore;
 
-            Directory.CreateDirectory(_runConfig.DataFilePath);
-
-            using (StreamWriter sw = new StreamWriter(Path.Combine(_runConfig.DataFilePath, $"unitCfg_{unitCfg.Addr}.json")))
-            using (JsonWriter writer = new JsonTextWriter(sw))
-            {
-                serializer.Serialize(writer, unitCfg);
-            }            
+            _unitDictionary[unitCfg.Addr].UnitConfig = unitCfg;
+            unitCfg.SaveToFile(_runConfig.DataFilePath);                        
         }
 
         #endregion
@@ -281,16 +267,8 @@ namespace Slevyr.DataAccess.Services
         {
             Logger.Info($"addr:{addr}");
 
-            var fileName = Path.Combine(_runConfig.DataFilePath, $"unitCfg_{addr}.json");
-
-            if (!File.Exists(fileName)) return null;
-
-            using (StreamReader file = File.OpenText(fileName))
-            {
-                JsonSerializer serializer = new JsonSerializer();
-                return (UnitConfig)serializer.Deserialize(file, typeof(UnitConfig));
-            }
-            
+            _unitDictionary[addr].LoadUnitConfigFromFile(addr, _runConfig.DataFilePath);
+            return _unitDictionary[addr].UnitConfig;          
         }
     }
 }

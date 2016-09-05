@@ -155,7 +155,7 @@ namespace Slevyr.WebAppHost
         public UnitStatus RefreshStatus([FromUri] byte addr)
         {
             Logger.Info($"+ {addr}");
-            if (RunConfig.IsMockupMode) return Mock.MockUnitStatus();
+            //if (RunConfig.IsMockupMode) return Mock.MockUnitStatus();
 
             try
             {
@@ -190,15 +190,19 @@ namespace Slevyr.WebAppHost
         }
 
         [HttpGet]
-        public bool NastavPrestavkySmen([FromUri] byte addr, [FromUri] char varianta, [FromUri] int prest1, [FromUri] int prest2, [FromUri] int prest3)
+        public bool NastavPrestavkySmen([FromUri] byte addr, [FromUri] char varianta, [FromUri] string prest1, [FromUri] string prest2, [FromUri] string prest3)
         {
             Logger.Info($"addr:{addr}  prest1:{prest1} prest2:{prest2} prest2:{prest2}");
 
             if (RunConfig.IsMockupMode) return true;
 
+            var p1 = TimeSpan.Parse(prest1);
+            var p2 = TimeSpan.Parse(prest2);
+            var p3 = TimeSpan.Parse(prest3);
+
             try
             {
-                return SlevyrService.NastavPrestavky(addr,varianta, (short)prest1, (short)prest2, (short)prest3);
+                return SlevyrService.NastavPrestavky(addr,varianta, p1, p2, p3);
             }
             catch (KeyNotFoundException)
             {

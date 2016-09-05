@@ -74,9 +74,13 @@ $(document).ready(function () {
                 $('#Def2Smeny').val(data.Def2Smeny);
                 $('#Def3Smeny').val(data.Def3Smeny);
 
-                $('#Prestavka1Smeny').val(data.Prestavka1SmenyW3);
-                $('#Prestavka2Smeny').val(data.Prestavka2SmenyW3);
-                $('#Prestavka3Smeny').val(data.Prestavka3SmenyW3);
+                $('#Prestavka1Smeny').val(data.Prestavka1Smeny);
+                $('#Prestavka2Smeny').val(data.Prestavka2Smeny);
+                $('#Prestavka3Smeny').val(data.Prestavka3Smeny);
+
+                $('#Zacatek1Smeny').val(data.Zacatek1Smeny);
+                $('#Zacatek2Smeny').val(data.Zacatek2Smeny);
+                $('#Zacatek3Smeny').val(data.Zacatek3Smeny);
 
                 $('#WriteProtectEEprom').val(data.WriteProtectEEprom);
 
@@ -102,17 +106,19 @@ $(document).ready(function () {
         var model = {
             Addr: addr,
             UnitName: $('#LinkaNameEdit').val(),
-            typSmennosti: $('#TypSmennosti').val(),
-            cil1Smeny: $('#Cil1Smeny').val(),
-            cil2Smeny: $('#Cil2Smeny').val(),
-            cil3Smeny: $('#Cil3Smeny').val(),
-            def1Smeny: $('#Def1Smeny').val(),
-            def2Smeny: $('#Def2Smeny').val(),
-            def3Smeny: $('#Def3Smeny').val(),
-            prestavka1SmenyW3: $('#Prestavka1Smeny').val(),
-            prestavka2SmenyW3: $('#Prestavka2Smeny').val(),
-            prestavka3SmenyW3: $('#Prestavka3Smeny').val(),
-
+            TypSmennosti: $('#TypSmennosti').val(),
+            Cil1Smeny: $('#Cil1Smeny').val(),
+            Cil2Smeny: $('#Cil2Smeny').val(),
+            Cil3Smeny: $('#Cil3Smeny').val(),
+            Def1Smeny: $('#Def1Smeny').val(),
+            Def2Smeny: $('#Def2Smeny').val(),
+            Def3Smeny: $('#Def3Smeny').val(),
+            Prestavka1Smeny: $('#Prestavka1Smeny').val(),
+            Prestavka2Smeny: $('#Prestavka2Smeny').val(),
+            Prestavka3Smeny: $('#Prestavka3Smeny').val(),
+            Zacatek1Smeny: $('#Zacatek1Smeny').val(),
+            Zacatek2Smeny: $('#Zacatek2Smeny').val(),
+            Zacatek3Smeny: $('#Zacatek3Smeny').val(),
             WriteProtectEEprom: $('#WriteProtectEEprom').val(),
             MinOK: $('#MinOk').val(),
             MinNG: $('#MinNg').val(),

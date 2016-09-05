@@ -130,5 +130,14 @@ namespace Slevyr.WebAppHost.Properties {
                 this["UnitAddrs"] = value;
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://localhost:5000/")]
+        public string BaseAddress {
+            get {
+                return ((string)(this["BaseAddress"]));
+            }
+        }
     }
 }
