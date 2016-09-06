@@ -58,6 +58,8 @@ var addr = null;
 
                 onAddrIdChange();
 
+                $('#stav').text('');
+
             })
             .fail(function (jqXHR, textStatus, err) {
                 $('#stav').text('Error: ' + err);
@@ -71,6 +73,7 @@ var addr = null;
         $.getJSON(uri + '/LoadUnitConfig?', {addr: addr})
             .done(function (data) {
                 $('#LinkaName').text(data.UnitName);
+                $('#stav').text('');
             })
             .fail(function (jqXHR, textStatus, err) {
                 $('#stav').text('Error: ' + err);
