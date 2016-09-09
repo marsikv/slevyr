@@ -11,6 +11,8 @@ var addr = null;
        
         $("#RefreshStatus").click(refreshStatus);
 
+        $("#GetStatus").click(getStatus);
+
         $("#AddrIdDropDown").change(onAddrIdChange);
 
     });
@@ -25,7 +27,7 @@ var addr = null;
                 if (isTimerEnabled && (timerRefreshPeriod > 0)) {
                     //alert('set timer to ' + timerRefreshPeriod);
                     if (refreshTimer) window.clearInterval(refreshTimer);                    
-                    refreshTimer = window.setInterval(refreshStatus, timerRefreshPeriod * 1000);
+                    refreshTimer = window.setInterval(getStatus, timerRefreshPeriod * 1000);
                 }
                 else {
                     if (refreshTimer) {
@@ -63,7 +65,7 @@ var addr = null;
             })
             .fail(function (jqXHR, textStatus, err) {
                 $('#stav').text('Error: ' + err);
-                alert("refreshStatus - error");
+                alert("getConfig - error");
             });
     }
 
@@ -107,7 +109,8 @@ var addr = null;
                 //alert('status,okNumValue =' + data.Ok);
                 $('#okNumValue').text(data.Ok);
                 $('#ngNumValue').text(data.Ng);
-                $('#okNgRefreshTime').text(new Date().toLocaleTimeString());
+                //$('#okNgRefreshTime').text(new Date().toLocaleTimeString());
+                $('#okNgRefreshTime').text(data.TimeStr);
                 $('#casOkValue').text(data.CasOk);
                 $('#casNgValue').text(data.CasNg);
 
@@ -121,6 +124,31 @@ var addr = null;
             .fail(function (jqXHR, textStatus, err) {
                 $('#stav').text('Error: ' + err);
                 alert("refreshStatus - error");
+            });
+    }
+
+    function getStatus() {
+        clearStatus();
+        //alert('status, Addr=' + addr);
+        $.getJSON(uri + '/getStatus?Addr=' + addr)
+            .done(function (data) {
+                //alert('status,okNumValue =' + data.Ok);
+                $('#okNumValue').text(data.Ok);
+                $('#ngNumValue').text(data.Ng);
+                $('#okNgRefreshTime').text(new Date().toLocaleTimeString());
+                $('#casOkValue').text(data.CasOk);
+                $('#casNgValue').text(data.CasNg);
+
+                $('#cilTabule').text(data.CilKusuTabule);
+                $('#rozdilTabule').text(data.RozdilTabule);
+                $('#cilDefTabule').text(data.CilDefectTabule + "%");
+                $('#aktualniDefTabule').text(data.AktualDefectTabule);
+
+                $('#stav').text('');
+            })
+            .fail(function (jqXHR, textStatus, err) {
+                $('#stav').text('Error: ' + err);
+                alert("getStatus - error");
             });
     }
 

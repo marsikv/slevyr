@@ -572,6 +572,7 @@ namespace Slevyr.DataAccess.Model
 
         public bool ReadStavCitacu(out short ok, out short ng)
         {
+            Logger.Debug($"+ unit {_address}");
             bool res = false;
 
             if (_isMockupMode)
@@ -609,6 +610,8 @@ namespace Slevyr.DataAccess.Model
 
             UnitStatus.IsOkNg = res;
 
+            Logger.Debug($"- unit {_address}");
+
             return res;
         }
 
@@ -621,6 +624,8 @@ namespace Slevyr.DataAccess.Model
 
         public bool ReadCasOK(out Single value)
         {
+            Logger.Debug($"+ unit {_address}");
+
             bool res = false;
 
             if (_isMockupMode)
@@ -654,11 +659,15 @@ namespace Slevyr.DataAccess.Model
 
             UnitStatus.IsCasOk = res;
 
+            Logger.Debug($"- unit {_address}");
+
             return res;
         }
 
         public bool ReadCasNG(out Single value)
         {
+            Logger.Debug($"+ unit {_address}");
+
             bool res = false;
 
             if (_isMockupMode)
@@ -690,6 +699,8 @@ namespace Slevyr.DataAccess.Model
             }
 
             UnitStatus.IsCasNg = res;
+
+            Logger.Debug($"- unit {_address}");
 
             return res;
         }

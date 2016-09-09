@@ -7,6 +7,7 @@ namespace Slevyr.DataAccess.Model
         public bool IsMockupMode;
         public bool IsRefreshTimerOn;
         public int RefreshTimerPeriod;
+        //public int WorkerTimerPeriod;
         public int RelaxTime;
         public int PortReadTimeout;
         public string DataFilePath;

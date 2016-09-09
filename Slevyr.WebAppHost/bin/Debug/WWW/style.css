@@ -72,7 +72,7 @@ input[type=button]:focus {
 
 #obsah       { position: absolute; width: 500px; top: 120px; left: 150px; }
 /*#patka       { width: 400px;  background: #ed1c24; border: 2px solid #7f0011;}*/
-#levyDolni   { position: absolute; width: 180px; left: 0px; }
-#pravyDolni  { position: absolute; width: 180px; left: 220px; }
+#levyDolni   { position: absolute; width: 400px; left: 0px; }
+#pravyDolni  { position: absolute; width: 400px; left: 220px; }
 #patka       { width: 400px; }
 

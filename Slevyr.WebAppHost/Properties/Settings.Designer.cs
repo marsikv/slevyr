@@ -25,18 +25,6 @@ namespace Slevyr.WebAppHost.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("10")]
-        public int RefreshTimerPeriod {
-            get {
-                return ((int)(this["RefreshTimerPeriod"]));
-            }
-            set {
-                this["RefreshTimerPeriod"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("data")]
         public string JsonFilePath {
             get {
@@ -119,24 +107,36 @@ namespace Slevyr.WebAppHost.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("100;10;171;172;173;174")]
-        public string UnitAddrs {
-            get {
-                return ((string)(this["UnitAddrs"]));
-            }
-            set {
-                this["UnitAddrs"] = value;
-            }
-        }
-        
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("http://localhost:5000/")]
         public string BaseAddress {
             get {
                 return ((string)(this["BaseAddress"]));
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int RefreshTimerPeriod {
+            get {
+                return ((int)(this["RefreshTimerPeriod"]));
+            }
+            set {
+                this["RefreshTimerPeriod"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        public string UnitAddrs {
+            get {
+                return ((string)(this["UnitAddrs"]));
+            }
+            set {
+                this["UnitAddrs"] = value;
             }
         }
     }

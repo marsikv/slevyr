@@ -52,6 +52,7 @@ namespace Slevyr.WebAppHost
                 IsMockupMode = Settings.Default.MockupMode,
                 IsRefreshTimerOn = Settings.Default.IsRefreshTimerOn,
                 RefreshTimerPeriod = Settings.Default.RefreshTimerPeriod,
+                //WorkerTimerPeriod = Settings.Default.WorkerTimerPeriod,
                 RelaxTime = Settings.Default.RelaxTime,
                 PortReadTimeout = Settings.Default.PortReadTimeout,
                 DataFilePath = Settings.Default.JsonFilePath,
@@ -95,6 +96,12 @@ namespace Slevyr.WebAppHost
             RunConfig.RefreshTimerPeriod = refreshTimerPeriod;
             RunConfig.PortReadTimeout = portReadTimeout;
             RunConfig.RelaxTime = relaxTime;
+
+            if (isTimerOn)
+                SlevyrService.StartWorker();
+            else
+                SlevyrService.StopWorker();
+
             return true;
         }
 
@@ -160,6 +167,22 @@ namespace Slevyr.WebAppHost
             try
             {
                 return SlevyrService.RefreshStatus(addr);
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+        }
+
+        [HttpGet]
+        public UnitStatus GetStatus([FromUri] byte addr)
+        {
+            Logger.Info($"+ {addr}");
+            //if (RunConfig.IsMockupMode) return Mock.MockUnitStatus();
+
+            try
+            {
+                return SlevyrService.Status(addr);
             }
             catch (KeyNotFoundException)
             {

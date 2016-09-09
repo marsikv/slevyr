@@ -41,7 +41,7 @@ namespace Slevyr.DataAccess.Model
         public float CilDefectTabule { get; set; }
         public float AktualDefectTabule { get; set; }
         public int RozdilTabule { get; set; }
-
+        public string TimeStr { get; set; }
 
         #endregion
 
@@ -57,6 +57,7 @@ namespace Slevyr.DataAccess.Model
         public void RecalcTabule(UnitConfig unitConfig)
         {
 
+            Logger.Debug($"+ unit {unitConfig.Addr}");
             DateTime dateTimeNow = DateTime.Now;
 
             //pocet sekund od zacátku dne
@@ -152,6 +153,8 @@ namespace Slevyr.DataAccess.Model
             decimal val = ((decimal)Ng / (decimal)Ok) *100;
 
             AktualDefectTabule = (float)Math.Round(val,2);
+
+            Logger.Debug($"- unit {unitConfig.Addr}");
         }
 
         #endregion

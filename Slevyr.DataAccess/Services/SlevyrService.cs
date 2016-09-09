@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
+using System.Timers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using NLog;
@@ -20,7 +23,11 @@ namespace Slevyr.DataAccess.Services
 
         static RunConfig _runConfig = new RunConfig();
 
+        //static Timer _workTimer;
+
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+        private static BackgroundWorker _bw;
 
         public static int SelectedUnit { get; set; }
 
@@ -105,10 +112,7 @@ namespace Slevyr.DataAccess.Services
 
         public static UnitStatus Status(byte addr)
         {
-            Logger.Info("+");
-            //if (_runConfig.IsMockupMode) return Mock.MockUnitStatus();
-
-            _unitDictionary[addr].RecalcTabule();
+            Logger.Info($"+ {addr}");
 
             return _unitDictionary[addr].UnitStatus;
         }
@@ -116,18 +120,16 @@ namespace Slevyr.DataAccess.Services
 
         public static UnitStatus RefreshStatus(byte addr)
         {
-            Logger.Info($"+ {addr}");
-            //if (_runConfig.IsMockupMode) return Mock.MockUnitStatus();
+            Logger.Info($"+ *** unit {addr}");
 
             short ok, ng;
             Single casOk, casNg;
-            Logger.Info("   ReadStavCitacu");
             _unitDictionary[addr].ReadStavCitacu(out ok, out ng);
             Logger.Info($"   ok:{ok} ng:{ng}");
-            Logger.Info("   ReadCasOK");
+
             _unitDictionary[addr].ReadCasOK(out casOk);
             Logger.Info($"   casOk:{casOk}");
-            Logger.Info("   ReadCasNG");
+
             _unitDictionary[addr].ReadCasNG(out casNg);
             Logger.Info($"   casNg:{casNg}");
 
@@ -135,6 +137,9 @@ namespace Slevyr.DataAccess.Services
             _unitDictionary[addr].RecalcTabule();
 
             _unitDictionary[addr].UnitStatus.Time = DateTime.Now;
+            _unitDictionary[addr].UnitStatus.TimeStr = _unitDictionary[addr].UnitStatus.Time.ToShortTimeString();
+
+            Logger.Info($"- *** unit {addr}");
 
             return _unitDictionary[addr].UnitStatus;
         }
@@ -269,6 +274,41 @@ namespace Slevyr.DataAccess.Services
 
             _unitDictionary[addr].LoadUnitConfigFromFile(addr, _runConfig.DataFilePath);
             return _unitDictionary[addr].UnitConfig;          
+        }
+
+        public static void StartWorker()
+        {
+            _bw = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
+            _bw.DoWork += _bw_DoWork;
+            _bw.RunWorkerAsync();
+
+            Logger.Info("*** read worker started ***");
+        }
+
+        private static void _bw_DoWork(object sender, DoWorkEventArgs e)
+        {
+            while (true)
+            {
+                foreach (var addr in UnitAddresses)
+                {
+                    if (_bw.CancellationPending)
+                    {
+                        Logger.Info("*** read worker canceled ***");
+                        return;
+                    }
+
+                    RefreshStatus((byte)addr);
+
+                    Thread.Sleep(500);
+                }
+
+            }
+        }
+
+
+        public static void StopWorker()
+        {
+            _bw.CancelAsync();
         }
     }
 }
