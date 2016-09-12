@@ -52,9 +52,10 @@ namespace Slevyr.WebAppHost
                 IsMockupMode = Settings.Default.MockupMode,
                 IsRefreshTimerOn = Settings.Default.IsRefreshTimerOn,
                 RefreshTimerPeriod = Settings.Default.RefreshTimerPeriod,
-                //WorkerTimerPeriod = Settings.Default.WorkerTimerPeriod,
+                WorkerSleepPeriod = Settings.Default.WorkerSleepPeriod,
                 RelaxTime = Settings.Default.RelaxTime,
-                PortReadTimeout = Settings.Default.PortReadTimeout,
+                ReadResultTimeOut = Settings.Default.ReadResultTimeOut,
+                SendCommandTimeOut = Settings.Default.SendCommandTimeOut,
                 DataFilePath = Settings.Default.JsonFilePath,
                 UnitAddrs = unitAddrs,
             };
@@ -72,6 +73,9 @@ namespace Slevyr.WebAppHost
             SlevyrService.Init(PortConfig, RunConfig);
 
             Logger.Info("unit count: " + SlevyrService.UnitCount);
+
+            if (RunConfig.IsRefreshTimerOn) SlevyrService.StartWorker();
+            
         }
 
         #endregion
@@ -88,14 +92,14 @@ namespace Slevyr.WebAppHost
 
 
         [HttpGet]
-        public bool SetConfig([FromUri] bool isMockupMode,[FromUri] bool isTimerOn, [FromUri] int refreshTimerPeriod, [FromUri] int relaxTime, [FromUri] int portReadTimeout)
+        public bool SetConfig([FromUri] bool isMockupMode,[FromUri] bool isTimerOn, [FromUri] int refreshTimerPeriod)
         {
             Logger.Info($"isMockupMode: {isMockupMode}, isTimerOn: {isTimerOn},timerPeriod: {refreshTimerPeriod}");
             RunConfig.IsMockupMode = isMockupMode;
             RunConfig.IsRefreshTimerOn = isTimerOn;
             RunConfig.RefreshTimerPeriod = refreshTimerPeriod;
-            RunConfig.PortReadTimeout = portReadTimeout;
-            RunConfig.RelaxTime = relaxTime;
+            //RunConfig.PortReadTimeout = portReadTimeout;
+            //RunConfig.RelaxTime = relaxTime;
 
             if (isTimerOn)
                 SlevyrService.StartWorker();
@@ -404,13 +408,13 @@ namespace Slevyr.WebAppHost
         }
 
         [HttpGet]
-        public UnitConfig LoadUnitConfig([FromUri] byte addr)
+        public UnitConfig GetUnitConfig([FromUri] byte addr)
         {
             Logger.Info($"Addr:{addr}");
 
             try
             {
-                var res = SlevyrService.LoadUnitConfig(addr);
+                var res = SlevyrService.GetUnitConfig(addr);
                 return res;
             }
             catch (KeyNotFoundException)

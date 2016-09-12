@@ -5,11 +5,13 @@ namespace Slevyr.DataAccess.Model
     public class RunConfig
     {
         public bool IsMockupMode;
-        public bool IsRefreshTimerOn;
-        public int RefreshTimerPeriod;
-        //public int WorkerTimerPeriod;
-        public int RelaxTime;
-        public int PortReadTimeout;
+        public bool IsRefreshTimerOn;         //predava se do HTML strance "LinkaTabule" a aktivuje timer nacitani stavu
+        public int RefreshTimerPeriod = 1000; //perioda [ms] predavana pro timer nacitani stavu pomoci JS v HTML strance "LinkaTabule"
+        public int WorkerSleepPeriod = 5000;  //doba [ms] po kterou spi worker pred tim nez nacte stav dalsi jednotky
+        public int RelaxTime = 300;           //cekame [ms] po precteni vysledku pred tim nez se posle dalsi pozadavek
+        public int SendCommandTimeOut = 200;  //timeout [ms] pro nacitani potvrzeni odeslaneho prikazu
+        public int ReadResultTimeOut = 5000;  //timeout [ms] pro nacitani dat ktere maji prijit po odeslanem prikazu
+        //public int PortReadTimeout;
         public string DataFilePath;
         public IEnumerable<int> UnitAddrs;
     }

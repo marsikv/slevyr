@@ -1,6 +1,5 @@
 var uri = 'api/slevyr';
 var isTimerEnabled = false;
-var timerRefreshPeriod = 10000;
 var refreshTimer;
 var addr = null;
 
@@ -27,7 +26,7 @@ var addr = null;
                 if (isTimerEnabled && (timerRefreshPeriod > 0)) {
                     //alert('set timer to ' + timerRefreshPeriod);
                     if (refreshTimer) window.clearInterval(refreshTimer);                    
-                    refreshTimer = window.setInterval(getStatus, timerRefreshPeriod * 1000);
+                    refreshTimer = window.setInterval(getStatus, timerRefreshPeriod);
                 }
                 else {
                     if (refreshTimer) {
@@ -46,9 +45,11 @@ var addr = null;
 
                 if (isTimerEnabled) {
                     $("#isTimerOn").text(" [timer on]");
+                    $("#RefreshStatus").prop('disabled', true);
 
                 } else {
                     $("#isTimerOn").text("");
+                    $("#RefreshStatus").prop('disabled', false);
                 }
 
                 $.each(data.UnitAddrs, function (key,value) {
@@ -72,7 +73,7 @@ var addr = null;
     function readUnitConfig() {
         clearStatus();
         if (typeof addr != 'undefined' &&  addr != null && addr.length > 1)
-        $.getJSON(uri + '/LoadUnitConfig?', {addr: addr})
+        $.getJSON(uri + '/GetUnitConfig?', {addr: addr})
             .done(function (data) {
                 $('#LinkaName').text(data.UnitName);
                 $('#stav').text('');
@@ -89,16 +90,7 @@ var addr = null;
     }
 
     function clearStatus() {
-        $('#stav').text('Pracuji...');
-        //$('#okNumValue').text("-");
-        //$('#ngNumValue').text("-");
-        //$('#okNgRefreshTime').text("-");
-        //$('#casOkValue').text("-");
-        //$('#casNgValue').text("-");
-
-        //$('#cilTabule').text("-");
-        //$('#rozdilTabule').text("-");
-        //$('#cilDefTabule').text("-");
+        $('#stav').text('pracuji..');
     }
 
     function refreshStatus() {
@@ -107,12 +99,18 @@ var addr = null;
         $.getJSON(uri + '/refreshStatus?Addr=' + addr)
             .done(function (data) {
                 //alert('status,okNumValue =' + data.Ok);
-                $('#okNumValue').text(data.Ok);
-                $('#ngNumValue').text(data.Ng);
-                //$('#okNgRefreshTime').text(new Date().toLocaleTimeString());
-                $('#okNgRefreshTime').text(data.TimeStr);
+                if (data.IsOkNg) {
+                    $('#okNumValue').text(data.Ok);
+                    $('#ngNumValue').text(data.Ng);
+                    $('#okNgRefreshTime').text(data.OkNgTimeTxt);
+                    $('#chybaJednotky').text('');
+                } else {
+                    $('#chybaJednotky').text('Chyba jednotky - ' + data.ErrorTimeTxt);
+                }
+
                 $('#casOkValue').text(data.CasOk);
                 $('#casNgValue').text(data.CasNg);
+                $('#checkTime').text(data.LastCheckTimeTxt);
 
                 $('#cilTabule').text(data.CilKusuTabule);
                 $('#rozdilTabule').text(data.RozdilTabule);
@@ -123,21 +121,29 @@ var addr = null;
             })
             .fail(function (jqXHR, textStatus, err) {
                 $('#stav').text('Error: ' + err);
-                alert("refreshStatus - error");
+                //alert("refreshStatus - error");
             });
     }
 
     function getStatus() {
-        clearStatus();
+        //clearStatus();
         //alert('status, Addr=' + addr);
         $.getJSON(uri + '/getStatus?Addr=' + addr)
             .done(function (data) {
                 //alert('status,okNumValue =' + data.Ok);
-                $('#okNumValue').text(data.Ok);
-                $('#ngNumValue').text(data.Ng);
-                $('#okNgRefreshTime').text(new Date().toLocaleTimeString());
+                if (data.IsOkNg) {
+                    $('#okNumValue').text(data.Ok);
+                    $('#ngNumValue').text(data.Ng);
+                    $('#okNgRefreshTime').text(data.OkNgTimeTxt);
+                    $('#chybaJednotky').text('');
+                } else {
+                    //TODO vypsat kdy zjisteno a kdy proveden posledni test
+                    $('#chybaJednotky').text('Chyba jednotky - ' + data.ErrorTimeTxt);
+                }
+
                 $('#casOkValue').text(data.CasOk);
                 $('#casNgValue').text(data.CasNg);
+                $('#checkTime').text(data.LastCheckTimeTxt);                
 
                 $('#cilTabule').text(data.CilKusuTabule);
                 $('#rozdilTabule').text(data.RozdilTabule);
@@ -148,36 +154,7 @@ var addr = null;
             })
             .fail(function (jqXHR, textStatus, err) {
                 $('#stav').text('Error: ' + err);
-                alert("getStatus - error");
+                //alert("getStatus - error");
             });
     }
 
-    //function openPort() {
-    //    //alert("openPort");
-
-    //    $.getJSON(uri + '/openPort',
-    //        {                
-    //        })
-    //        .done(function (data) {
-    //            $('#stav').text('serial port open');
-    //        })
-    //        .fail(function (jqXHR, textStatus, err) {
-    //            $('#stav').text('Error: ' + err);
-    //            alert("'); - error");
-    //        });
-    //}
-
-    //function closePort() {
-    //    //alert("closePort");
-
-    //    $.getJSON(uri + '/closePort',
-    //        {
-    //        })
-    //        .done(function (data) {
-    //            $('#stav').text('serial port closed');
-    //        })
-    //        .fail(function (jqXHR, textStatus, err) {
-    //            $('#stav').text('Error: ' + err);
-    //            alert("'); - error");
-    //        });
-    //}

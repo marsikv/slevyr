@@ -49,7 +49,7 @@ namespace Slevyr.WebAppHost.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool IsRefreshTimerOn {
             get {
                 return ((bool)(this["IsRefreshTimerOn"]));
@@ -85,25 +85,13 @@ namespace Slevyr.WebAppHost.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("200")]
+        [global::System.Configuration.DefaultSettingValueAttribute("300")]
         public int RelaxTime {
             get {
                 return ((int)(this["RelaxTime"]));
             }
             set {
                 this["RelaxTime"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("5000")]
-        public int PortReadTimeout {
-            get {
-                return ((int)(this["PortReadTimeout"]));
-            }
-            set {
-                this["PortReadTimeout"] = value;
             }
         }
         
@@ -118,7 +106,7 @@ namespace Slevyr.WebAppHost.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
         public int RefreshTimerPeriod {
             get {
                 return ((int)(this["RefreshTimerPeriod"]));
@@ -137,6 +125,42 @@ namespace Slevyr.WebAppHost.Properties {
             }
             set {
                 this["UnitAddrs"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5000")]
+        public int WorkerSleepPeriod {
+            get {
+                return ((int)(this["WorkerSleepPeriod"]));
+            }
+            set {
+                this["WorkerSleepPeriod"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("200")]
+        public int SendCommandTimeOut {
+            get {
+                return ((int)(this["SendCommandTimeOut"]));
+            }
+            set {
+                this["SendCommandTimeOut"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5000")]
+        public int ReadResultTimeOut {
+            get {
+                return ((int)(this["ReadResultTimeOut"]));
+            }
+            set {
+                this["ReadResultTimeOut"] = value;
             }
         }
     }

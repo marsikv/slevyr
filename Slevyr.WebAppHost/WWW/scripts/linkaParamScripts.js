@@ -1,6 +1,5 @@
 var uri = 'api/slevyr';
 var isTimerEnabled = false;
-var timerRefreshPeriod = 10000;
 var refreshTimer;
 var addr = null;
 
@@ -59,7 +58,7 @@ $(document).ready(function () {
         //alert('readUnitConfig'+addr);
         //var addr = $('#addrId').val();
         if (typeof addr != 'undefined' && addr != null && addr.length > 1)
-        $.getJSON(uri + '/LoadUnitConfig', {
+        $.getJSON(uri + '/GetUnitConfig', {
             addr: addr
             })
             .done(function (data) {

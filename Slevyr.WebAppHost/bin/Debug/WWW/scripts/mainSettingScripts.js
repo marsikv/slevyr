@@ -30,8 +30,8 @@ var uri = 'api/slevyr';
                 isMockupMode: false,
                 isTimerOn: $('#isTimerOn').prop('checked'),
                 RefreshTimerPeriod: $('#timerPeriod').val(),
-                RelaxTime: $('#relaxTime').val(),
-                PortReadTimeout: $('#portReadTimeout').val(),
+                //RelaxTime: $('#relaxTime').val(),
+                //PortReadTimeout: $('#portReadTimeout').val(),
             })
             .done(function (data) {
                 $('#error').text('');

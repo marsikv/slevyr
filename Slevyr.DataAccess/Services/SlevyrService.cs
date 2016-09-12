@@ -26,6 +26,7 @@ namespace Slevyr.DataAccess.Services
         //static Timer _workTimer;
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger UnitsLogger = LogManager.GetLogger("Units");
 
         private static BackgroundWorker _bw;
 
@@ -55,12 +56,15 @@ namespace Slevyr.DataAccess.Services
 
             _runConfig = runConfig;
 
-            //_unitAddrs = unitAddrs;
-
             _unitDictionary = new Dictionary<int, UnitMonitor>();
             foreach (var a in runConfig.UnitAddrs)
             {
-                _unitDictionary.Add(a, new UnitMonitor((byte)a, _serialPort, _runConfig.IsMockupMode, _runConfig.PortReadTimeout, _runConfig.RelaxTime));
+                _unitDictionary.Add(a, new UnitMonitor((byte)a, _serialPort, _runConfig));
+            }
+
+            foreach (var m in _unitDictionary.Values)
+            {
+                 m.LoadUnitConfigFromFile(m.Address, _runConfig.DataFilePath);
             }
 
             Logger.Info("unit count: " + _unitDictionary.Count);
@@ -125,21 +129,23 @@ namespace Slevyr.DataAccess.Services
             short ok, ng;
             Single casOk, casNg;
             _unitDictionary[addr].ReadStavCitacu(out ok, out ng);
-            Logger.Info($"   ok:{ok} ng:{ng}");
+            Logger.Info($">ok:{ok} ng:{ng}");
+            UnitsLogger.Info($"unit {addr}");
+            UnitsLogger.Info($" ok:{ok} ng:{ng}");
 
             _unitDictionary[addr].ReadCasOK(out casOk);
-            Logger.Info($"   casOk:{casOk}");
+            Logger.Info($">casOk:{casOk}");
 
             _unitDictionary[addr].ReadCasNG(out casNg);
-            Logger.Info($"   casNg:{casNg}");
+            Logger.Info($">casNg:{casNg}");
+            UnitsLogger.Info($" casOk:{casOk} casNg:{casNg}");
 
             //prepocitat pro zobrazeni tabule
             _unitDictionary[addr].RecalcTabule();
 
-            _unitDictionary[addr].UnitStatus.Time = DateTime.Now;
-            _unitDictionary[addr].UnitStatus.TimeStr = _unitDictionary[addr].UnitStatus.Time.ToShortTimeString();
+            _unitDictionary[addr].UnitStatus.LastCheckTime = DateTime.Now;
 
-            Logger.Info($"- *** unit {addr}");
+            Logger.Info($"-");
 
             return _unitDictionary[addr].UnitStatus;
         }
@@ -268,11 +274,12 @@ namespace Slevyr.DataAccess.Services
 
         #endregion
 
-        public static UnitConfig LoadUnitConfig(byte addr)
+        public static UnitConfig GetUnitConfig(byte addr)
         {
             Logger.Info($"addr:{addr}");
 
-            _unitDictionary[addr].LoadUnitConfigFromFile(addr, _runConfig.DataFilePath);
+            //nacteno je jiz pri startu
+            //_unitDictionary[addr].LoadUnitConfigFromFile(addr, _runConfig.DataFilePath);
             return _unitDictionary[addr].UnitConfig;          
         }
 
@@ -289,6 +296,9 @@ namespace Slevyr.DataAccess.Services
         {
             while (true)
             {
+                Logger.Debug($"---");
+                ClosePort();
+                OpenPort();
                 foreach (var addr in UnitAddresses)
                 {
                     if (_bw.CancellationPending)
@@ -299,7 +309,9 @@ namespace Slevyr.DataAccess.Services
 
                     RefreshStatus((byte)addr);
 
-                    Thread.Sleep(500);
+                    Logger.Debug($"+worker sleep: {_runConfig.WorkerSleepPeriod}");
+                    Thread.Sleep(_runConfig.WorkerSleepPeriod);  //pauza pred ctenim dalsi jednotky - parametr
+                    Logger.Debug("-worker sleep");
                 }
 
             }
