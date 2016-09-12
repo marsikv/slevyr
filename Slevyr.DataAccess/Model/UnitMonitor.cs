@@ -659,7 +659,6 @@ namespace Slevyr.DataAccess.Model
                 if (res)
                 {
                     value = Helper.ToSingle(_outBuff, 7);
-                    value = 123.456F;
                     UnitStatus.CasOk = value;
                     UnitStatus.CasOkTime = DateTime.Now;
                 }                
