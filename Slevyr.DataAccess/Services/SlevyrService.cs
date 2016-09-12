@@ -29,6 +29,7 @@ namespace Slevyr.DataAccess.Services
         private static readonly Logger UnitsLogger = LogManager.GetLogger("Units");
 
         private static BackgroundWorker _bw;
+        private static bool _isWorkerStarted;
 
         public static int SelectedUnit { get; set; }
 
@@ -133,12 +134,15 @@ namespace Slevyr.DataAccess.Services
             UnitsLogger.Info($"unit {addr}");
             UnitsLogger.Info($" ok:{ok} ng:{ng}");
 
-            _unitDictionary[addr].ReadCasOK(out casOk);
-            Logger.Info($">casOk:{casOk}");
+            if (_runConfig.IsReadOkNgTime)
+            {
+                _unitDictionary[addr].ReadCasOK(out casOk);
+                Logger.Info($">casOk:{casOk}");
 
-            _unitDictionary[addr].ReadCasNG(out casNg);
-            Logger.Info($">casNg:{casNg}");
-            UnitsLogger.Info($" casOk:{casOk} casNg:{casNg}");
+                _unitDictionary[addr].ReadCasNG(out casNg);
+                Logger.Info($">casNg:{casNg}");
+                UnitsLogger.Info($" casOk:{casOk} casNg:{casNg}");
+            }
 
             //prepocitat pro zobrazeni tabule
             _unitDictionary[addr].RecalcTabule();
@@ -285,11 +289,19 @@ namespace Slevyr.DataAccess.Services
 
         public static void StartWorker()
         {
+            if (_isWorkerStarted) return;
+
+            _isWorkerStarted = true;
             _bw = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
             _bw.DoWork += _bw_DoWork;
             _bw.RunWorkerAsync();
 
             Logger.Info("*** read worker started ***");
+        }
+
+        public static void StopWorker()
+        {
+            _bw.CancelAsync();
         }
 
         private static void _bw_DoWork(object sender, DoWorkEventArgs e)
@@ -304,6 +316,7 @@ namespace Slevyr.DataAccess.Services
                     if (_bw.CancellationPending)
                     {
                         Logger.Info("*** read worker canceled ***");
+                        _isWorkerStarted = false;
                         return;
                     }
 
@@ -318,9 +331,5 @@ namespace Slevyr.DataAccess.Services
         }
 
 
-        public static void StopWorker()
-        {
-            _bw.CancelAsync();
-        }
     }
 }

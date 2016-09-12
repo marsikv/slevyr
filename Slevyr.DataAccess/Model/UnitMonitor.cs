@@ -149,10 +149,10 @@ namespace Slevyr.DataAccess.Model
             _sp.DiscardInBuffer();
         }
 
-        private bool SendCommandBasic()
+        private bool SendCommandBasic(int a)
         {
             bool res;
-            Logger.Debug("+");
+            Logger.Debug($"+ attempt:{a}");
             //lock (lockobj)
             //{
                 if (!_sp.IsOpen) return false;
@@ -202,20 +202,20 @@ namespace Slevyr.DataAccess.Model
 
             lock (lockobj)
             {
-                sendOk = SendCommandBasic();
+                sendOk = SendCommandBasic(1);
 
                 if (!sendOk)
                 {
                     Thread.Sleep(200);
                     DiscardSendBuffer();
-                    sendOk = SendCommandBasic();
+                    sendOk = SendCommandBasic(2);
                 }
 
                 if (!sendOk)
                 {
                     Thread.Sleep(200);
                     DiscardSendBuffer();
-                    sendOk = SendCommandBasic();
+                    sendOk = SendCommandBasic(3);
                 }
 
                 if (!sendOk)
@@ -228,14 +228,14 @@ namespace Slevyr.DataAccess.Model
             return sendOk;
         }
 
-        private bool ReceiveResultsBasic()
+        private bool ReceiveResultsBasic(int a)
         {
             bool res = false;
-            Logger.Debug("+");
+            Logger.Debug($"+ attempt:{a}");
 
             //lock (lockobj)
             //{
-                if (!_sp.IsOpen) return false;
+            if (!_sp.IsOpen) return false;
 
                 //precte vysledky
                 try
@@ -278,20 +278,20 @@ namespace Slevyr.DataAccess.Model
             lock (lockobj)
             {
 
-                res = ReceiveResultsBasic();
+                res = ReceiveResultsBasic(1);
 
                 if (!res)
                 {
                     Thread.Sleep(200);
                     DiscardSendBuffer();
-                    res = ReceiveResultsBasic();
+                    res = ReceiveResultsBasic(2);
                 }
 
                 if (!res)
                 {
                     Thread.Sleep(200);
                     DiscardSendBuffer();
-                    res = ReceiveResultsBasic();
+                    res = ReceiveResultsBasic(3);
                 }
 
                 if (!res)
@@ -659,6 +659,7 @@ namespace Slevyr.DataAccess.Model
                 if (res)
                 {
                     value = Helper.ToSingle(_outBuff, 7);
+                    value = 123.456F;
                     UnitStatus.CasOk = value;
                     UnitStatus.CasOkTime = DateTime.Now;
                 }                

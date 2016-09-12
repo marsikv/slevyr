@@ -163,5 +163,17 @@ namespace Slevyr.WebAppHost.Properties {
                 this["ReadResultTimeOut"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool IsReadOkNgTime {
+            get {
+                return ((bool)(this["IsReadOkNgTime"]));
+            }
+            set {
+                this["IsReadOkNgTime"] = value;
+            }
+        }
     }
 }

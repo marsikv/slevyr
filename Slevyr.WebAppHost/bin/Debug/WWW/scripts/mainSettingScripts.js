@@ -10,7 +10,8 @@ var uri = 'api/slevyr';
         $.getJSON(uri + '/getConfig?')
             .done(function (data) {
                 //$('#isMockupMode').prop('checked',data.IsMockupMode);
-                $('#isTimerOn').prop('checked',data.IsRefreshTimerOn);
+                $('#isTimerOn').prop('checked', data.IsRefreshTimerOn);
+                $('#isReadOkNgTime').prop('checked', data.IsReadOkNgTime);
                 $('#timerPeriod').val(data.RefreshTimerPeriod);
                 $('#relaxTime').val(data.RelaxTime);
                 $('#portReadTimeout').val(data.PortReadTimeout);
@@ -30,6 +31,7 @@ var uri = 'api/slevyr';
                 isMockupMode: false,
                 isTimerOn: $('#isTimerOn').prop('checked'),
                 RefreshTimerPeriod: $('#timerPeriod').val(),
+                ReadCasOkNg: $('#isReadOkNgTime').prop('checked')
                 //RelaxTime: $('#relaxTime').val(),
                 //PortReadTimeout: $('#portReadTimeout').val(),
             })

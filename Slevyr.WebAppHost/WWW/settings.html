@@ -38,7 +38,11 @@
         </tr>
         <tr>
             <td>Refresh timer period [ms]</td>
-            <td><input type="text" id="timerPeriod" value="10" size="5"/></td>
+            <td><input type="text" id="timerPeriod" value="1000" size="5"/></td>
+        </tr>
+        <tr>
+            <td>Načítat poslední čas OK a NG</td>
+            <td><input id="isReadOkNgTime" type="checkbox" value="Set" /></td>
         </tr>
         <!--<tr>
             <td>Relax time [ms]</td>
@@ -58,15 +62,30 @@
    
 </div>-->
 
-<div id="levyDolni">
-    <input type="button" value="Apply" id="Apply" /> 
-    <input type="button" value="Synchro času" id="SyncTime" />
-</div>
-
-<div id="pravyDolni">
+<!--<div id="levyDolni">
+    <input type="button" value="Apply" id="Apply"/>
+    <input type="button" value="Synchro času" id="SyncTime"/>
     <a href="menu.html">&lArr;&nbsp;Zpět </a>
-</div>
+</div>-->
 
+
+
+<!--<div id="pravyDolni">
+    <a href="menu.html">&lArr;&nbsp;Zpět </a>
+</div>-->
+
+
+<div>
+    <table style="width: 400px;">
+        <tbody>
+            <tr>
+                <td><input id="Apply" type="button" value="Apply" /></td>
+                <td><input id="SyncTime" type="button" value="Synchro času" /></td>
+                <td><a href="menu.html">&lArr;&nbsp;Zpět</a></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 
 <div id="patka" style="position: absolute; top: 300px">
     <p id="error"/>

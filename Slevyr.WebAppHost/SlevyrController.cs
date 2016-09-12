@@ -51,6 +51,7 @@ namespace Slevyr.WebAppHost
             {
                 IsMockupMode = Settings.Default.MockupMode,
                 IsRefreshTimerOn = Settings.Default.IsRefreshTimerOn,
+                IsReadOkNgTime = Settings.Default.IsReadOkNgTime,
                 RefreshTimerPeriod = Settings.Default.RefreshTimerPeriod,
                 WorkerSleepPeriod = Settings.Default.WorkerSleepPeriod,
                 RelaxTime = Settings.Default.RelaxTime,
@@ -92,12 +93,13 @@ namespace Slevyr.WebAppHost
 
 
         [HttpGet]
-        public bool SetConfig([FromUri] bool isMockupMode,[FromUri] bool isTimerOn, [FromUri] int refreshTimerPeriod)
+        public bool SetConfig([FromUri] bool isMockupMode,[FromUri] bool isTimerOn, [FromUri] int refreshTimerPeriod, [FromUri] bool readCasOkNg)
         {
             Logger.Info($"isMockupMode: {isMockupMode}, isTimerOn: {isTimerOn},timerPeriod: {refreshTimerPeriod}");
             RunConfig.IsMockupMode = isMockupMode;
             RunConfig.IsRefreshTimerOn = isTimerOn;
             RunConfig.RefreshTimerPeriod = refreshTimerPeriod;
+            RunConfig.IsReadOkNgTime = readCasOkNg;
             //RunConfig.PortReadTimeout = portReadTimeout;
             //RunConfig.RelaxTime = relaxTime;
 

@@ -45,11 +45,19 @@ var addr = null;
 
                 if (isTimerEnabled) {
                     $("#isTimerOn").text(" [timer on]");
-                    $("#RefreshStatus").visibility = false;
+                    $("#RefreshStatus").prop('disabled', true);
 
                 } else {
                     $("#isTimerOn").text("");
-                    $("#RefreshStatus").visibility = true;
+                    $("#RefreshStatus").prop('disabled', false);
+                }
+
+                if (data.IsReadOkNgTime) {
+                    $('#casOkValue').show();
+                    $('#casNgValue').show();
+                } else {
+                    $('#casOkValue').hide();
+                    $('#casNgValue').hide();
                 }
 
                 $.each(data.UnitAddrs, function (key,value) {
@@ -98,7 +106,6 @@ var addr = null;
         //alert('status, Addr=' + addr);
         $.getJSON(uri + '/refreshStatus?Addr=' + addr)
             .done(function (data) {
-                //alert('status,okNumValue =' + data.Ok);
                 if (data.IsOkNg) {
                     $('#okNumValue').text(data.Ok);
                     $('#ngNumValue').text(data.Ng);
@@ -108,8 +115,8 @@ var addr = null;
                     $('#chybaJednotky').text('Chyba jednotky - ' + data.ErrorTimeTxt);
                 }
 
-                $('#casOkValue').text(data.CasOk);
-                $('#casNgValue').text(data.CasNg);
+                $('#casOkValue').text(Number((data.CasOk).toFixed(1)) + 's');
+                $('#casNgValue').text(Number((data.CasNg).toFixed(1)) + 's');
                 $('#checkTime').text(data.LastCheckTimeTxt);
 
                 $('#cilTabule').text(data.CilKusuTabule);
@@ -118,6 +125,7 @@ var addr = null;
                 $('#aktualniDefTabule').text(data.AktualDefectTabule);
 
                 $('#stav').text('');
+
             })
             .fail(function (jqXHR, textStatus, err) {
                 $('#stav').text('Error: ' + err);
@@ -137,12 +145,11 @@ var addr = null;
                     $('#okNgRefreshTime').text(data.OkNgTimeTxt);
                     $('#chybaJednotky').text('');
                 } else {
-                    //TODO vypsat kdy zjisteno a kdy proveden posledni test
                     $('#chybaJednotky').text('Chyba jednotky - ' + data.ErrorTimeTxt);
                 }
 
-                $('#casOkValue').text(data.CasOk);
-                $('#casNgValue').text(data.CasNg);
+                $('#casOkValue').text(Number((data.CasOk).toFixed(1)) + 's');
+                $('#casNgValue').text(Number((data.CasNg).toFixed(1)) + 's');
                 $('#checkTime').text(data.LastCheckTimeTxt);                
 
                 $('#cilTabule').text(data.CilKusuTabule);
