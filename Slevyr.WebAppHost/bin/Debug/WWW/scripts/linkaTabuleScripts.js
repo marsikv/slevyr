@@ -35,14 +35,6 @@ var addr = null;
                     }
                 }
 
-                //if (data.IsMockupMode) {
-                //    closePort();
-                //    $("#isMockupMode").text(" [mockup]");
-                //} else {
-                //    openPort();
-                //    $("#isMockupMode").text("");
-                //}
-
                 if (isTimerEnabled) {
                     $("#isTimerOn").text(" [timer on]");
                     $("#RefreshStatus").prop('disabled', true);
@@ -54,10 +46,15 @@ var addr = null;
 
                 if (data.IsReadOkNgTime) {
                     $('#casOkValue').show();
+                    $('#casOkLabel').show();                    
                     $('#casNgValue').show();
+                    $('#casNgLabel').show();
                 } else {
                     $('#casOkValue').hide();
                     $('#casNgValue').hide();
+                    $('#casOkLabel').hide();
+                    $('#casNgLabel').hide();
+
                 }
 
                 $.each(data.UnitAddrs, function (key,value) {
@@ -122,7 +119,13 @@ var addr = null;
                 $('#cilTabule').text(data.CilKusuTabule);
                 $('#rozdilTabule').text(data.RozdilTabule);
                 $('#cilDefTabule').text(data.CilDefectTabule + "%");
-                $('#aktualniDefTabule').text(data.AktualDefectTabule);
+                $('#aktualniDefTabule').text(data.AktualDefectTabule + "%");
+
+                if (data.IsPrestavkaTabule) {
+                    $('#isPrestavkaTabule').show();
+                } else {
+                    $('#isPrestavkaTabule').hide();
+                }
 
                 $('#stav').text('');
 
@@ -155,7 +158,7 @@ var addr = null;
                 $('#cilTabule').text(data.CilKusuTabule);
                 $('#rozdilTabule').text(data.RozdilTabule);
                 $('#cilDefTabule').text(data.CilDefectTabule + "%");
-                $('#aktualniDefTabule').text(data.AktualDefectTabule);
+                $('#aktualniDefTabule').text(data.AktualDefectTabule + "%");
 
                 $('#stav').text('');
             })

@@ -44,13 +44,15 @@ namespace Slevyr.DataAccess.Model
         public float Defektivita { get; set; }
         public DateTime DefektivitaTime { get; set; }
         public bool IsDefektivita { get; set; }
-
+        public bool IsPrestavkaTabule { get; set; }
         public int CilKusuTabule { get; set; }
         public float CilDefectTabule { get; set; }
         public float AktualDefectTabule { get; set; }
+        public string AktualDefectTabuleTxt => Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.CurrentCulture);
+
         public int RozdilTabule { get; set; }
         
-        public bool IsTabule { get; set; }
+        public bool IsTabuleOk { get; set; }
 
         #endregion
 
@@ -68,12 +70,14 @@ namespace Slevyr.DataAccess.Model
 
             try
             {
+                //zatim jen pro typ A
+
                 Logger.Debug($"+ unit {unitConfig.Addr}");
                 DateTime dateTimeNow = DateTime.Now;
 
                 if (!IsOkNg)
                 {
-                    IsTabule = false;
+                    IsTabuleOk = false;
                     Logger.Error("nelze spočítat tabuli");
                     return;
                 }
@@ -86,6 +90,8 @@ namespace Slevyr.DataAccess.Model
 
                 //pocet sec. prestavky, nyni prestavka 30min - udelat jako parametr ?
                 int prestavkaSec = 30 * 60;
+                //8hod - 0.5hod. prestavka
+                int delkaSmenySec = 27000;
 
                 int zacatekSmeny1Sec = (int)unitConfig.Zacatek1SmenyTime.TotalSeconds;
                 int zacatekSmeny2Sec = (int)unitConfig.Zacatek2SmenyTime.TotalSeconds;
@@ -94,91 +100,113 @@ namespace Slevyr.DataAccess.Model
                 int zacatekPrestavkySmeny1Sec = (int)unitConfig.Prestavka1SmenyTime.TotalSeconds;
                 int zacatekPrestavkySmeny2Sec = (int)unitConfig.Prestavka2SmenyTime.TotalSeconds;
                 int zacatekPrestavkySmeny3Sec = (int)unitConfig.Prestavka3SmenyTime.TotalSeconds;
-
-                //výpoèet sekund celé smìny -30 minut na pøestávku * poèet sekund celého dne
-                int delkaSmenySec = zacatekPrestavkySmeny2Sec - zacatekPrestavkySmeny1Sec - prestavkaSec;
+                int konecPrestavkySmeny1Sec = zacatekPrestavkySmeny1Sec + prestavkaSec;
+                int konecPrestavkySmeny2Sec = zacatekPrestavkySmeny2Sec + prestavkaSec;
+                int konecPrestavkySmeny3Sec = zacatekPrestavkySmeny3Sec + prestavkaSec;
 
                 int odZacatkuSmenySec = 0;
 
+                IsPrestavkaTabule = false;
+
+                int pracovniCasSec = 0;
+
                 Logger.Debug($"actual time is {dateTimeNow}");
 
-                //TODO overit u P.
-                if (secondsFromMidn < zacatekPrestavkySmeny3Sec)
+                if (secondsFromMidn > zacatekSmeny1Sec && secondsFromMidn < zacatekSmeny2Sec)  //smena1
                 {
-                    odZacatkuSmenySec = secondsFromMidn + 2 * 3600;  //Pøed pøestávkou na tøetí smìnì od pùlnoci + 2hodiny ze starého dne
-                    CilKusuTabule = unitConfig.Cil3Smeny;
-                    CilDefectTabule = unitConfig.Def3Smeny / 10;
-                    Logger.Debug("interval i1");
-
-                }
-                else if (secondsFromMidn >= zacatekPrestavkySmeny3Sec && secondsFromMidn < zacatekSmeny1Sec)
-                {
-                    odZacatkuSmenySec = secondsFromMidn - prestavkaSec + 2 * 3600;  //Pøed pøestávkou na tøetí smìnì od pùlnoci po pøestávce + 2hod ze starého dne
-                    CilKusuTabule = unitConfig.Cil3Smeny;
-                    CilDefectTabule = unitConfig.Def3Smeny / 10;
-                    Logger.Debug("interval i2");
-                }
-                else if (secondsFromMidn >= zacatekSmeny1Sec && secondsFromMidn < zacatekPrestavkySmeny1Sec)
-                {
-                    odZacatkuSmenySec = secondsFromMidn - zacatekSmeny1Sec;  // Pøed pøestávkou na první smìnì
+                    string o;
+                    if (secondsFromMidn < zacatekPrestavkySmeny1Sec)
+                    {
+                        IsPrestavkaTabule = false;
+                        pracovniCasSec = secondsFromMidn - zacatekSmeny1Sec;
+                        o = "c1";
+                    }
+                    else if (secondsFromMidn > zacatekPrestavkySmeny1Sec && secondsFromMidn < konecPrestavkySmeny1Sec)
+                    {
+                        IsPrestavkaTabule = true;
+                        pracovniCasSec = 0;
+                        o = "pr";
+                    }
+                    else
+                    {
+                        IsPrestavkaTabule = false;
+                        pracovniCasSec = zacatekPrestavkySmeny1Sec - zacatekSmeny1Sec + secondsFromMidn - konecPrestavkySmeny1Sec;
+                        o = "c2";
+                    }
                     CilKusuTabule = unitConfig.Cil1Smeny;
-                    CilDefectTabule = unitConfig.Def1Smeny / 10;
-                    Logger.Debug("interval i3");
-                }
-                else if (secondsFromMidn >= zacatekPrestavkySmeny1Sec && secondsFromMidn < zacatekSmeny2Sec)
+                    Logger.Debug("smena1 "+o);
+                }                
+                else if (secondsFromMidn > zacatekSmeny2Sec && secondsFromMidn < zacatekSmeny3Sec) //smena 2
                 {
-                    odZacatkuSmenySec = secondsFromMidn - zacatekSmeny1Sec - prestavkaSec;  // Po pøestávce na první smìnì
-                    CilKusuTabule = unitConfig.Cil1Smeny;
-                    CilDefectTabule = unitConfig.Def1Smeny / 10;
-                    Logger.Debug("interval i4");
-                }
-                else if (secondsFromMidn >= zacatekSmeny2Sec && secondsFromMidn < zacatekPrestavkySmeny2Sec)
-                {
-                    odZacatkuSmenySec = secondsFromMidn - zacatekSmeny2Sec;  // Pøed pøestávkou na druhé smìnì
+                    string o;
+                    if (secondsFromMidn < zacatekPrestavkySmeny2Sec)
+                    {
+                        IsPrestavkaTabule = false;
+                        pracovniCasSec = secondsFromMidn - zacatekSmeny2Sec;
+                        o = "c1";
+                    }
+                    else if (secondsFromMidn > zacatekPrestavkySmeny2Sec && secondsFromMidn < konecPrestavkySmeny2Sec)
+                    {
+                        IsPrestavkaTabule = true;
+                        pracovniCasSec = 0;
+                        o = "pr";
+                    }
+                    else
+                    {
+                        IsPrestavkaTabule = false;
+                        pracovniCasSec = zacatekPrestavkySmeny2Sec - zacatekSmeny2Sec + secondsFromMidn - konecPrestavkySmeny2Sec;
+                        o = "c2";
+                    }
                     CilKusuTabule = unitConfig.Cil2Smeny;
-                    CilDefectTabule = unitConfig.Def2Smeny / 10;
-                    Logger.Debug("interval i5");
+                    Logger.Debug("smena2 " + o);
                 }
-                else if (secondsFromMidn >= zacatekPrestavkySmeny2Sec && secondsFromMidn < zacatekSmeny3Sec)
+                else if (secondsFromMidn > zacatekSmeny3Sec || secondsFromMidn < zacatekSmeny1Sec) //smena 3
                 {
-                    odZacatkuSmenySec = secondsFromMidn - zacatekSmeny2Sec - prestavkaSec;  // Po pøestávce na druhe smìnì
-                    CilKusuTabule = unitConfig.Cil2Smeny;
-                    CilDefectTabule = unitConfig.Def2Smeny / 10;
-                    Logger.Debug("interval i6");
-                }
-                else if (secondsFromMidn >= zacatekSmeny3Sec && secondsFromMidn < (24 * 3600 - 1))
-                {
-                    odZacatkuSmenySec = secondsFromMidn - zacatekSmeny3Sec; // Pøed pøestávkou na tøetí smìnì do pùlnoci
+                    string o;
+                    if (secondsFromMidn > zacatekSmeny3Sec)
+                    {
+                        IsPrestavkaTabule = false;
+                        pracovniCasSec = secondsFromMidn - zacatekSmeny3Sec;
+                        o = "c1";
+                    }
+                    else if (secondsFromMidn < zacatekPrestavkySmeny3Sec)
+                    {
+                        IsPrestavkaTabule = false;
+                        pracovniCasSec = 86400 - zacatekSmeny3Sec + secondsFromMidn;
+                        o = "c2 (po pulnoci)";
+                    }
+                    else if (secondsFromMidn >= zacatekPrestavkySmeny3Sec && secondsFromMidn < konecPrestavkySmeny3Sec)
+                    {
+                        IsPrestavkaTabule = true;
+                        pracovniCasSec = 0;
+                        o = "pr";
+                    }
+                    else
+                    {
+                        IsPrestavkaTabule = false;
+                        pracovniCasSec = 86400 - zacatekSmeny3Sec + zacatekPrestavkySmeny3Sec + secondsFromMidn - konecPrestavkySmeny3Sec;
+                        o = "c3";
+                    }
                     CilKusuTabule = unitConfig.Cil3Smeny;
-                    CilDefectTabule = unitConfig.Def3Smeny / 10;
-                    Logger.Debug("interval i7");
+                    Logger.Debug("smena3 " + o);
                 }
-                else
+
+
+                if (!IsPrestavkaTabule)
                 {
-                    //  strOdZacatkuSmeny = (strPartOfTheDay) * 86400 + str2Hod * 86400                 '  Pøed pøestávkou na tøetí smìnì od pùlnoci + 2hodiny ze starého dne
-                    Logger.Debug("interval i8 - nedef");
+                    var casNa1Kus = delkaSmenySec / CilKusuTabule;
+                    var aktualniCil = pracovniCasSec / casNa1Kus;
+                    RozdilTabule = Ok - aktualniCil;
+                    AktualDefectTabule = Ng / Ok;
                 }
-
-                //Pocet sekund na 1 kus
-                //var prumCasKus = delkaSmenySec / unitConfig.Cil1Smeny;
-                //TODO overit u Patrika
-                var prumCasKus = delkaSmenySec / CilKusuTabule;
-
-                var ocekavanyPocOk = (int)(odZacatkuSmenySec / prumCasKus);
-
-                RozdilTabule = Ok - ocekavanyPocOk;
-
-                decimal val = ((decimal)Ng / (decimal)Ok) * 100;
-
-                AktualDefectTabule = (float)Math.Round(val, 2);
 
                 Logger.Debug($"- unit {unitConfig.Addr}");
 
-                IsTabule = true;
+                IsTabuleOk = true;
             }
             catch (Exception ex)
             {
-                IsTabule = false;
+                IsTabuleOk = false;
                 Logger.Error(ex);                
             }
         }

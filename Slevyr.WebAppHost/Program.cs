@@ -21,6 +21,12 @@ namespace Slevyr.WebAppHost
         http://localhost:5000/api/slevy/status
 
         http://localhost:5000/api/slevy/closePort
+
+
+
+        netsh http add urlacl url=http://+:5000/ user=Everyone
+        netsh http delete urlacl url=http://+:5000/ user=Everyone
+
     */
 
     class Program
@@ -29,10 +35,13 @@ namespace Slevyr.WebAppHost
 
         static void Main()
         {
-            string baseAddress = Settings.Default.BaseAddress;
+            int port = Settings.Default.WebAppPort;
+            string baseAddress = $"http://localhost:{port}/";
+
 
             // Start OWIN host 
-            using (WebApp.Start<Startup>(url: baseAddress))
+            using (WebApp.Start($"http://+:{port}/"))
+            //using (WebApp.Start<Startup>(url: baseAddress))
             {
 
                 HttpClient client = new HttpClient();
@@ -53,7 +62,7 @@ namespace Slevyr.WebAppHost
 
                 Console.WriteLine("Stiskem klávesy se služba ukončí !\n");
 
-                Process.Start(baseAddress+"menu.html");
+                Process.Start(baseAddress + "menu.html");
 
                 Console.ReadLine();
 

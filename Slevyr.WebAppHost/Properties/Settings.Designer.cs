@@ -97,10 +97,10 @@ namespace Slevyr.WebAppHost.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://localhost:5000/")]
-        public string BaseAddress {
+        [global::System.Configuration.DefaultSettingValueAttribute("5000")]
+        public int WebAppPort {
             get {
-                return ((string)(this["BaseAddress"]));
+                return ((int)(this["WebAppPort"]));
             }
         }
         
