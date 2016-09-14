@@ -198,7 +198,8 @@ namespace Slevyr.WebAppHost
 
 
         [HttpGet]
-        public bool NastavStatus([FromUri] byte addr, [FromUri] string writeProtectEEprom, [FromUri] byte minOK, [FromUri] byte minNG, [FromUri] string bootloaderOn, [FromUri] byte parovanyLED,
+        public bool NastavJednotku([FromUri] byte addr, [FromUri] bool writeProtectEEprom, [FromUri] byte minOK, [FromUri] byte minNG, 
+            [FromUri] bool bootloaderOn, [FromUri] byte parovanyLED,
             [FromUri] byte rozliseniCidel, [FromUri] byte pracovniJasLed)
         {
             Logger.Info($"addr:{addr} writeProtectEEprom:{writeProtectEEprom} minOK:{minOK} minNG:{minNG} parovanyLED:{parovanyLED}");
@@ -207,10 +208,10 @@ namespace Slevyr.WebAppHost
 
             try
             {
-                bool writeProtectEEpromVal = String.Equals(writeProtectEEprom, "ANO",StringComparison.InvariantCultureIgnoreCase) ;
-                bool bootloaderOnVal = String.Equals(bootloaderOn, "ANO",StringComparison.InvariantCultureIgnoreCase);
+                //bool writeProtectEEpromVal = String.Equals(writeProtectEEprom, "ANO",StringComparison.InvariantCultureIgnoreCase) ;
+                //bool bootloaderOnVal = String.Equals(bootloaderOn, "ANO",StringComparison.InvariantCultureIgnoreCase);
 
-                return SlevyrService.NastavStatus(addr, writeProtectEEpromVal, minOK, minNG, bootloaderOnVal, parovanyLED, rozliseniCidel, pracovniJasLed);
+                return SlevyrService.NastavStatus(addr, writeProtectEEprom, minOK, minNG, bootloaderOn, parovanyLED, rozliseniCidel, pracovniJasLed);
             }
             catch (KeyNotFoundException)
             {

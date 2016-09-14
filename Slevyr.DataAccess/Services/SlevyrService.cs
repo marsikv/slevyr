@@ -128,7 +128,7 @@ namespace Slevyr.DataAccess.Services
             Logger.Info($"+ *** unit {addr}");
 
             short ok, ng;
-            Single casOk, casNg;
+            Single casOk=-1, casNg=-1;
             _unitDictionary[addr].ReadStavCitacu(out ok, out ng);
             Logger.Info($">ok:{ok} ng:{ng}");
             UnitsLogger.Info($"unit {addr}");
@@ -143,6 +143,11 @@ namespace Slevyr.DataAccess.Services
                 Logger.Info($">casNg:{casNg}");
                 UnitsLogger.Info($" casOk:{casOk} casNg:{casNg}");
             }
+
+            //Datum a čas;příkaz;adresa;OK;NG;časOK;časNG;9.Byte;int(10.byte,11.byte);
+            //2016 - 09 - 14 08:05:28; 4; 172; 1180; 16; 6,258688; 525,0415; ; ;
+
+            UnitsLogger.Info($" 4;{addr};{ok};{ng};{casOk};{casNg};'9.Byte';int(10.byte,11.byte)';");
 
             //prepocitat pro zobrazeni tabule
             _unitDictionary[addr].RecalcTabule();

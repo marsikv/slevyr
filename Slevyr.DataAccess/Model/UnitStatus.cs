@@ -48,10 +48,11 @@ namespace Slevyr.DataAccess.Model
         public int CilKusuTabule { get; set; }
         public float CilDefectTabule { get; set; }
         public float AktualDefectTabule { get; set; }
-        public string AktualDefectTabuleTxt => Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.CurrentCulture);
+        public string AktualDefectTabuleTxt => float.IsNaN(AktualDefectTabule) ? "-" : Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.CurrentCulture);
 
         public int RozdilTabule { get; set; }
-        
+        public string RozdilTabuleTxt => (RozdilTabule == int.MinValue) ? "-" : RozdilTabule.ToString();
+
         public bool IsTabuleOk { get; set; }
 
         #endregion
@@ -86,7 +87,7 @@ namespace Slevyr.DataAccess.Model
                 int secondsFromMidn = dateTimeNow.Second + dateTimeNow.Minute * 60 + dateTimeNow.Hour * 3600;
 
                 //pocet sekund celého dne
-                int allDaySec = 24 * 60 * 60;
+                //int allDaySec = 24 * 60 * 60;
 
                 //pocet sec. prestavky, nyni prestavka 30min - udelat jako parametr ?
                 int prestavkaSec = 30 * 60;
@@ -134,6 +135,7 @@ namespace Slevyr.DataAccess.Model
                         o = "c2";
                     }
                     CilKusuTabule = unitConfig.Cil1Smeny;
+                    CilDefectTabule = unitConfig.Def1Smeny;
                     Logger.Debug("smena1 "+o);
                 }                
                 else if (secondsFromMidn > zacatekSmeny2Sec && secondsFromMidn < zacatekSmeny3Sec) //smena 2
@@ -158,6 +160,7 @@ namespace Slevyr.DataAccess.Model
                         o = "c2";
                     }
                     CilKusuTabule = unitConfig.Cil2Smeny;
+                    CilDefectTabule = unitConfig.Def2Smeny;
                     Logger.Debug("smena2 " + o);
                 }
                 else if (secondsFromMidn > zacatekSmeny3Sec || secondsFromMidn < zacatekSmeny1Sec) //smena 3
@@ -188,16 +191,32 @@ namespace Slevyr.DataAccess.Model
                         o = "c3";
                     }
                     CilKusuTabule = unitConfig.Cil3Smeny;
+                    CilDefectTabule = unitConfig.Def3Smeny;
                     Logger.Debug("smena3 " + o);
                 }
 
-
                 if (!IsPrestavkaTabule)
                 {
-                    var casNa1Kus = delkaSmenySec / CilKusuTabule;
-                    var aktualniCil = pracovniCasSec / casNa1Kus;
-                    RozdilTabule = Ok - aktualniCil;
-                    AktualDefectTabule = Ng / Ok;
+                    
+                    try
+                    {
+                        double casNa1Kus = (double)delkaSmenySec / (double)CilKusuTabule;
+                        var aktualniCil = pracovniCasSec / casNa1Kus;
+                        RozdilTabule = (int)Math.Round(Ok - aktualniCil);
+                    }
+                    catch (Exception)
+                    {
+                        RozdilTabule = int.MinValue;
+                    }
+                    
+                    try
+                    {
+                        AktualDefectTabule = (float)Ng / (float)Ok;
+                    }
+                    catch (Exception)
+                    {
+                        AktualDefectTabule = float.NaN;
+                    }
                 }
 
                 Logger.Debug($"- unit {unitConfig.Addr}");

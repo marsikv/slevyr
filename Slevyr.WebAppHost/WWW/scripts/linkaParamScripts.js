@@ -14,7 +14,7 @@ $(document).ready(function () {
         $("#NastavCileSmen").click(nastavCileSmen);
         $("#NastavPrestavky").click(nastavPrestavkySmen);
         $("#NastavDefektivitu").click(nastavDefektivitu);
-        $("#NastavStatus").click(nastavStatus);
+        $("#NastavJednotku").click(nastavJednotku);
 
         $("#SyncTime").click(nastavAktualniCas);
     });
@@ -81,16 +81,16 @@ $(document).ready(function () {
                 $('#Zacatek2Smeny').val(data.Zacatek2Smeny);
                 $('#Zacatek3Smeny').val(data.Zacatek3Smeny);
 
-                $('#WriteProtectEEprom').val(data.WriteProtectEEprom);
+                $('#WriteProtectEEprom').prop('checked', data.WriteProtectEEprom);
 
-                $('#MinOk').val(data.MinOk);
+                $('#MinOK').val(data.MinOK);
 
-                $('#MinNg').val(data.MinNG);
+                $('#MinNG').val(data.MinNG);
 
-                $('#BootloaderOn').val(data.BootloaderOn);
-                $('#rozliseniCidelTeploty').val(data.RozliseniCidel);
+                $('#BootloaderOn').prop('checked', data.BootloaderOn);
+                $('#RozliseniCidelTeploty').val(data.RozliseniCidel);
                 $('#PracovniJasLed').val(data.PracovniJasLed);
-                $('#addrParovanyLED').val(data.ParovanyLED);
+                $('#AddrParovanyLed').val(data.ParovanyLED);
 
             })
             .fail(function (jqXHR, textStatus, err) {
@@ -118,12 +118,12 @@ $(document).ready(function () {
             Zacatek1Smeny: $('#Zacatek1Smeny').val(),
             Zacatek2Smeny: $('#Zacatek2Smeny').val(),
             Zacatek3Smeny: $('#Zacatek3Smeny').val(),
-            WriteProtectEEprom: $('#WriteProtectEEprom').val(),
-            MinOK: $('#MinOk').val(),
-            MinNG: $('#MinNg').val(),
-            BootloaderOn: $('#BootloaderOn').val(),
-            ParovanyLED: $('#addrParovanyLED').val(),
-            RozliseniCidel: $('#rozliseniCidel').val(),
+            WriteProtectEEprom:  $('#WriteProtectEEprom').prop('checked'),
+            MinOK: $('#MinOK').val(),
+            MinNG: $('#MinNG').val(),
+            BootloaderOn: $('#BootloaderOn').prop('checked'),
+            ParovanyLED: $('#AddrParovanyLed').val(),
+            RozliseniCidel: $('#RozliseniCidelTeploty').val(),
             PracovniJasLed: $('#PracovniJasLed').val()
         };
 
@@ -145,7 +145,7 @@ $(document).ready(function () {
 
     function nastavCileSmen() {
         //alert('nastavCileSmen');
-        var varianta  = $('#typSmennosti').val();
+        var varianta  = $('#TypSmennosti').val();
         var cil1Smeny = $('#Cil1Smeny').val();
         var cil2Smeny = $('#Cil2Smeny').val();
         var cil3Smeny = $('#Cil3Smeny').val();
@@ -168,7 +168,7 @@ $(document).ready(function () {
 
     function nastavPrestavkySmen() {
         //alert('nastavPrestavkySmen');
-        var varianta = $('#typSmennosti').val();
+        var varianta = $('#TypSmennosti').val();
         var p1Smeny = $('#Prestavka1Smeny').val();
         var p2Smeny = $('#Prestavka2Smeny').val();
         var p3Smeny = $('#Prestavka3Smeny').val();
@@ -210,7 +210,7 @@ $(document).ready(function () {
 
     function nastavDefektivitu() {
         //alert('nastavDefektivitu');
-        var varianta = $('#typSmennosti').val();
+        var varianta = $('#TypSmennosti').val();
         var def1Smeny = $('#Def1Smeny').val();
         var def2Smeny = $('#Def2Smeny').val();
         var def3Smeny = $('#Def3Smeny').val();
@@ -231,25 +231,31 @@ $(document).ready(function () {
             });
     }
 
-    function nastavStatus() {
-        //alert('nastavStatus');
-        $.getJSON(uri + '/nastavStatus',
+    function nastavJednotku() {
+        var writeProtectEEprom = $('#WriteProtectEEprom').prop('checked');
+        var minOk = $('#MinOK').val();
+        var minNg = $('#MinNG').val();
+        var bootloaderOn = $('#BootloaderOn').prop('checked');
+        var parovanyLed = $('#AddrParovanyLed').val();
+        var rozliseniCidel = $('#RozliseniCidelTeploty').val();
+        var pracovniJasLed = $('#PracovniJasLed').val();
+        $.getJSON(uri + '/NastavJednotku',
             {
                 addr: addr,
-                writeProtectEEprom: $('#WriteProtectEEprom').val(),
-                minOK: $('#MinOk').val(),
-                minNG: $('#MinNg').val(),
-                bootloaderOn: $('#BootloaderOn').val(),
-                parovanyLED: $('#addrParovanyLED').val(),
-                rozliseniCidel: $('#rozliseniCidelTeploty').val(),
-                pracovniJasLed: $('#PracovniJasLed').val()
+                writeProtectEEprom: writeProtectEEprom,
+                minOK: minOk,
+                minNG: minNg,
+                bootloaderOn: bootloaderOn,
+                parovanyLED: parovanyLed,
+                rozliseniCidel: rozliseniCidel,
+                pracovniJasLed: pracovniJasLed
             })
             .done(function (data) {
                 $('#stav').text('');
             })
             .fail(function (jqXHR, textStatus, err) {
                 $('#stav').text('Error: ' + err);
-                alert("nastavStatus - error");
+                alert("nastavJednotku - error");
             });
     }
 

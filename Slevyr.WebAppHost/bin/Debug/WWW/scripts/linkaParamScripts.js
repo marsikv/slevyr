@@ -14,7 +14,7 @@ $(document).ready(function () {
         $("#NastavCileSmen").click(nastavCileSmen);
         $("#NastavPrestavky").click(nastavPrestavkySmen);
         $("#NastavDefektivitu").click(nastavDefektivitu);
-        $("#NastavStatus").click(nastavStatus);
+        $("#NastavJednotku").click(nastavJednotku);
 
         $("#SyncTime").click(nastavAktualniCas);
     });
@@ -81,13 +81,13 @@ $(document).ready(function () {
                 $('#Zacatek2Smeny').val(data.Zacatek2Smeny);
                 $('#Zacatek3Smeny').val(data.Zacatek3Smeny);
 
-                $('#WriteProtectEEprom').val(data.WriteProtectEEprom);
+                $('#WriteProtectEEprom').prop('checked', data.WriteProtectEEprom);
 
                 $('#MinOk').val(data.MinOk);
 
                 $('#MinNg').val(data.MinNG);
 
-                $('#BootloaderOn').val(data.BootloaderOn);
+                $('#BootloaderOn').('checked', data.BootloaderOn);
                 $('#rozliseniCidelTeploty').val(data.RozliseniCidel);
                 $('#PracovniJasLed').val(data.PracovniJasLed);
                 $('#addrParovanyLED').val(data.ParovanyLED);
@@ -231,15 +231,14 @@ $(document).ready(function () {
             });
     }
 
-    function nastavStatus() {
-        //alert('nastavStatus');
-        $.getJSON(uri + '/nastavStatus',
+    function nastavJednotku() {
+        $.getJSON(uri + '/NastavJednotku',
             {
                 addr: addr,
-                writeProtectEEprom: $('#WriteProtectEEprom').val(),
+                writeProtectEEprom: $('#WriteProtectEEprom').prop('checked'),
                 minOK: $('#MinOk').val(),
                 minNG: $('#MinNg').val(),
-                bootloaderOn: $('#BootloaderOn').val(),
+                bootloaderOn: $('#BootloaderOn').prop('checked'),
                 parovanyLED: $('#addrParovanyLED').val(),
                 rozliseniCidel: $('#rozliseniCidelTeploty').val(),
                 pracovniJasLed: $('#PracovniJasLed').val()
@@ -249,7 +248,7 @@ $(document).ready(function () {
             })
             .fail(function (jqXHR, textStatus, err) {
                 $('#stav').text('Error: ' + err);
-                alert("nastavStatus - error");
+                alert("nastavJednotku - error");
             });
     }
 

@@ -92,6 +92,7 @@ var addr = null;
     function onAddrIdChange() {
         addr = $("#AddrIdDropDown option:selected").val();
         readUnitConfig();
+        getStatus();
     }
 
     function clearStatus() {
@@ -103,32 +104,7 @@ var addr = null;
         //alert('status, Addr=' + addr);
         $.getJSON(uri + '/refreshStatus?Addr=' + addr)
             .done(function (data) {
-                if (data.IsOkNg) {
-                    $('#okNumValue').text(data.Ok);
-                    $('#ngNumValue').text(data.Ng);
-                    $('#okNgRefreshTime').text(data.OkNgTimeTxt);
-                    $('#chybaJednotky').text('');
-                } else {
-                    $('#chybaJednotky').text('Chyba jednotky - ' + data.ErrorTimeTxt);
-                }
-
-                $('#casOkValue').text(Number((data.CasOk).toFixed(1)) + 's');
-                $('#casNgValue').text(Number((data.CasNg).toFixed(1)) + 's');
-                $('#checkTime').text(data.LastCheckTimeTxt);
-
-                $('#cilTabule').text(data.CilKusuTabule);
-                $('#rozdilTabule').text(data.RozdilTabule);
-                $('#cilDefTabule').text(data.CilDefectTabule + "%");
-                $('#aktualniDefTabule').text(data.AktualDefectTabule + "%");
-
-                if (data.IsPrestavkaTabule) {
-                    $('#isPrestavkaTabule').show();
-                } else {
-                    $('#isPrestavkaTabule').hide();
-                }
-
-                $('#stav').text('');
-
+                updateTableElements(data);
             })
             .fail(function (jqXHR, textStatus, err) {
                 $('#stav').text('Error: ' + err);
@@ -142,29 +118,41 @@ var addr = null;
         $.getJSON(uri + '/getStatus?Addr=' + addr)
             .done(function (data) {
                 //alert('status,okNumValue =' + data.Ok);
-                if (data.IsOkNg) {
-                    $('#okNumValue').text(data.Ok);
-                    $('#ngNumValue').text(data.Ng);
-                    $('#okNgRefreshTime').text(data.OkNgTimeTxt);
-                    $('#chybaJednotky').text('');
-                } else {
-                    $('#chybaJednotky').text('Chyba jednotky - ' + data.ErrorTimeTxt);
-                }
-
-                $('#casOkValue').text(Number((data.CasOk).toFixed(1)) + 's');
-                $('#casNgValue').text(Number((data.CasNg).toFixed(1)) + 's');
-                $('#checkTime').text(data.LastCheckTimeTxt);                
-
-                $('#cilTabule').text(data.CilKusuTabule);
-                $('#rozdilTabule').text(data.RozdilTabule);
-                $('#cilDefTabule').text(data.CilDefectTabule + "%");
-                $('#aktualniDefTabule').text(data.AktualDefectTabule + "%");
-
-                $('#stav').text('');
+                updateTableElements(data);
             })
             .fail(function (jqXHR, textStatus, err) {
                 $('#stav').text('Error: ' + err);
                 //alert("getStatus - error");
             });
+    }
+
+    function updateTableElements(data) {
+        if (data.IsOkNg) {
+            $('#okNumValue').text(data.Ok);
+            $('#ngNumValue').text(data.Ng);
+            $('#okNgRefreshTime').text(data.OkNgTimeTxt);
+            $('#chybaJednotky').text('');
+        } else {
+            $('#chybaJednotky').text('Chyba jednotky - ' + data.ErrorTimeTxt);
+        }
+
+        if (data.IsPrestavkaTabule) {
+            $('#isPrestavkaTabule').show();
+        } else {
+            $('#isPrestavkaTabule').hide();
+        }
+
+        $('#casOkValue').text(Number((data.CasOk).toFixed(1)) + 's');
+        $('#casNgValue').text(Number((data.CasNg).toFixed(1)) + 's');
+        $('#checkTime').text(data.LastCheckTimeTxt);
+
+        $('#cilTabule').text(data.CilKusuTabule);
+        $('#rozdilTabule').text(data.RozdilTabuleTxt);
+        $('#cilDefTabule').text(data.CilDefectTabule + "%");
+        $('#aktualniDefTabule').text(data.AktualDefectTabuleTxt + "%");
+
+
+
+        $('#stav').text('');
     }
 
