@@ -111,7 +111,7 @@ namespace Slevyr.DataAccess.Model
         #region private methods
 
         //pripravime in buffer na predani příkazu
-        private void PrepareInput(byte cmd)
+        private void PrepareCommand(byte cmd)
         {
             Array.Clear(_inBuff, 0, _inBuff.Length);
             _inBuff[2] = _address;
@@ -149,10 +149,16 @@ namespace Slevyr.DataAccess.Model
             _sp.DiscardInBuffer();
         }
 
-        private bool SendCommandBasic(int a)
+        /// <summary>
+        /// posle prikaz na port, parametry jsou jen pro logovani cisla pokusu
+        /// </summary>
+        /// <param name="a1"></param>
+        /// <param name="a2"></param>
+        /// <returns></returns>
+        private bool SendCommandBasic(int a1, int a2)
         {
             bool res;
-            Logger.Debug($"+ attempt:{a}");
+            Logger.Debug($"+ attempt:{a1}.{a2}");
             //lock (lockobj)
             //{
                 if (!_sp.IsOpen) return false;
@@ -194,7 +200,7 @@ namespace Slevyr.DataAccess.Model
 
         //odesle prikaz, v _inBuffer musi byt prikaz nachystany
         //provede kontrolu odeslani
-        private bool SendCommand()
+        private bool SendCommand(int a)
         {
             Logger.Debug("+");
 
@@ -202,20 +208,20 @@ namespace Slevyr.DataAccess.Model
 
             lock (lockobj)
             {
-                sendOk = SendCommandBasic(1);
+                sendOk = SendCommandBasic(a,1);
 
                 if (!sendOk)
                 {
                     Thread.Sleep(200);
                     DiscardSendBuffer();
-                    sendOk = SendCommandBasic(2);
+                    sendOk = SendCommandBasic(a,2);
                 }
 
                 if (!sendOk)
                 {
                     Thread.Sleep(200);
                     DiscardSendBuffer();
-                    sendOk = SendCommandBasic(3);
+                    sendOk = SendCommandBasic(a,3);
                 }
 
                 if (!sendOk)
@@ -228,15 +234,15 @@ namespace Slevyr.DataAccess.Model
             return sendOk;
         }
 
-        private bool ReceiveResultsBasic(int a)
+        private bool ReceiveResults(int a)
         {
             bool res = false;
             Logger.Debug($"+ attempt:{a}");
 
-            //lock (lockobj)
-            //{
             if (!_sp.IsOpen) return false;
 
+            lock (lockobj)
+            {
                 //precte vysledky
                 try
                 {
@@ -259,7 +265,7 @@ namespace Slevyr.DataAccess.Model
                     Logger.Error(ex);
                     res = false;
                 }
-            //}
+            }
 
             res = res && CheckResponseOk();
 
@@ -269,7 +275,13 @@ namespace Slevyr.DataAccess.Model
             return res;
         }
 
-        private bool ReceiveResults()
+
+        /// <summary>
+        /// posle pozadavek a precte vysledek.
+        /// provadi dva pokusy
+        /// </summary>
+        /// <returns></returns>
+        private bool SendReceiveResults()
         {
             bool res = false;
 
@@ -278,32 +290,37 @@ namespace Slevyr.DataAccess.Model
             lock (lockobj)
             {
 
-                res = ReceiveResultsBasic(1);
-
-                if (!res)
+                if (SendCommand(1))
                 {
                     Thread.Sleep(200);
-                    DiscardSendBuffer();
-                    res = ReceiveResultsBasic(2);
+
+                    res = ReceiveResults(1);
+
+                    if (!res)
+                    {
+                        Thread.Sleep(200);
+                        DiscardSendBuffer();
+                        if (SendCommand(2))
+                        {
+                            Thread.Sleep(200);
+                            res = ReceiveResults(2);
+                            if (!res)
+                            {
+                                Thread.Sleep(200);
+                                DiscardSendBuffer();
+                            }
+                        }
+                    }
+
                 }
 
-                if (!res)
-                {
-                    Thread.Sleep(200);
-                    DiscardSendBuffer();
-                    res = ReceiveResultsBasic(3);
-                }
-
-                if (!res)
-                {
-                    DiscardSendBuffer();
-                }
             }
 
             Logger.Debug($"- res:{res}");
 
             return res;
         }
+        
 
         private void _sp_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
@@ -316,23 +333,21 @@ namespace Slevyr.DataAccess.Model
 
         public bool SetSmennost(char varianta)
         {
-            bool res;
-            PrepareInput(CmdSetSmennost);
+            PrepareCommand(CmdSetSmennost);
 
             _inBuff[4] = (byte)varianta;
 
             UnitConfig.TypSmennosti = varianta.ToString();
 
-            res = SendCommand() && ReceiveResults();
+            var res = SendReceiveResults();
 
             return res;
         }
        
         public bool SetCileSmen(char varianta, short cil1, short cil2, short cil3)
         {
-            bool res;
             Logger.Debug("+");
-            PrepareInput(CmdSetCilSmen);
+            PrepareCommand(CmdSetCilSmen);
 
             _inBuff[4] = (byte)varianta;
 
@@ -344,7 +359,7 @@ namespace Slevyr.DataAccess.Model
             Helper.FromShort(cil2, out _inBuff[7], out _inBuff[8]);
             Helper.FromShort(cil3, out _inBuff[9], out _inBuff[10]);
 
-            res = SendCommand() && ReceiveResults();
+            var res = SendReceiveResults();
 
             Logger.Debug("-");
             return res;
@@ -352,8 +367,7 @@ namespace Slevyr.DataAccess.Model
 
         public bool SetDefektivita(char varianta, short def1, short def2, short def3)
         {
-            bool res;
-            PrepareInput(CmdSetDefSmen);
+            PrepareCommand(CmdSetDefSmen);
 
             _inBuff[4] = (byte)varianta;
 
@@ -365,24 +379,14 @@ namespace Slevyr.DataAccess.Model
             Helper.FromShort(def2, out _inBuff[7], out _inBuff[8]);
             Helper.FromShort(def3, out _inBuff[9], out _inBuff[10]);
 
-            if (SendCommand())
-            {
-                //načtení výsledku
-                res = ReceiveResults();
-            }
-            else
-            {
-                res = false;
-            }
+            return SendCommand(1);
 
-            return res;
         }
 
         //TODO - v jakych jednotkach se zadavaji prestavky ?
         public bool SetPrestavky(char varianta, TimeSpan prest1, TimeSpan prest2, TimeSpan prest3)
         {
-            bool res;
-            PrepareInput(CmdSetZacPrestav);
+            PrepareCommand(CmdSetZacPrestav);
 
             _inBuff[4] = (byte)varianta;
 
@@ -399,15 +403,15 @@ namespace Slevyr.DataAccess.Model
             _inBuff[9] = (byte)prest3.Hours;
             _inBuff[10] = (byte)prest3.Minutes;
 
-            res = SendCommand() && ReceiveResults();
-
-            return res;
+            return SendCommand(1);
         }
 
         public bool SetCas(DateTime dt)
         {
+            Logger.Debug($"+ unit {_address}");
+
             bool res;
-            PrepareInput(CmdSetDatumDen);
+            PrepareCommand(CmdSetDatumDen);
 
             _inBuff[4] = (byte)dt.Hour;
             _inBuff[5] = (byte)dt.Minute;
@@ -417,7 +421,9 @@ namespace Slevyr.DataAccess.Model
             _inBuff[9] = (byte)(dt.Year-2000);
             _inBuff[10] = (byte)dt.DayOfWeek;
 
-            res = SendCommand() && ReceiveResults();
+            res = SendCommand(1); 
+
+            Logger.Debug($"- {res} unit {_address}");
 
             return res;
         }
@@ -425,33 +431,34 @@ namespace Slevyr.DataAccess.Model
         public bool SetJasLcd(byte jas)
         {
             bool res;
-            PrepareInput(CmdSetJasLed);
+            PrepareCommand(CmdSetJasLed);
 
             _inBuff[4] = jas;
 
-            res = SendCommand() && ReceiveResults();
-
-            return res;
+            return SendCommand(1);
         }
 
         public bool SetCitace(short ok, short ng)
         {
             bool res;
-            PrepareInput(CmdSetHodnotyCitacu);
+            PrepareCommand(CmdSetHodnotyCitacu);
 
             Helper.FromShort(ok, out _inBuff[4], out _inBuff[5]);
             Helper.FromShort(ng, out _inBuff[6], out _inBuff[7]);
 
-            res = SendCommand() && ReceiveResults();
-
-            return res;
+            return SendCommand(1);
         }
 
         public bool Reset()
         {
-            PrepareInput(CmdResetJednotky);
+            PrepareCommand(CmdResetJednotky);
 
-            if (SendCommand())
+            return SendCommand(1);
+
+            //TODO otestovat
+
+            /*
+            if (SendCommand(1))
             {
                 //načtení výsledku
                 return ReceiveResults();
@@ -462,12 +469,18 @@ namespace Slevyr.DataAccess.Model
             {
                 return false;
             }
+            */
         }
 
         public bool Set6f()
         {
-            PrepareInput(0x6f);
+            PrepareCommand(0x6f);
 
+            return SendCommand(1);
+
+            //TODO otestovat
+
+            /*
             if (SendCommand())
             {
                 //načtení výsledku
@@ -479,57 +492,44 @@ namespace Slevyr.DataAccess.Model
             {
                 return false;
             }
+            */
         }
 
         public bool SetHandshake(byte handshake, byte prumTyp)
         {
-            bool res;
-            PrepareInput(CmdSetParamRF);
+            PrepareCommand(CmdSetParamRF);
 
             _inBuff[4] = handshake;
             _inBuff[5] = prumTyp;
 
-            if (SendCommand())
+            var res = SendCommand(1);
+
+
+            if (res)
             {
-                //načtení výsledku
-                res = ReceiveResults() && CheckResponseOk();
+                UnitStatus.Handshake = (handshake == 0);
 
-                if (res)
+                if (UnitStatus.Handshake)
                 {
-                    UnitStatus.Handshake = (handshake == 0);
-
-                    if (UnitStatus.Handshake)
-                    {
-                        //nastavim handler na prijem zprav z portu
-                        //_sp.DataReceived += _sp_DataReceived;
-                        //TODO spustit timer pro nacitani stavu prubezne
-                    }
-                    else
-                    {
-                        //TODO handler by se mel asi okamzite odebrat pri kazdem prikazu ktery prijde
-                        //odeberu handler
-                        //_sp.DataReceived -= _sp_DataReceived;
-
-                        //ukoncit timer
-                    }
+                    //nastavim handler na prijem zprav z portu
+                    //_sp.DataReceived += _sp_DataReceived;
+                    //TODO spustit timer pro nacitani stavu prubezne
                 }
                 else
                 {
-                    DiscardSendBuffer();
-                }
+                    //TODO handler by se mel asi okamzite odebrat pri kazdem prikazu ktery prijde
+                    //odeberu handler
+                    //_sp.DataReceived -= _sp_DataReceived;
 
-                return res;
+                    //ukoncit timer
+                }
             }
-            else
-            {
-                return false;
-            }
+            return res;
         }
 
         public bool SetStatus(byte writeProtectEEprom, byte minOK, byte minNG, byte bootloaderOn, byte parovanyLED, byte rozliseniCidel, byte pracovniJasLed)
         {
-            bool res;
-            PrepareInput(CmdZaklNastaveni);
+            PrepareCommand(CmdZaklNastaveni);
 
             _inBuff[4] = writeProtectEEprom;
             _inBuff[5] = minOK;
@@ -539,34 +539,29 @@ namespace Slevyr.DataAccess.Model
             _inBuff[9] = rozliseniCidel;
             _inBuff[10] = pracovniJasLed;
 
-            res = SendCommand() && ReceiveResults();
-
-            return res;
+            return SendCommand(1);
         }
 
         public bool ReadZaklNastaveni(out byte minOk, out byte minNg, out byte adrLocal, out byte verzeSw1, out byte verzeSw2, out byte verzeSw3)
         {
-            bool res = false;
-            PrepareInput(CmdReadZakSysNast);
+            PrepareCommand(CmdReadZakSysNast);
 
             minOk = 0;
             minNg = 0;
             adrLocal = 0;
             verzeSw1 = verzeSw2 = verzeSw3 = 0;
 
-            if (SendCommand())
+            var res = SendReceiveResults();
+
+            if (res)
             {
                 //načtení výsledku
-                res = ReceiveResults();
-                if (res)
-                {
-                    minOk = _outBuff[4];
-                    minNg = _outBuff[5];
-                    adrLocal = _outBuff[6];
-                    verzeSw1 = _outBuff[7];
-                    verzeSw2 = _outBuff[8];
-                    verzeSw3 = _outBuff[9];
-                }               
+                minOk = _outBuff[4];
+                minNg = _outBuff[5];
+                adrLocal = _outBuff[6];
+                verzeSw1 = _outBuff[7];
+                verzeSw2 = _outBuff[8];
+                verzeSw3 = _outBuff[9];
             }
 
             return res;
@@ -575,7 +570,6 @@ namespace Slevyr.DataAccess.Model
         public bool ReadStavCitacu(out short ok, out short ng)
         {
             Logger.Debug($"+ unit {_address}");
-            bool res = false;
 
             if (_isMockupMode)
             {
@@ -587,36 +581,28 @@ namespace Slevyr.DataAccess.Model
                 return true;
             }
 
-            PrepareInput(CmdReadStavCitacu);
+            PrepareCommand(CmdReadStavCitacu);
 
             ok = 0;
             ng = 0;
 
-            var sendOk = SendCommand();            
+            //var sendOk = SendCommand();
+            var res = SendReceiveResults();
 
-            if (sendOk)
+            if (res)
             {
                 //načtení výsledku
-                res = ReceiveResults();
-                if (res)
-                {
-                    ok = Helper.ToShort(_outBuff[4], _outBuff[5]);
-                    ng = Helper.ToShort(_outBuff[6], _outBuff[7]);
-                    UnitStatus.Ok = ok;
-                    UnitStatus.Ng = ng;
-                    UnitStatus.OkNgTime = DateTime.Now;                   
-                }
-                else
-                {
-                    UnitStatus.OkNgTime = DateTime.MaxValue;
-                    UnitStatus.ErrorTime = DateTime.Now;
-                }
+               
+                ok = Helper.ToShort(_outBuff[4], _outBuff[5]);
+                ng = Helper.ToShort(_outBuff[6], _outBuff[7]);
+                UnitStatus.Ok = ok;
+                UnitStatus.Ng = ng;
+                UnitStatus.OkNgTime = DateTime.Now;                   
             }
             else
             {
                 UnitStatus.OkNgTime = DateTime.MaxValue;
                 UnitStatus.ErrorTime = DateTime.Now;
-                res = false;
             }
 
             UnitStatus.IsOkNg = res;
@@ -637,8 +623,6 @@ namespace Slevyr.DataAccess.Model
         {
             Logger.Debug($"+ unit {_address}");
 
-            bool res = false;
-
             if (_isMockupMode)
             {
                 value = (Single)DateTime.Now.Hour * 2;  //hod. poslouzi jako hodnota casu ok
@@ -648,20 +632,17 @@ namespace Slevyr.DataAccess.Model
             }
 
 
-            PrepareInput(CmdReadHodnotuPoslCykluOk);
+            PrepareCommand(CmdReadHodnotuPoslCykluOk);
 
             value = 0;
 
-            if (SendCommand())
+            var res = SendReceiveResults();
+
+            if (res)
             {
-                //načtení výsledku
-                res = ReceiveResults();
-                if (res)
-                {
-                    value = Helper.ToSingle(_outBuff, 7);
-                    UnitStatus.CasOk = value;
-                    UnitStatus.CasOkTime = DateTime.Now;
-                }                
+                value = Helper.ToSingle(_outBuff, 7);
+                UnitStatus.CasOk = value;
+                UnitStatus.CasOkTime = DateTime.Now;
             }
 
             UnitStatus.IsCasOk = res;
@@ -675,8 +656,6 @@ namespace Slevyr.DataAccess.Model
         {
             Logger.Debug($"+ unit {_address}");
 
-            bool res = false;
-
             if (_isMockupMode)
             {
                 value = (Single)(DateTime.Now.Hour * 1.5);  //hod. poslouzi jako hodnota casu ng
@@ -685,21 +664,17 @@ namespace Slevyr.DataAccess.Model
                 return true;
             }
 
-            PrepareInput(CmdReadHodnotuPoslCykluNg);
+            PrepareCommand(CmdReadHodnotuPoslCykluNg);
 
             value = 0;
 
-            if (SendCommand())
+            var res = SendReceiveResults();
+
+            if (res)
             {
-                //načtení výsledku
-                res = ReceiveResults();
-                if (res)
-                {
-                    value = Helper.ToSingle(_outBuff, 7);
-                    UnitStatus.CasNg = value;
-                    UnitStatus.CasNgTime = DateTime.Now;
-                }
-              
+                value = Helper.ToSingle(_outBuff, 7);
+                UnitStatus.CasNg = value;
+                UnitStatus.CasNgTime = DateTime.Now;             
             }
 
             UnitStatus.IsCasNg = res;
@@ -711,22 +686,17 @@ namespace Slevyr.DataAccess.Model
 
         public bool ReadRozdilKusu(out short value)
         {
-            bool res = false;
-
-            PrepareInput(CmdReadRozdilusu);
+            PrepareCommand(CmdReadRozdilusu);
 
             value = 0;
 
-            if (SendCommand())
+            var res = SendReceiveResults();
+
+            if (res)
             {
-                //načtení výsledku
-                res = ReceiveResults();
-                if (res)
-                {
                     value = Helper.ToShort(_outBuff[8], _outBuff[9]);
                     UnitStatus.RozdilKusu = value;
-                    UnitStatus.RozdilKusuTime = DateTime.Now;
-                }
+                    UnitStatus.RozdilKusuTime = DateTime.Now;                
               
             }
 
@@ -737,23 +707,17 @@ namespace Slevyr.DataAccess.Model
 
         public bool ReadDefektivita(out Single value)
         {
-            bool res = false;
-
-            PrepareInput(CmdReadDefektivita);
+            PrepareCommand(CmdReadDefektivita);
 
             value = 0;
 
-            if (SendCommand())
-            {
-                //načtení výsledku
-                res = ReceiveResults();
+            var res = SendReceiveResults();
 
-                if (res)
-                {
-                    value = Helper.ToSingle(_outBuff, 7);
-                    UnitStatus.Defektivita = value;
-                    UnitStatus.DefektivitaTime = DateTime.Now;
-                }                
+            if (res)
+            {
+                value = Helper.ToSingle(_outBuff, 7);
+                UnitStatus.Defektivita = value;
+                UnitStatus.DefektivitaTime = DateTime.Now;
             }
 
             UnitStatus.IsDefektivita = res;

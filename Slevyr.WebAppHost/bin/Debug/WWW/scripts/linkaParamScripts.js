@@ -26,10 +26,10 @@ $(document).ready(function () {
             .done(function (data) {
 
                 if (data.IsMockupMode) {
-                    closePort();
+                    //closePort();
                     $("#isMockupMode").text(" [mockup]");
                 } else {
-                    openPort();
+                    //openPort();
                     $("#isMockupMode").text("");
                 }
 
@@ -83,14 +83,14 @@ $(document).ready(function () {
 
                 $('#WriteProtectEEprom').prop('checked', data.WriteProtectEEprom);
 
-                $('#MinOk').val(data.MinOk);
+                $('#MinOK').val(data.MinOK);
 
-                $('#MinNg').val(data.MinNG);
+                $('#MinNG').val(data.MinNG);
 
-                $('#BootloaderOn').('checked', data.BootloaderOn);
-                $('#rozliseniCidelTeploty').val(data.RozliseniCidel);
+                $('#BootloaderOn').prop('checked', data.BootloaderOn);
+                $('#RozliseniCidelTeploty').val(data.RozliseniCidel);
                 $('#PracovniJasLed').val(data.PracovniJasLed);
-                $('#addrParovanyLED').val(data.ParovanyLED);
+                $('#AddrParovanyLed').val(data.ParovanyLED);
 
             })
             .fail(function (jqXHR, textStatus, err) {
@@ -118,12 +118,12 @@ $(document).ready(function () {
             Zacatek1Smeny: $('#Zacatek1Smeny').val(),
             Zacatek2Smeny: $('#Zacatek2Smeny').val(),
             Zacatek3Smeny: $('#Zacatek3Smeny').val(),
-            WriteProtectEEprom: $('#WriteProtectEEprom').val(),
-            MinOK: $('#MinOk').val(),
-            MinNG: $('#MinNg').val(),
-            BootloaderOn: $('#BootloaderOn').val(),
-            ParovanyLED: $('#addrParovanyLED').val(),
-            RozliseniCidel: $('#rozliseniCidel').val(),
+            WriteProtectEEprom:  $('#WriteProtectEEprom').prop('checked'),
+            MinOK: $('#MinOK').val(),
+            MinNG: $('#MinNG').val(),
+            BootloaderOn: $('#BootloaderOn').prop('checked'),
+            ParovanyLED: $('#AddrParovanyLed').val(),
+            RozliseniCidel: $('#RozliseniCidelTeploty').val(),
             PracovniJasLed: $('#PracovniJasLed').val()
         };
 
@@ -145,7 +145,7 @@ $(document).ready(function () {
 
     function nastavCileSmen() {
         //alert('nastavCileSmen');
-        var varianta  = $('#typSmennosti').val();
+        var varianta  = $('#TypSmennosti').val();
         var cil1Smeny = $('#Cil1Smeny').val();
         var cil2Smeny = $('#Cil2Smeny').val();
         var cil3Smeny = $('#Cil3Smeny').val();
@@ -168,7 +168,7 @@ $(document).ready(function () {
 
     function nastavPrestavkySmen() {
         //alert('nastavPrestavkySmen');
-        var varianta = $('#typSmennosti').val();
+        var varianta = $('#TypSmennosti').val();
         var p1Smeny = $('#Prestavka1Smeny').val();
         var p2Smeny = $('#Prestavka2Smeny').val();
         var p3Smeny = $('#Prestavka3Smeny').val();
@@ -210,7 +210,7 @@ $(document).ready(function () {
 
     function nastavDefektivitu() {
         //alert('nastavDefektivitu');
-        var varianta = $('#typSmennosti').val();
+        var varianta = $('#TypSmennosti').val();
         var def1Smeny = $('#Def1Smeny').val();
         var def2Smeny = $('#Def2Smeny').val();
         var def3Smeny = $('#Def3Smeny').val();
@@ -232,16 +232,23 @@ $(document).ready(function () {
     }
 
     function nastavJednotku() {
+        var writeProtectEEprom = $('#WriteProtectEEprom').prop('checked');
+        var minOk = $('#MinOK').val();
+        var minNg = $('#MinNG').val();
+        var bootloaderOn = $('#BootloaderOn').prop('checked');
+        var parovanyLed = $('#AddrParovanyLed').val();
+        var rozliseniCidel = $('#RozliseniCidelTeploty').val();
+        var pracovniJasLed = $('#PracovniJasLed').val();
         $.getJSON(uri + '/NastavJednotku',
             {
                 addr: addr,
-                writeProtectEEprom: $('#WriteProtectEEprom').prop('checked'),
-                minOK: $('#MinOk').val(),
-                minNG: $('#MinNg').val(),
-                bootloaderOn: $('#BootloaderOn').prop('checked'),
-                parovanyLED: $('#addrParovanyLED').val(),
-                rozliseniCidel: $('#rozliseniCidelTeploty').val(),
-                pracovniJasLed: $('#PracovniJasLed').val()
+                writeProtectEEprom: writeProtectEEprom,
+                minOK: minOk,
+                minNG: minNg,
+                bootloaderOn: bootloaderOn,
+                parovanyLED: parovanyLed,
+                rozliseniCidel: rozliseniCidel,
+                pracovniJasLed: pracovniJasLed
             })
             .done(function (data) {
                 $('#stav').text('');
@@ -267,35 +274,35 @@ $(document).ready(function () {
             });
     }
 
-    function openPort() {
-        //alert("openPort");
+    //function openPort() {
+    //    //alert("openPort");
 
-        $.getJSON(uri + '/openPort',
-            {                
-            })
-            .done(function (data) {
-                $('#stav').text('serial port open');
-            })
-            .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                alert("'); - error");
-            });
-    }
+    //    $.getJSON(uri + '/openPort',
+    //        {                
+    //        })
+    //        .done(function (data) {
+    //            $('#stav').text('serial port open');
+    //        })
+    //        .fail(function (jqXHR, textStatus, err) {
+    //            $('#stav').text('Error: ' + err);
+    //            alert("'); - error");
+    //        });
+    //}
 
-    function closePort() {
-        //alert("closePort");
+    //function closePort() {
+    //    //alert("closePort");
 
-        $.getJSON(uri + '/closePort',
-            {
-            })
-            .done(function (data) {
-                $('#stav').text('serial port closed');
-            })
-            .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                alert("'); - error");
-            });
-    }
+    //    $.getJSON(uri + '/closePort',
+    //        {
+    //        })
+    //        .done(function (data) {
+    //            $('#stav').text('serial port closed');
+    //        })
+    //        .fail(function (jqXHR, textStatus, err) {
+    //            $('#stav').text('Error: ' + err);
+    //            alert("'); - error");
+    //        });
+    //}
 
    
  

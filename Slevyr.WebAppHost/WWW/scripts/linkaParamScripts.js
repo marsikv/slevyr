@@ -26,10 +26,10 @@ $(document).ready(function () {
             .done(function (data) {
 
                 if (data.IsMockupMode) {
-                    closePort();
+                    //closePort();
                     $("#isMockupMode").text(" [mockup]");
                 } else {
-                    openPort();
+                    //openPort();
                     $("#isMockupMode").text("");
                 }
 
@@ -274,35 +274,35 @@ $(document).ready(function () {
             });
     }
 
-    function openPort() {
-        //alert("openPort");
+    //function openPort() {
+    //    //alert("openPort");
 
-        $.getJSON(uri + '/openPort',
-            {                
-            })
-            .done(function (data) {
-                $('#stav').text('serial port open');
-            })
-            .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                alert("'); - error");
-            });
-    }
+    //    $.getJSON(uri + '/openPort',
+    //        {                
+    //        })
+    //        .done(function (data) {
+    //            $('#stav').text('serial port open');
+    //        })
+    //        .fail(function (jqXHR, textStatus, err) {
+    //            $('#stav').text('Error: ' + err);
+    //            alert("'); - error");
+    //        });
+    //}
 
-    function closePort() {
-        //alert("closePort");
+    //function closePort() {
+    //    //alert("closePort");
 
-        $.getJSON(uri + '/closePort',
-            {
-            })
-            .done(function (data) {
-                $('#stav').text('serial port closed');
-            })
-            .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                alert("'); - error");
-            });
-    }
+    //    $.getJSON(uri + '/closePort',
+    //        {
+    //        })
+    //        .done(function (data) {
+    //            $('#stav').text('serial port closed');
+    //        })
+    //        .fail(function (jqXHR, textStatus, err) {
+    //            $('#stav').text('Error: ' + err);
+    //            alert("'); - error");
+    //        });
+    //}
 
    
  

@@ -131,8 +131,6 @@ namespace Slevyr.DataAccess.Services
             Single casOk=-1, casNg=-1;
             _unitDictionary[addr].ReadStavCitacu(out ok, out ng);
             Logger.Info($">ok:{ok} ng:{ng}");
-            UnitsLogger.Info($"unit {addr}");
-            UnitsLogger.Info($" ok:{ok} ng:{ng}");
 
             if (_runConfig.IsReadOkNgTime)
             {
@@ -141,7 +139,6 @@ namespace Slevyr.DataAccess.Services
 
                 _unitDictionary[addr].ReadCasNG(out casNg);
                 Logger.Info($">casNg:{casNg}");
-                UnitsLogger.Info($" casOk:{casOk} casNg:{casNg}");
             }
 
             //Datum a čas;příkaz;adresa;OK;NG;časOK;časNG;9.Byte;int(10.byte,11.byte);
