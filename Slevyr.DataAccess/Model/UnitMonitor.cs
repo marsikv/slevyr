@@ -171,7 +171,8 @@ namespace Slevyr.DataAccess.Model
                     Logger.Debug(" -w");
                     //kontrola odeslání
                     var task = _sp.ReadAsync(11);
-                    task.Wait(_runConfig.SendCommandTimeOut);
+
+                task.Wait(_runConfig.SendCommandTimeOut);
 
                     if (!task.IsCompleted)
                     {
@@ -212,14 +213,14 @@ namespace Slevyr.DataAccess.Model
 
                 if (!sendOk)
                 {
-                    Thread.Sleep(200);
+                    Thread.Sleep(_runConfig.RelaxTime);
                     DiscardSendBuffer();
                     sendOk = SendCommandBasic(a,2);
                 }
 
                 if (!sendOk)
                 {
-                    Thread.Sleep(200);
+                    Thread.Sleep(_runConfig.RelaxTime);
                     DiscardSendBuffer();
                     sendOk = SendCommandBasic(a,3);
                 }
@@ -292,21 +293,21 @@ namespace Slevyr.DataAccess.Model
 
                 if (SendCommand(1))
                 {
-                    Thread.Sleep(200);
+                    Thread.Sleep(_runConfig.RelaxTime);
 
                     res = ReceiveResults(1);
 
                     if (!res)
                     {
-                        Thread.Sleep(200);
+                        Thread.Sleep(_runConfig.RelaxTime);
                         DiscardSendBuffer();
                         if (SendCommand(2))
                         {
-                            Thread.Sleep(200);
+                            Thread.Sleep(_runConfig.RelaxTime);
                             res = ReceiveResults(2);
                             if (!res)
                             {
-                                Thread.Sleep(200);
+                                Thread.Sleep(_runConfig.RelaxTime);
                                 DiscardSendBuffer();
                             }
                         }
@@ -351,9 +352,9 @@ namespace Slevyr.DataAccess.Model
 
             _inBuff[4] = (byte)varianta;
 
-            UnitConfig.Cil1Smeny = cil1 * 10;
-            UnitConfig.Cil2Smeny = cil2 * 10;
-            UnitConfig.Cil3Smeny = cil3 * 10;
+            UnitConfig.Cil1Smeny = cil1;
+            UnitConfig.Cil2Smeny = cil2;
+            UnitConfig.Cil3Smeny = cil3;
 
             Helper.FromShort(cil1, out _inBuff[5], out _inBuff[6]);
             Helper.FromShort(cil2, out _inBuff[7], out _inBuff[8]);
@@ -595,19 +596,24 @@ namespace Slevyr.DataAccess.Model
                
                 ok = Helper.ToShort(_outBuff[4], _outBuff[5]);
                 ng = Helper.ToShort(_outBuff[6], _outBuff[7]);
+                short machineStatus = _outBuff[9];
+
                 UnitStatus.Ok = ok;
                 UnitStatus.Ng = ng;
+                UnitStatus.MachineStatus = machineStatus;
+
                 UnitStatus.OkNgTime = DateTime.Now;                   
             }
             else
             {
                 UnitStatus.OkNgTime = DateTime.MaxValue;
                 UnitStatus.ErrorTime = DateTime.Now;
+                UnitStatus.MachineStatus = 2; //todo udelat enum
             }
 
             UnitStatus.IsOkNg = res;
 
-            Logger.Debug($"- {res} unit {_address}");
+            Logger.Debug($"- {res} machine {UnitStatus.MachineStatus}/unit {_address}");
 
             return res;
         }

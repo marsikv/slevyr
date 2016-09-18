@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -144,7 +145,10 @@ namespace Slevyr.DataAccess.Services
             //Datum a čas;příkaz;adresa;OK;NG;časOK;časNG;9.Byte;int(10.byte,11.byte);
             //2016 - 09 - 14 08:05:28; 4; 172; 1180; 16; 6,258688; 525,0415; ; ;
 
-            UnitsLogger.Info($" 4;{addr};{ok};{ng};{casOk};{casNg};'9.Byte';int(10.byte,11.byte)';");
+            string casOkStr = (_runConfig.IsReadOkNgTime) ? casOk.ToString(CultureInfo.InvariantCulture) : string.Empty;
+            string casNgStr = (_runConfig.IsReadOkNgTime) ? casNg.ToString(CultureInfo.InvariantCulture) : string.Empty;
+
+            UnitsLogger.Info($" 4;{addr};{ok};{ng};{casOkStr};{casNgStr};{_unitDictionary[addr].UnitStatus.MachineStatus}");
 
             //prepocitat pro zobrazeni tabule
             _unitDictionary[addr].RecalcTabule();

@@ -21,6 +21,14 @@ namespace Slevyr.DataAccess.Model
         public short Ok { get; set; }
         public short Ng { get; set; }
 
+        /// <summary>
+        /// 1 - stroj stoji
+        /// 0 - stroj jede
+        /// 255 - stroj ma poruchu 
+        /// 2 - Nezname
+        /// </summary>
+        public short MachineStatus { get; set; }
+
         public DateTime LastCheckTime { get; set; }
         public string LastCheckTimeTxt => LastCheckTime.ToShortTimeString();
 
