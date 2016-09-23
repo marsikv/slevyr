@@ -15,5 +15,6 @@ namespace Slevyr.DataAccess.Model
         //public int PortReadTimeout;
         public string DataFilePath;
         public IEnumerable<int> UnitAddrs;
+        public bool IsWriteEmptyToLog;         //pokud je true zapisuje do logu jednotek radek s prazdnymi hodnotami pokud dojde k chybe pri vycitani jednotky
     }
 }

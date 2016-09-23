@@ -151,8 +151,10 @@ var addr = null;
         $('#cilDefTabule').text(data.CilDefectTabule + "%");
         $('#aktualniDefTabule').text(data.AktualDefectTabuleTxt + "%");
 
-
-
-        $('#stav').text('');
+        //$('#stav').text('');
+        if (data.MachineStatus == 0)
+            $('#stav').text('');
+        else
+            $('#stav').text(data.MachineStatusTxt);
     }
 

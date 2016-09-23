@@ -600,7 +600,7 @@ namespace Slevyr.DataAccess.Model
 
                 UnitStatus.Ok = ok;
                 UnitStatus.Ng = ng;
-                UnitStatus.MachineStatus = machineStatus;
+                UnitStatus.MachineStatus = (MachineStateEnum)machineStatus;
 
                 UnitStatus.OkNgTime = DateTime.Now;                   
             }
@@ -608,12 +608,12 @@ namespace Slevyr.DataAccess.Model
             {
                 UnitStatus.OkNgTime = DateTime.MaxValue;
                 UnitStatus.ErrorTime = DateTime.Now;
-                UnitStatus.MachineStatus = 2; //todo udelat enum
+                UnitStatus.MachineStatus = MachineStateEnum.Neznamy; //todo udelat enum
             }
 
             UnitStatus.IsOkNg = res;
 
-            Logger.Debug($"- {res} machine {UnitStatus.MachineStatus}/unit {_address}");
+            Logger.Debug($"- {res} machineState {UnitStatus.MachineStatus}/unit {_address}");
 
             return res;
         }

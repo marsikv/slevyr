@@ -1,14 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NLog;
+using Slevyr.DataAccess.Services;
 
 namespace Slevyr.DataAccess.Model
 {
+
+    public enum MachineStateEnum
+    {
+        [Description("Výroba")]
+        Vyroba = 0,
+        [Description("Přerušení výroby")]
+        Preruseni = 1,
+        [Description("Stop stroje")]
+        Stop =2,
+        [Description("Změna modelu")]
+        ZmenaModelu = 3,
+        [Description("Porucha")]
+        Porucha = 4,
+        [Description("Servis")]
+        Servis =5,
+        [Description("Neznámý stav")]
+        Neznamy =99
+    }
+
     public class UnitStatus
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -21,13 +42,8 @@ namespace Slevyr.DataAccess.Model
         public short Ok { get; set; }
         public short Ng { get; set; }
 
-        /// <summary>
-        /// 1 - stroj stoji
-        /// 0 - stroj jede
-        /// 255 - stroj ma poruchu 
-        /// 2 - Nezname
-        /// </summary>
-        public short MachineStatus { get; set; }
+        public MachineStateEnum MachineStatus { get; set; }
+        public string MachineStatusTxt => Helper.GetDescriptionFromEnumValue(MachineStatus);
 
         public DateTime LastCheckTime { get; set; }
         public string LastCheckTimeTxt => LastCheckTime.ToShortTimeString();
@@ -60,6 +76,11 @@ namespace Slevyr.DataAccess.Model
 
         public int RozdilTabule { get; set; }
         public string RozdilTabuleTxt => (RozdilTabule == int.MinValue) ? "-" : RozdilTabule.ToString();
+
+        /// <summary>
+        /// cas v sec. ktery uz aktualni smene ubehl
+        /// </summary>
+        public int UbehlyCasSmenySec { get; set; }
 
         public bool IsTabuleOk { get; set; }
 
@@ -117,8 +138,6 @@ namespace Slevyr.DataAccess.Model
 
                 IsPrestavkaTabule = false;
 
-                int pracovniCasSec = 0;
-
                 Logger.Debug($"actual time is {dateTimeNow}");
 
                 if (secondsFromMidn > zacatekSmeny1Sec && secondsFromMidn < zacatekSmeny2Sec)  //smena1
@@ -127,19 +146,19 @@ namespace Slevyr.DataAccess.Model
                     if (secondsFromMidn < zacatekPrestavkySmeny1Sec)
                     {
                         IsPrestavkaTabule = false;
-                        pracovniCasSec = secondsFromMidn - zacatekSmeny1Sec;
+                        UbehlyCasSmenySec = secondsFromMidn - zacatekSmeny1Sec;
                         o = "c1";
                     }
                     else if (secondsFromMidn > zacatekPrestavkySmeny1Sec && secondsFromMidn < konecPrestavkySmeny1Sec)
                     {
                         IsPrestavkaTabule = true;
-                        pracovniCasSec = 0;
+                        UbehlyCasSmenySec = 0;
                         o = "pr";
                     }
                     else
                     {
                         IsPrestavkaTabule = false;
-                        pracovniCasSec = zacatekPrestavkySmeny1Sec - zacatekSmeny1Sec + secondsFromMidn - konecPrestavkySmeny1Sec;
+                        UbehlyCasSmenySec = zacatekPrestavkySmeny1Sec - zacatekSmeny1Sec + secondsFromMidn - konecPrestavkySmeny1Sec;
                         o = "c2";
                     }
                     CilKusuTabule = unitConfig.Cil1Smeny;
@@ -152,19 +171,19 @@ namespace Slevyr.DataAccess.Model
                     if (secondsFromMidn < zacatekPrestavkySmeny2Sec)
                     {
                         IsPrestavkaTabule = false;
-                        pracovniCasSec = secondsFromMidn - zacatekSmeny2Sec;
+                        UbehlyCasSmenySec = secondsFromMidn - zacatekSmeny2Sec;
                         o = "c1";
                     }
                     else if (secondsFromMidn > zacatekPrestavkySmeny2Sec && secondsFromMidn < konecPrestavkySmeny2Sec)
                     {
                         IsPrestavkaTabule = true;
-                        pracovniCasSec = 0;
+                        UbehlyCasSmenySec = 0;
                         o = "pr";
                     }
                     else
                     {
                         IsPrestavkaTabule = false;
-                        pracovniCasSec = zacatekPrestavkySmeny2Sec - zacatekSmeny2Sec + secondsFromMidn - konecPrestavkySmeny2Sec;
+                        UbehlyCasSmenySec = zacatekPrestavkySmeny2Sec - zacatekSmeny2Sec + secondsFromMidn - konecPrestavkySmeny2Sec;
                         o = "c2";
                     }
                     CilKusuTabule = unitConfig.Cil2Smeny;
@@ -177,25 +196,25 @@ namespace Slevyr.DataAccess.Model
                     if (secondsFromMidn > zacatekSmeny3Sec)
                     {
                         IsPrestavkaTabule = false;
-                        pracovniCasSec = secondsFromMidn - zacatekSmeny3Sec;
+                        UbehlyCasSmenySec = secondsFromMidn - zacatekSmeny3Sec;
                         o = "c1";
                     }
                     else if (secondsFromMidn < zacatekPrestavkySmeny3Sec)
                     {
                         IsPrestavkaTabule = false;
-                        pracovniCasSec = 86400 - zacatekSmeny3Sec + secondsFromMidn;
+                        UbehlyCasSmenySec = 86400 - zacatekSmeny3Sec + secondsFromMidn;
                         o = "c2 (po pulnoci)";
                     }
                     else if (secondsFromMidn >= zacatekPrestavkySmeny3Sec && secondsFromMidn < konecPrestavkySmeny3Sec)
                     {
                         IsPrestavkaTabule = true;
-                        pracovniCasSec = 0;
+                        UbehlyCasSmenySec = 0;
                         o = "pr";
                     }
                     else
                     {
                         IsPrestavkaTabule = false;
-                        pracovniCasSec = 86400 - zacatekSmeny3Sec + zacatekPrestavkySmeny3Sec + secondsFromMidn - konecPrestavkySmeny3Sec;
+                        UbehlyCasSmenySec = 86400 - zacatekSmeny3Sec + zacatekPrestavkySmeny3Sec + secondsFromMidn - konecPrestavkySmeny3Sec;
                         o = "c3";
                     }
                     CilKusuTabule = unitConfig.Cil3Smeny;
@@ -209,7 +228,7 @@ namespace Slevyr.DataAccess.Model
                     try
                     {
                         double casNa1Kus = (double)delkaSmenySec / (double)CilKusuTabule;
-                        var aktualniCil = pracovniCasSec / casNa1Kus;
+                        var aktualniCil = UbehlyCasSmenySec / casNa1Kus;
                         RozdilTabule = (int)Math.Round(Ok - aktualniCil);
                     }
                     catch (Exception)

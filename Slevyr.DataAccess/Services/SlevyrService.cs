@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Timers;
 using Newtonsoft.Json;
@@ -28,6 +29,7 @@ namespace Slevyr.DataAccess.Services
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly Logger UnitsLogger = LogManager.GetLogger("Units");
+        private static readonly Logger Units2Logger = LogManager.GetLogger("Units2");
 
         private static BackgroundWorker _bw;
         private static bool _isWorkerStarted;
@@ -130,10 +132,11 @@ namespace Slevyr.DataAccess.Services
 
             short ok, ng;
             Single casOk=-1, casNg=-1;
-            _unitDictionary[addr].ReadStavCitacu(out ok, out ng);
-            Logger.Info($">ok:{ok} ng:{ng}");
+            var res = _unitDictionary[addr].ReadStavCitacu(out ok, out ng);
+            string s = res ? "" : "err";
+            Logger.Info($">ok:{ok} ng:{ng} " + s);
 
-            if (_runConfig.IsReadOkNgTime)
+            if (res && _runConfig.IsReadOkNgTime)
             {
                 _unitDictionary[addr].ReadCasOK(out casOk);
                 Logger.Info($">casOk:{casOk}");
@@ -142,18 +145,43 @@ namespace Slevyr.DataAccess.Services
                 Logger.Info($">casNg:{casNg}");
             }
 
-            //Datum a čas;příkaz;adresa;OK;NG;časOK;časNG;9.Byte;int(10.byte,11.byte);
-            //2016 - 09 - 14 08:05:28; 4; 172; 1180; 16; 6,258688; 525,0415; ; ;
+            if (res)
+            {
+                //prepocitat pro zobrazeni tabule
+                _unitDictionary[addr].RecalcTabule();
 
-            string casOkStr = (_runConfig.IsReadOkNgTime) ? casOk.ToString(CultureInfo.InvariantCulture) : string.Empty;
-            string casNgStr = (_runConfig.IsReadOkNgTime) ? casNg.ToString(CultureInfo.InvariantCulture) : string.Empty;
+                _unitDictionary[addr].UnitStatus.LastCheckTime = DateTime.Now;
 
-            UnitsLogger.Info($" 4;{addr};{ok};{ng};{casOkStr};{casNgStr};{_unitDictionary[addr].UnitStatus.MachineStatus}");
+                string casOkStr = (_runConfig.IsReadOkNgTime)
+                    ? casOk.ToString(CultureInfo.InvariantCulture)
+                    : string.Empty;
+                string casNgStr = (_runConfig.IsReadOkNgTime)
+                    ? casNg.ToString(CultureInfo.InvariantCulture)
+                    : string.Empty;
 
-            //prepocitat pro zobrazeni tabule
-            _unitDictionary[addr].RecalcTabule();
+                StringBuilder sb = new StringBuilder();
+                sb.Append($"4;{_unitDictionary[addr].UnitConfig.UnitName};{addr}"); //az po 4
+                sb.Append($";{_unitDictionary[addr].UnitStatus.CilKusuTabule}"); //5
+                sb.Append($";{ok}"); //6
+                sb.Append(_runConfig.IsReadOkNgTime ? $";{_unitDictionary[addr].UnitStatus.CasOk}" : ";"); //7
+                sb.Append($";{_unitDictionary[addr].UnitStatus.UbehlyCasSmenySec/(float) ok:F}"); //8
+                sb.Append($";{_unitDictionary[addr].UnitStatus.CilDefectTabule:F}"); //9
+                sb.Append($";{ng}"); //10
+                sb.Append(_runConfig.IsReadOkNgTime ? $";{_unitDictionary[addr].UnitStatus.CasNg}" : ";"); //11
+                sb.Append($";{_unitDictionary[addr].UnitStatus.UbehlyCasSmenySec / (float)ng:F}"); //12
+                sb.Append($";{_unitDictionary[addr].UnitStatus.RozdilTabuleTxt}"); //13
+                sb.Append($";{_unitDictionary[addr].UnitStatus.AktualDefectTabuleTxt}"); //14
+                sb.Append($";{_unitDictionary[addr].UnitStatus.MachineStatus}"); //15
+                sb.Append($";{Convert.ToInt32(_unitDictionary[addr].UnitStatus.IsPrestavkaTabule)}"); //16
+                Units2Logger.Info(sb.ToString);
 
-            _unitDictionary[addr].UnitStatus.LastCheckTime = DateTime.Now;
+                UnitsLogger.Info($"4;{addr};{ok};{ng};{casOkStr};{casNgStr};{(int)_unitDictionary[addr].UnitStatus.MachineStatus}");
+
+            }
+            else
+            {
+                if (_runConfig.IsWriteEmptyToLog) UnitsLogger.Info($" 4;{addr};;;;;");
+            }
 
             Logger.Info($"-");
 

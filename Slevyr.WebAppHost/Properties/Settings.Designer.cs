@@ -175,5 +175,17 @@ namespace Slevyr.WebAppHost.Properties {
                 this["IsReadOkNgTime"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool IsWriteEmptyToLog {
+            get {
+                return ((bool)(this["IsWriteEmptyToLog"]));
+            }
+            set {
+                this["IsWriteEmptyToLog"] = value;
+            }
+        }
     }
 }

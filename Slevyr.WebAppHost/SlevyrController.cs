@@ -59,6 +59,7 @@ namespace Slevyr.WebAppHost
                 SendCommandTimeOut = Settings.Default.SendCommandTimeOut,
                 DataFilePath = Settings.Default.JsonFilePath,
                 UnitAddrs = unitAddrs,
+                IsWriteEmptyToLog = Settings.Default.IsWriteEmptyToLog
             };
 
             PortConfig = new SerialPortConfig()
