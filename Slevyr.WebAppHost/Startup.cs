@@ -43,10 +43,16 @@ namespace Slevyr.WebAppHost
             var options = new FileServerOptions
             {
                 EnableDefaultFiles = true,
-                FileSystem = physicalFileSystem
+                FileSystem = physicalFileSystem,
             };
             options.StaticFileOptions.FileSystem = physicalFileSystem;
             options.StaticFileOptions.ServeUnknownFileTypes = true;
+            options.StaticFileOptions.OnPrepareResponse = (staticFileResponseContext) =>
+            {
+                staticFileResponseContext.OwinContext.Response.Headers.Add("Cache-Control",
+                    new[] { "public", "no-cache, no-store, must-revalidate, max-age=0" });
+            };
+
             options.DefaultFilesOptions.DefaultFileNames = new[]
             {
                 "menu.html"

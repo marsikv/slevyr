@@ -110,7 +110,12 @@ namespace Slevyr.DataAccess.Services
             Logger.Info("+");
 
             if (_runConfig.IsMockupMode) return true;
-            if (_serialPort.IsOpen) _serialPort.Close();
+            if (_serialPort.IsOpen)
+            {
+                _serialPort.DiscardInBuffer();
+                _serialPort.DiscardOutBuffer();
+                _serialPort.Close();
+            }
             return !_serialPort.IsOpen;
         }
 
@@ -159,16 +164,30 @@ namespace Slevyr.DataAccess.Services
                     ? casNg.ToString(CultureInfo.InvariantCulture)
                     : string.Empty;
 
+                //4;Linka montáž čerpadel - EBS1;170;
+                //6000; - 5
+                //0; - 6 ok)
+                //;  - 7 cas ok
+                //+nekonečno; - 8 ubehly cas smeny
+                //0,00; - 9
+                //0; - 10 ng
+                //; - 11 cas ng
+                //+nekonečno; - 12
+                //-1600;  - 13
+                //-;      - 14 
+                //Vyroba; - 15
+                //0       - 16
+
                 StringBuilder sb = new StringBuilder();
                 sb.Append($"4;{_unitDictionary[addr].UnitConfig.UnitName};{addr}"); //az po 4
                 sb.Append($";{_unitDictionary[addr].UnitStatus.CilKusuTabule}"); //5
                 sb.Append($";{ok}"); //6
                 sb.Append(_runConfig.IsReadOkNgTime ? $";{_unitDictionary[addr].UnitStatus.CasOk}" : ";"); //7
-                sb.Append($";{_unitDictionary[addr].UnitStatus.UbehlyCasSmenySec/(float) ok:F}"); //8
+                sb.Append(ok != 0 ? $";{_unitDictionary[addr].UnitStatus.UbehlyCasSmenySec/(float) ok:F}" : ";");
                 sb.Append($";{_unitDictionary[addr].UnitStatus.CilDefectTabule:F}"); //9
                 sb.Append($";{ng}"); //10
                 sb.Append(_runConfig.IsReadOkNgTime ? $";{_unitDictionary[addr].UnitStatus.CasNg}" : ";"); //11
-                sb.Append($";{_unitDictionary[addr].UnitStatus.UbehlyCasSmenySec / (float)ng:F}"); //12
+                sb.Append(ng != 0 ? $";{_unitDictionary[addr].UnitStatus.UbehlyCasSmenySec / (float)ng:F}":";"); //12
                 sb.Append($";{_unitDictionary[addr].UnitStatus.RozdilTabuleTxt}"); //13
                 sb.Append($";{_unitDictionary[addr].UnitStatus.AktualDefectTabuleTxt}"); //14
                 sb.Append($";{_unitDictionary[addr].UnitStatus.MachineStatus}"); //15

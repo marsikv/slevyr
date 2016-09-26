@@ -143,10 +143,11 @@ namespace Slevyr.DataAccess.Model
             return res;
         }
 
-        private void DiscardSendBuffer()
+        private void DiscardBuffers()
         {
             Logger.Debug("");
             _sp.DiscardInBuffer();
+            _sp.DiscardOutBuffer();
         }
 
         /// <summary>
@@ -214,20 +215,20 @@ namespace Slevyr.DataAccess.Model
                 if (!sendOk)
                 {
                     Thread.Sleep(_runConfig.RelaxTime);
-                    DiscardSendBuffer();
+                    DiscardBuffers();
                     sendOk = SendCommandBasic(a,2);
                 }
 
                 if (!sendOk)
                 {
                     Thread.Sleep(_runConfig.RelaxTime);
-                    DiscardSendBuffer();
+                    DiscardBuffers();
                     sendOk = SendCommandBasic(a,3);
                 }
 
                 if (!sendOk)
                 {
-                    DiscardSendBuffer();
+                    DiscardBuffers();
                 }
             }
 
@@ -300,7 +301,7 @@ namespace Slevyr.DataAccess.Model
                     if (!res)
                     {
                         Thread.Sleep(_runConfig.RelaxTime);
-                        DiscardSendBuffer();
+                        DiscardBuffers();
                         if (SendCommand(2))
                         {
                             Thread.Sleep(_runConfig.RelaxTime);
@@ -308,7 +309,7 @@ namespace Slevyr.DataAccess.Model
                             if (!res)
                             {
                                 Thread.Sleep(_runConfig.RelaxTime);
-                                DiscardSendBuffer();
+                                DiscardBuffers();
                             }
                         }
                     }

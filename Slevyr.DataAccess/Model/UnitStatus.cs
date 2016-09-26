@@ -231,18 +231,20 @@ namespace Slevyr.DataAccess.Model
                         var aktualniCil = UbehlyCasSmenySec / casNa1Kus;
                         RozdilTabule = (int)Math.Round(Ok - aktualniCil);
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         RozdilTabule = int.MinValue;
+                        Logger.Error(ex);
                     }
                     
                     try
                     {
                         AktualDefectTabule = (float)Ng / (float)Ok;
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         AktualDefectTabule = float.NaN;
+                        Logger.Error(ex);
                     }
                 }
 
