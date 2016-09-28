@@ -14,10 +14,12 @@ var addr = null;
 
         $("#AddrIdDropDown").change(onAddrIdChange);
 
+        jQuery.ajaxSetup({ cache: false });
+
     });
 
     function readRunConfig() {
-        //alert('readConfig');
+        //alert('readConfig')
         $.getJSON(uri + '/getConfig?')
             .done(function (data) {
                 isTimerEnabled = data.IsRefreshTimerOn;

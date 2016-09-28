@@ -153,49 +153,41 @@ namespace Slevyr.DataAccess.Services
             if (res)
             {
                 //prepocitat pro zobrazeni tabule
-                _unitDictionary[addr].RecalcTabule();
+                try
+                {
+                    _unitDictionary[addr].RecalcTabule();
 
-                _unitDictionary[addr].UnitStatus.LastCheckTime = DateTime.Now;
+                    _unitDictionary[addr].UnitStatus.LastCheckTime = DateTime.Now;
 
-                string casOkStr = (_runConfig.IsReadOkNgTime)
-                    ? casOk.ToString(CultureInfo.InvariantCulture)
-                    : string.Empty;
-                string casNgStr = (_runConfig.IsReadOkNgTime)
-                    ? casNg.ToString(CultureInfo.InvariantCulture)
-                    : string.Empty;
+                    string casOkStr = (_runConfig.IsReadOkNgTime)
+                        ? casOk.ToString(CultureInfo.InvariantCulture)
+                        : string.Empty;
+                    string casNgStr = (_runConfig.IsReadOkNgTime)
+                        ? casNg.ToString(CultureInfo.InvariantCulture)
+                        : string.Empty;
 
-                //4;Linka montáž čerpadel - EBS1;170;
-                //6000; - 5
-                //0; - 6 ok)
-                //;  - 7 cas ok
-                //+nekonečno; - 8 ubehly cas smeny
-                //0,00; - 9
-                //0; - 10 ng
-                //; - 11 cas ng
-                //+nekonečno; - 12
-                //-1600;  - 13
-                //-;      - 14 
-                //Vyroba; - 15
-                //0       - 16
+                    UnitsLogger.Info($"4;{addr};{ok};{ng};{casOkStr};{casNgStr};{(int)_unitDictionary[addr].UnitStatus.MachineStatus}");
 
-                StringBuilder sb = new StringBuilder();
-                sb.Append($"4;{_unitDictionary[addr].UnitConfig.UnitName};{addr}"); //az po 4
-                sb.Append($";{_unitDictionary[addr].UnitStatus.CilKusuTabule}"); //5
-                sb.Append($";{ok}"); //6
-                sb.Append(_runConfig.IsReadOkNgTime ? $";{_unitDictionary[addr].UnitStatus.CasOk}" : ";"); //7
-                sb.Append(ok != 0 ? $";{_unitDictionary[addr].UnitStatus.UbehlyCasSmenySec/(float) ok:F}" : ";");
-                sb.Append($";{_unitDictionary[addr].UnitStatus.CilDefectTabule:F}"); //9
-                sb.Append($";{ng}"); //10
-                sb.Append(_runConfig.IsReadOkNgTime ? $";{_unitDictionary[addr].UnitStatus.CasNg}" : ";"); //11
-                sb.Append(ng != 0 ? $";{_unitDictionary[addr].UnitStatus.UbehlyCasSmenySec / (float)ng:F}":";"); //12
-                sb.Append($";{_unitDictionary[addr].UnitStatus.RozdilTabuleTxt}"); //13
-                sb.Append($";{_unitDictionary[addr].UnitStatus.AktualDefectTabuleTxt}"); //14
-                sb.Append($";{_unitDictionary[addr].UnitStatus.MachineStatus}"); //15
-                sb.Append($";{Convert.ToInt32(_unitDictionary[addr].UnitStatus.IsPrestavkaTabule)}"); //16
-                Units2Logger.Info(sb.ToString);
-
-                UnitsLogger.Info($"4;{addr};{ok};{ng};{casOkStr};{casNgStr};{(int)_unitDictionary[addr].UnitStatus.MachineStatus}");
-
+                    StringBuilder sb = new StringBuilder();
+                    sb.Append($"4;{_unitDictionary[addr].UnitConfig.UnitName};{addr}"); //az po 4
+                    sb.Append($";{_unitDictionary[addr].UnitStatus.CilKusuTabule}"); //5
+                    sb.Append($";{ok}"); //6
+                    sb.Append(_runConfig.IsReadOkNgTime ? $";{_unitDictionary[addr].UnitStatus.CasOk}" : ";"); //7
+                    sb.Append(ok != 0 ? $";{_unitDictionary[addr].UnitStatus.UbehlyCasSmenySec / (float)ok:F}" : ";");
+                    sb.Append($";{_unitDictionary[addr].UnitStatus.CilDefectTabule:F}"); //9
+                    sb.Append($";{ng}"); //10
+                    sb.Append(_runConfig.IsReadOkNgTime ? $";{_unitDictionary[addr].UnitStatus.CasNg}" : ";"); //11
+                    sb.Append(ng != 0 ? $";{_unitDictionary[addr].UnitStatus.UbehlyCasSmenySec / (float)ng:F}" : ";"); //12
+                    sb.Append($";{_unitDictionary[addr].UnitStatus.RozdilTabuleTxt}"); //13
+                    sb.Append($";{_unitDictionary[addr].UnitStatus.AktualDefectTabuleTxt}"); //14
+                    sb.Append($";{_unitDictionary[addr].UnitStatus.MachineStatus}"); //15
+                    sb.Append($";{Convert.ToInt32(_unitDictionary[addr].UnitStatus.IsPrestavkaTabule)}"); //16
+                    Units2Logger.Info(sb.ToString);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex);
+                }
             }
             else
             {
