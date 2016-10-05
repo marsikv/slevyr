@@ -17,6 +17,8 @@ $(document).ready(function () {
         $("#NastavJednotku").click(nastavJednotku);
 
         $("#SyncTime").click(nastavAktualniCas);
+
+        jQuery.ajaxSetup({ cache: false });
     });
 
     function readRunConfig() {

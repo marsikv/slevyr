@@ -31,6 +31,8 @@ namespace Slevyr.WebAppHost
     {
         #region Fields
 
+        static readonly string ApiVersion = "1.0";
+
         static readonly RunConfig RunConfig;
 
         static readonly SerialPortConfig PortConfig;
@@ -45,7 +47,7 @@ namespace Slevyr.WebAppHost
         {
             Logger.Info("+");
 
-            var unitAddrs = Settings.Default.UnitAddrs.Split(';').Select(s => Int32.Parse(s));
+            var unitAddrs = Settings.Default.UnitAddrs.Split(';').Select(int.Parse);
 
             RunConfig = new RunConfig
             {
@@ -83,6 +85,14 @@ namespace Slevyr.WebAppHost
         #endregion
 
         #region RunConfig
+
+        [HttpGet]
+        public String GetApiVersion()
+        {
+            Logger.Info("+");
+
+            return ApiVersion;
+        }
 
         [HttpGet]
         public RunConfig GetConfig()

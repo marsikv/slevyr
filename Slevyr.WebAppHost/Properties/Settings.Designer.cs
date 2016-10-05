@@ -106,18 +106,6 @@ namespace Slevyr.WebAppHost.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
-        public int RefreshTimerPeriod {
-            get {
-                return ((int)(this["RefreshTimerPeriod"]));
-            }
-            set {
-                this["RefreshTimerPeriod"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("100")]
         public string UnitAddrs {
             get {
@@ -185,6 +173,30 @@ namespace Slevyr.WebAppHost.Properties {
             }
             set {
                 this["IsWriteEmptyToLog"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5000")]
+        public int RefreshTimerPeriod {
+            get {
+                return ((int)(this["RefreshTimerPeriod"]));
+            }
+            set {
+                this["RefreshTimerPeriod"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UseLocalHost {
+            get {
+                return ((bool)(this["UseLocalHost"]));
+            }
+            set {
+                this["UseLocalHost"] = value;
             }
         }
     }

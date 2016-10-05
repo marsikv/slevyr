@@ -42,8 +42,16 @@ namespace Slevyr.DataAccess.Model
         public short Ok { get; set; }
         public short Ng { get; set; }
 
+        /// <summary>
+        /// Stav stroje, byte 9
+        /// </summary>
         public MachineStateEnum MachineStatus { get; set; }
         public string MachineStatusTxt => Helper.GetDescriptionFromEnumValue(MachineStatus);
+
+        /// <summary>
+        /// Jak dlouho stroj stoji v sec (byte 10 a 11)
+        /// </summary>
+        public int MachineShutdownTime { get; set; }
 
         public DateTime LastCheckTime { get; set; }
         public string LastCheckTimeTxt => LastCheckTime.ToShortTimeString();

@@ -247,7 +247,7 @@ namespace Slevyr.DataAccess.Services
 
             if (_runConfig.IsMockupMode) return true;
 
-            return _unitDictionary[addr].SetCas(new DateTime());
+            return _unitDictionary[addr].SetCas(DateTime.Now);
         }
 
 
@@ -341,7 +341,7 @@ namespace Slevyr.DataAccess.Services
             _bw.DoWork += _bw_DoWork;
             _bw.RunWorkerAsync();
 
-            Logger.Info("*** read worker started ***");
+            Logger.Info("***  worker started ***");
         }
 
         public static void StopWorker()

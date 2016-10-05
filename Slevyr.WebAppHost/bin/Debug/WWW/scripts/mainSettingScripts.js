@@ -3,6 +3,7 @@ var uri = 'api/slevyr';
     $(document).ready(function () {
         readRunConfig();
         $("#Apply").click(applySettings);
+        jQuery.ajaxSetup({ cache: false });
     });
 
     function readRunConfig() {

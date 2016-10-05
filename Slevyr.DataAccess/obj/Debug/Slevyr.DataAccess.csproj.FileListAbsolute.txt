@@ -28,4 +28,3 @@ C:\devel\apam\slevyr\Slevyr.DataAccess\obj\Debug\Slevyr.DataAccess.csprojResolve
 C:\devel\apam\slevyr\Slevyr.DataAccess\obj\Debug\Slevyr.DataAccess.dll
 C:\devel\apam\slevyr\Slevyr.DataAccess\obj\Debug\Slevyr.DataAccess.pdb
 C:\devel\apam\slevyr\Slevyr.DataAccess\bin\Debug\Newtonsoft.Json.dll
-C:\devel\apam\slevyr\Slevyr.DataAccess\bin\Debug\Newtonsoft.Json.xml

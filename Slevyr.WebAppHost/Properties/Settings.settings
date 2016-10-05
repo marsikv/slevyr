@@ -23,9 +23,6 @@
     <Setting Name="WebAppPort" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">5000</Value>
     </Setting>
-    <Setting Name="RefreshTimerPeriod" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">1000</Value>
-    </Setting>
     <Setting Name="UnitAddrs" Type="System.String" Scope="User">
       <Value Profile="(Default)">100</Value>
     </Setting>
@@ -43,6 +40,12 @@
     </Setting>
     <Setting Name="IsWriteEmptyToLog" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="RefreshTimerPeriod" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">5000</Value>
+    </Setting>
+    <Setting Name="UseLocalHost" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

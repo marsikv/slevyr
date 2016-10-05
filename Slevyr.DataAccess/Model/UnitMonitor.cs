@@ -412,7 +412,6 @@ namespace Slevyr.DataAccess.Model
         {
             Logger.Debug($"+ unit {_address}");
 
-            bool res;
             PrepareCommand(CmdSetDatumDen);
 
             _inBuff[4] = (byte)dt.Hour;
@@ -423,7 +422,7 @@ namespace Slevyr.DataAccess.Model
             _inBuff[9] = (byte)(dt.Year-2000);
             _inBuff[10] = (byte)dt.DayOfWeek;
 
-            res = SendCommand(1); 
+            var res = SendCommand(1); 
 
             Logger.Debug($"- {res} unit {_address}");
 
@@ -597,11 +596,13 @@ namespace Slevyr.DataAccess.Model
                
                 ok = Helper.ToShort(_outBuff[4], _outBuff[5]);
                 ng = Helper.ToShort(_outBuff[6], _outBuff[7]);
-                short machineStatus = _outBuff[9];
+                short machineStatus = _outBuff[8];
+                short shutdownTime = Helper.ToShort(_outBuff[9], _outBuff[10]);
 
                 UnitStatus.Ok = ok;
                 UnitStatus.Ng = ng;
                 UnitStatus.MachineStatus = (MachineStateEnum)machineStatus;
+                UnitStatus.MachineShutdownTime = shutdownTime;
 
                 UnitStatus.OkNgTime = DateTime.Now;                   
             }
@@ -609,7 +610,7 @@ namespace Slevyr.DataAccess.Model
             {
                 UnitStatus.OkNgTime = DateTime.MaxValue;
                 UnitStatus.ErrorTime = DateTime.Now;
-                UnitStatus.MachineStatus = MachineStateEnum.Neznamy; //todo udelat enum
+                UnitStatus.MachineStatus = MachineStateEnum.Neznamy; 
             }
 
             UnitStatus.IsOkNg = res;
