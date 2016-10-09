@@ -262,7 +262,7 @@ $(document).ready(function () {
     }
 
     function nastavAktualniCas() {
-        alert('nastavAktualniCas');
+        //alert('nastavAktualniCas');
         $.getJSON(uri + '/nastavAktualniCas',
             {
                 addr: addr

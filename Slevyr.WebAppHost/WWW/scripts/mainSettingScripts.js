@@ -3,6 +3,7 @@ var uri = 'api/slevyr';
     $(document).ready(function () {
         readRunConfig();
         $("#Apply").click(applySettings);
+        $("#SyncTime").click(nastavAktualniCas);
         jQuery.ajaxSetup({ cache: false });
     });
 
@@ -42,6 +43,19 @@ var uri = 'api/slevyr';
             .fail(function (jqXHR, textStatus, err) {
                 $('#error').text('Error: ' + err);
                 alert("setConfig - error");
+            }); 
+    }
+
+    function nastavAktualniCas() {
+        alert('nastavAktualniCas pro vsechny jednotky');
+        $.getJSON(uri + '/NastavAktualniCasAllUnits',
+            {
+            })
+            .done(function (data) {
+                $('#stav').text('');
+            })
+            .fail(function (jqXHR, textStatus, err) {
+                $('#stav').text('Error: ' + err);
+                alert("'); - error");
             });
- 
     }

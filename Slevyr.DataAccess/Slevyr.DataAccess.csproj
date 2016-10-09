@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Model\RunConfig.cs" />
+    <Compile Include="Model\UnitCommand.cs" />
     <Compile Include="Model\UnitConfig.cs" />
     <Compile Include="Model\UnitMonitor.cs" />
     <Compile Include="Model\UnitStatus.cs" />

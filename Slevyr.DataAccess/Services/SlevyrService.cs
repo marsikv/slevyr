@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -25,16 +26,17 @@ namespace Slevyr.DataAccess.Services
 
         static RunConfig _runConfig = new RunConfig();
 
-        //static Timer _workTimer;
-
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly Logger UnitsLogger = LogManager.GetLogger("Units");
         private static readonly Logger Units2Logger = LogManager.GetLogger("Units2");
 
         private static BackgroundWorker _bw;
         private static bool _isWorkerStarted;
+        private static int _workerCycleCnt;
 
         public static int SelectedUnit { get; set; }
+
+        private static ConcurrentQueue<UnitCommand> _unitCommandsQueue = new ConcurrentQueue<UnitCommand>();
 
         #endregion
 
@@ -241,13 +243,23 @@ namespace Slevyr.DataAccess.Services
         }
 
 
-        public static bool NastavAktualniCas(byte addr)
+        public static bool NastavAktualniCas(int addr)
         {
-            Logger.Info("+");
+            Logger.Info($"addr:{ addr}");
 
             if (_runConfig.IsMockupMode) return true;
 
+            Func<bool> a = () => _unitDictionary[addr].SetCas(DateTime.Now);
+
             return _unitDictionary[addr].SetCas(DateTime.Now);
+        }
+
+        public static void NastavAktualniCasQueued(int addr)
+        {
+            Logger.Info("");
+
+            var uc = new UnitCommand(() => _unitDictionary[addr].SetCas(DateTime.Now), "NastavAktualniCas", addr);
+            _unitCommandsQueue.Enqueue(uc);           
         }
 
 
@@ -353,8 +365,28 @@ namespace Slevyr.DataAccess.Services
         {
             while (true)
             {
-                Logger.Debug($"---");
+                Logger.Info($"worker cycle {_workerCycleCnt++}");
+
+                UnitCommand unitCommand;
+
+                //pokud jsou prikazy cekajici na zpracovani tak se provedou prednostne
+                while (_unitCommandsQueue.TryDequeue(out unitCommand))
+                {
+                    Logger.Debug($"command {unitCommand.Description} dequeue");
+                    unitCommand.Run();
+                    Thread.Sleep(_runConfig.RelaxTime);
+                    Logger.Debug($"command invoke res:{unitCommand.Result}");
+                }
+
                 ClosePort();
+
+                Thread.Sleep(100);
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
+                Thread.Sleep(100);
+
                 OpenPort();
                 foreach (var addr in UnitAddresses)
                 {

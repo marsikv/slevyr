@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using NLog;
 using SledovaniVyroby.SerialPortWraper;
 using Slevyr.DataAccess.Model;
@@ -298,7 +295,30 @@ namespace Slevyr.WebAppHost
 
             try
             {
-                return SlevyrService.NastavAktualniCas(addr);
+                //return SlevyrService.NastavAktualniCas(addr);
+                SlevyrService.NastavAktualniCasQueued(addr);
+                return true;
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+        }
+
+        [HttpGet]
+        public bool NastavAktualniCasAllUnits()
+        {
+            Logger.Info("+");
+
+            if (RunConfig.IsMockupMode) return true;
+
+            try
+            {
+                foreach (var addr in RunConfig.UnitAddrs)
+                {
+                    SlevyrService.NastavAktualniCasQueued(addr);
+                }
+                return true;
             }
             catch (KeyNotFoundException)
             {
