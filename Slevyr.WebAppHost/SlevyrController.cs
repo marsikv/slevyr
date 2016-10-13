@@ -61,7 +61,7 @@ namespace Slevyr.WebAppHost
                 IsWriteEmptyToLog = Settings.Default.IsWriteEmptyToLog
             };
 
-            PortConfig = new SerialPortConfig()
+            PortConfig = new SerialPortConfig
             {
                 Port = Settings.Default.Port,
                 BaudRate = Settings.Default.BaudRate,
@@ -71,7 +71,7 @@ namespace Slevyr.WebAppHost
                 ReceiveLength = 11
             };
 
-            SlevyrService.Init(PortConfig, RunConfig);
+            SlevyrService.Init(PortConfig, RunConfig); 
 
             Logger.Info("unit count: " + SlevyrService.UnitCount);
 
@@ -87,7 +87,7 @@ namespace Slevyr.WebAppHost
         public String GetApiVersion()
         {
             Logger.Info("+");
-
+            
             return ApiVersion;
         }
 
@@ -180,7 +180,7 @@ namespace Slevyr.WebAppHost
 
             try
             {
-                return SlevyrService.RefreshStatus(addr);
+                return SlevyrService.ObtainStatus(addr);
             }
             catch (KeyNotFoundException)
             {
@@ -192,7 +192,8 @@ namespace Slevyr.WebAppHost
         public UnitStatus GetStatus([FromUri] byte addr)
         {
             Logger.Info($"+ {addr}");
-            //if (RunConfig.IsMockupMode) return Mock.MockUnitStatus();
+
+            if (RunConfig.IsMockupMode) return Mock.MockUnitStatus();
 
             try
             {

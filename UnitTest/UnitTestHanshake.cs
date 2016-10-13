@@ -91,8 +91,8 @@ namespace UnitTest
                 Thread.Sleep(500);
 
                 int c = 0;
-                short ok;
-                short ng;
+                int ok;
+                int ng;
 
                 while (c++ < 100)
                 {

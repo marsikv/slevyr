@@ -296,8 +296,8 @@ namespace UnitTest
 
                 //PrintByteArray(task.Result);
 
-                short ok;
-                short ng;
+                int ok;
+                int ng;
 
                 Console.WriteLine($"TestMethodVratitZaklNastaveni9 - OK");
 
@@ -331,8 +331,8 @@ namespace UnitTest
 
                 Assert.IsTrue(res);
 
-                short ok;
-                short ng;
+                int ok;
+                int ng;
 
                 Thread.Sleep(500);
 

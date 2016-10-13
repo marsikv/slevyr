@@ -162,37 +162,42 @@ namespace Slevyr.DataAccess.Model
             Logger.Debug($"+ attempt:{a1}.{a2}");
             //lock (lockobj)
             //{
-                if (!_sp.IsOpen) return false;
+            if (!_sp.IsOpen) return false;
 
-                try
-                {
-                    //odeslat pripraveny command s parametry
-                    _sp.Write(_inBuff, 0, BuffLength);
-                    Thread.Sleep(7);
-                    Logger.Debug(" -w");
-                    //kontrola odeslání
-                    var task = _sp.ReadAsync(11);
+            try
+            {
+                //odeslat pripraveny command s parametry
+                //_sp.Write(_inBuff, 0, BuffLength);
+
+                var wtask = _sp.WriteAsync(_inBuff, BuffLength);
+                wtask.Wait(_runConfig.SendCommandTimeOut);
+
+                Thread.Sleep(7);
+
+                Logger.Debug(" -w");
+
+                //kontrola odeslání
+                var task = _sp.ReadAsync(11);
 
                 task.Wait(_runConfig.SendCommandTimeOut);
 
-                    if (!task.IsCompleted)
-                    {
-                        Logger.Debug(" -timeout");
-                        res = false;
-                    }
-                    else
-                    {
-                        Logger.Debug(" -ok");
-                        _outBuff = task.Result;
-                        res = true;
-                    }
-                }
-                catch (Exception ex)
+                if (!task.IsCompleted)
                 {
-                    Logger.Error(ex);
+                    Logger.Debug(" -timeout");
                     res = false;
                 }
-            //}
+                else
+                {
+                    Logger.Debug(" -ok");
+                    _outBuff = task.Result;
+                    res = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex);
+                res = false;
+            }
 
             res = res && CheckSendOk();
             Logger.Debug($"-");
@@ -568,7 +573,7 @@ namespace Slevyr.DataAccess.Model
             return res;
         }
 
-        public bool ReadStavCitacu(out short ok, out short ng)
+        public bool ReadStavCitacu(out int ok, out int ng)
         {
             Logger.Debug($"+ unit {_address}");
 
@@ -620,10 +625,10 @@ namespace Slevyr.DataAccess.Model
             return res;
         }
 
-        public bool RefreshStavCitacu()
+        public bool ReadStavCitacu()
         {
-            short ok;
-            short ng;
+            int ok;
+            int ng;
             return ReadStavCitacu(out ok, out ng);
         }
 

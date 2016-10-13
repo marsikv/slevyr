@@ -73,18 +73,6 @@ namespace Slevyr.WebAppHost.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool MockupMode {
-            get {
-                return ((bool)(this["MockupMode"]));
-            }
-            set {
-                this["MockupMode"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("300")]
         public int RelaxTime {
             get {
@@ -101,18 +89,6 @@ namespace Slevyr.WebAppHost.Properties {
         public int WebAppPort {
             get {
                 return ((int)(this["WebAppPort"]));
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("100")]
-        public string UnitAddrs {
-            get {
-                return ((string)(this["UnitAddrs"]));
-            }
-            set {
-                this["UnitAddrs"] = value;
             }
         }
         
@@ -197,6 +173,30 @@ namespace Slevyr.WebAppHost.Properties {
             }
             set {
                 this["UseLocalHost"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100;171;172;173;174")]
+        public string UnitAddrs {
+            get {
+                return ((string)(this["UnitAddrs"]));
+            }
+            set {
+                this["UnitAddrs"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool MockupMode {
+            get {
+                return ((bool)(this["MockupMode"]));
+            }
+            set {
+                this["MockupMode"] = value;
             }
         }
     }

@@ -132,12 +132,18 @@ namespace Slevyr.DataAccess.Services
             return _unitDictionary[addr].UnitStatus;
         }
 
-
-        public static UnitStatus RefreshStatus(byte addr)
+        /// <summary>
+        /// Získá status jednoty načtením stavu čítačů a výpočtem parametrů zobrazovaných na tabuli
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <returns></returns>
+        public static UnitStatus ObtainStatus(byte addr)
         {
             Logger.Info($"+ *** unit {addr}");
 
-            short ok, ng;
+            if (_runConfig.IsMockupMode) return _unitDictionary[addr].UnitStatus;
+
+            int ok, ng;
             Single casOk=-1, casNg=-1;
             var res = _unitDictionary[addr].ReadStavCitacu(out ok, out ng);
             string s = res ? "" : "err";
@@ -299,7 +305,7 @@ namespace Slevyr.DataAccess.Services
                 return true;
             }
 
-            return _unitDictionary[addr].RefreshStavCitacu();
+            return _unitDictionary[addr].ReadStavCitacu();
 
         }
 
@@ -365,45 +371,56 @@ namespace Slevyr.DataAccess.Services
         {
             while (true)
             {
-                Logger.Info($"worker cycle {_workerCycleCnt++}");
+                Logger.Info($"worker cycle {++_workerCycleCnt}");
 
-                UnitCommand unitCommand;
-
-                //pokud jsou prikazy cekajici na zpracovani tak se provedou prednostne
-                while (_unitCommandsQueue.TryDequeue(out unitCommand))
+                try
                 {
-                    Logger.Debug($"command {unitCommand.Description} dequeue");
-                    unitCommand.Run();
-                    Thread.Sleep(_runConfig.RelaxTime);
-                    Logger.Debug($"command invoke res:{unitCommand.Result}");
-                }
+                    OpenPort();                    
 
-                ClosePort();
+                    UnitCommand unitCommand;
 
-                Thread.Sleep(100);
-
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-
-                Thread.Sleep(100);
-
-                OpenPort();
-                foreach (var addr in UnitAddresses)
-                {
-                    if (_bw.CancellationPending)
+                    //pokud jsou prikazy cekajici na zpracovani tak se provedou prednostne
+                    while (_unitCommandsQueue.TryDequeue(out unitCommand))
                     {
-                        Logger.Info("*** read worker canceled ***");
-                        _isWorkerStarted = false;
-                        return;
+                        Logger.Debug($"command {unitCommand.Description} dequeue");
+                        unitCommand.Run();
+                        Thread.Sleep(_runConfig.RelaxTime);
+                        Logger.Debug($"command invoke res:{unitCommand.Result}");
                     }
 
-                    RefreshStatus((byte)addr);
+                    //provedu nacitani ze vsech jednotek v cyklu
+                    foreach (var addr in UnitAddresses)
+                    {
+                        if (_bw.CancellationPending)
+                        {
+                            Logger.Info("*** read worker canceled ***");
+                            _isWorkerStarted = false;
+                            return;
+                        }
 
-                    Logger.Debug($"+worker sleep: {_runConfig.WorkerSleepPeriod}");
-                    Thread.Sleep(_runConfig.WorkerSleepPeriod);  //pauza pred ctenim dalsi jednotky - parametr
-                    Logger.Debug("-worker sleep");
+                        ObtainStatus((byte)addr);
+
+                        Logger.Debug($"+worker sleep: {_runConfig.WorkerSleepPeriod}");
+                        Thread.Sleep(_runConfig.WorkerSleepPeriod);  //pauza pred ctenim dalsi jednotky - parametr
+                        Logger.Debug("-worker sleep");
+                    }
+
+                    //muze byt problem ze prijimani dat neste neskoncilo
+
+                    //ClosePort();
+
+                    Thread.Sleep(100);
+
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+
+                    Thread.Sleep(100);
+
                 }
-
+                catch (Exception ex)
+                {
+                    Logger.Error(ex);
+                }
             }
         }
 

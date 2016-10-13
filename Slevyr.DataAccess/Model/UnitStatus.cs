@@ -39,8 +39,8 @@ namespace Slevyr.DataAccess.Model
         public bool SendError { get; set; }
         public string LastSendErrorDescription { get; set; }
 
-        public short Ok { get; set; }
-        public short Ng { get; set; }
+        public int Ok { get; set; }
+        public int Ng { get; set; }
 
         /// <summary>
         /// Stav stroje, byte 9
@@ -70,7 +70,7 @@ namespace Slevyr.DataAccess.Model
         public float CasNg { get; set; }
         public DateTime CasNgTime { get; set; }
         public bool IsCasNg { get; set; }
-        public short RozdilKusu { get; set; }
+        public int RozdilKusu { get; set; }
         public DateTime RozdilKusuTime { get; set; }
         public bool IsRozdilKusu { get; set; }
         public float Defektivita { get; set; }
@@ -80,7 +80,7 @@ namespace Slevyr.DataAccess.Model
         public int CilKusuTabule { get; set; }
         public float CilDefectTabule { get; set; }
         public float AktualDefectTabule { get; set; }
-        public string AktualDefectTabuleTxt => float.IsNaN(AktualDefectTabule) ? "-" : Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.CurrentCulture);
+        public string AktualDefectTabuleTxt => (float.IsNaN(AktualDefectTabule) || Ok == 0)  ? "-" : Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.CurrentCulture);
 
         public int RozdilTabule { get; set; }
         public string RozdilTabuleTxt => (RozdilTabule == int.MinValue) ? "-" : RozdilTabule.ToString();

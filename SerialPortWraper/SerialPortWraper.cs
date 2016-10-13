@@ -17,14 +17,13 @@ namespace SledovaniVyroby.SerialPortWraper
     {
         private const int OptimalBufferSize = 128;
         
-        private StreamReader _reader;
+        //private StreamReader _reader;
 
         #region Constructors
 
         public SerialPortWraper()
         {
         }
-
 
 
         public SerialPortWraper(SerialPortConfig cfg) 
@@ -39,13 +38,18 @@ namespace SledovaniVyroby.SerialPortWraper
             //Encoding = Encoding.Default;
             DtrEnable = false;
             RtsEnable = false;
-            //Handshake = Handshake.None;
+            Handshake = Handshake.None;
         }
 
 
         #endregion
 
         #region Public Methods
+
+        public async Task WriteAsync(byte[] buffer, int count)
+        {
+            await this.BaseStream.WriteAsync(buffer, 0, count);
+        }
 
         public async Task ReadAsync( byte[] buffer, int offset, int count)
         {
@@ -81,19 +85,19 @@ namespace SledovaniVyroby.SerialPortWraper
         }
 
 
-        public new string ReadLine()
-        {
-            /* On the HTC P3300, an OutOfMemoryException occurs when using SerialPort.ReadLine().
-             * However, a StreamReader.ReadLine() works just fine.  This suggests that SerialPort.ReadLine()
-             * is buggy!  Use a StreamReader to get the job done.
-             */
-            if (_reader == null)
-            {
-                _reader = new StreamReader(BaseStream, Encoding.ASCII, false, OptimalBufferSize);
-            }
+        //public new string ReadLine()
+        //{
+        //    /* On the HTC P3300, an OutOfMemoryException occurs when using SerialPort.ReadLine().
+        //     * However, a StreamReader.ReadLine() works just fine.  This suggests that SerialPort.ReadLine()
+        //     * is buggy!  Use a StreamReader to get the job done.
+        //     */
+        //    if (_reader == null)
+        //    {
+        //        _reader = new StreamReader(BaseStream, Encoding.ASCII, false, OptimalBufferSize);
+        //    }
 
-            return _reader.ReadLine();
-        }
+        //    return _reader.ReadLine();
+        //}
 
         #endregion
 

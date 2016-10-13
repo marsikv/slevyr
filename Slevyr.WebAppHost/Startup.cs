@@ -17,8 +17,13 @@ namespace Slevyr.WebAppHost
         // parameter in the WebApp.Start method.
         public void Configuration(IAppBuilder appBuilder)
         {
-            // Configure Web API for self-host. 
+            //registruji middleware odchytávající a zapisující vyjimky
+            appBuilder.Use<GlobalExceptionMiddleware>();
             
+
+
+            // Configure Web API for self-host.             
+
             HttpConfiguration config = new HttpConfiguration();
             config.Routes.MapHttpRoute(
                 name: "DefaultApi",
@@ -30,8 +35,9 @@ namespace Slevyr.WebAppHost
             config.Formatters.XmlFormatter.SupportedMediaTypes.Remove(appXmlType);
             //config.Formatters.JsonFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/html"))
 
-            appBuilder.UseWebApi(config);
-            
+            appBuilder.Use<GlobalExceptionMiddleware>().UseWebApi(config);
+            //appBuilder.UseWebApi(config);
+
 
             //A. nacitam z adresare www, ktery je soucasti solution
             //var physicalFileSystem = new PhysicalFileSystem(@"./WWW1");
