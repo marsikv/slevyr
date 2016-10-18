@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using NLog;
 using SledovaniVyroby.SerialPortWraper;
+using Slevyr.DataAccess.DAO;
 using Slevyr.DataAccess.Model;
 
 namespace Slevyr.DataAccess.Services
@@ -191,6 +192,8 @@ namespace Slevyr.DataAccess.Services
                     sb.Append($";{_unitDictionary[addr].UnitStatus.MachineStatus}"); //15
                     sb.Append($";{Convert.ToInt32(_unitDictionary[addr].UnitStatus.IsPrestavkaTabule)}"); //16
                     Units2Logger.Info(sb.ToString);
+
+                    SqlliteDao.AddUnitState(addr, _unitDictionary[addr].UnitStatus);
                 }
                 catch (Exception ex)
                 {
@@ -369,14 +372,17 @@ namespace Slevyr.DataAccess.Services
 
         private static void _bw_DoWork(object sender, DoWorkEventArgs e)
         {
+
+            OpenPort();
+
+            SqlliteDao.OpenConnection(true);
+
             while (true)
             {
                 Logger.Info($"worker cycle {++_workerCycleCnt}");
 
                 try
                 {
-                    OpenPort();                    
-
                     UnitCommand unitCommand;
 
                     //pokud jsou prikazy cekajici na zpracovani tak se provedou prednostne
@@ -395,6 +401,7 @@ namespace Slevyr.DataAccess.Services
                         {
                             Logger.Info("*** read worker canceled ***");
                             _isWorkerStarted = false;
+                            SqlliteDao.CloseConnection();
                             return;
                         }
 
@@ -405,23 +412,23 @@ namespace Slevyr.DataAccess.Services
                         Logger.Debug("-worker sleep");
                     }
 
-                    //muze byt problem ze prijimani dat neste neskoncilo
+                    //ClosePort();  //- muze byt problem ze prijimani dat neste neskoncilo
 
-                    //ClosePort();
+                    //pokud o vynuceni uvolneni zdroju
+                    //Thread.Sleep(100);
 
-                    Thread.Sleep(100);
+                    //GC.Collect();
+                    //GC.WaitForPendingFinalizers();
 
-                    GC.Collect();
-                    GC.WaitForPendingFinalizers();
-
-                    Thread.Sleep(100);
-
+                    //Thread.Sleep(100);
                 }
                 catch (Exception ex)
                 {
                     Logger.Error(ex);
                 }
             }
+           
+
         }
 
 

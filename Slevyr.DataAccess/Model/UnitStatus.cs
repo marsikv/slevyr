@@ -65,6 +65,13 @@ namespace Slevyr.DataAccess.Model
 
         public bool IsOkNg { get; set; }
         public float CasOk { get; set; }
+
+        public float PrumCasVyrobyOk => (Ok != 0) ? UbehlyCasSmenySec /(float) Ok:float.NaN;
+        public string PrumCasVyrobyOkStr => (Ok != 0) ? (UbehlyCasSmenySec / (float)Ok).ToString(CultureInfo.InvariantCulture) : "null";
+
+        public float PrumCasVyrobyNg => (Ng != 0) ? UbehlyCasSmenySec / (float)Ng : float.NaN;
+        public string PrumCasVyrobyNgStr => (Ng != 0) ? (UbehlyCasSmenySec / (float)Ng).ToString(CultureInfo.InvariantCulture) : "null";
+
         public DateTime CasOkTime { get; set; }
         public bool IsCasOk { get; set; }
         public float CasNg { get; set; }
@@ -81,6 +88,7 @@ namespace Slevyr.DataAccess.Model
         public float CilDefectTabule { get; set; }
         public float AktualDefectTabule { get; set; }
         public string AktualDefectTabuleTxt => (float.IsNaN(AktualDefectTabule) || Ok == 0)  ? "-" : Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.CurrentCulture);
+        public string AktualDefectTabuleStr => (float.IsNaN(AktualDefectTabule) || Ok == 0) ? "null" : Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.InvariantCulture);
 
         public int RozdilTabule { get; set; }
         public string RozdilTabuleTxt => (RozdilTabule == int.MinValue) ? "-" : RozdilTabule.ToString();
@@ -252,7 +260,7 @@ namespace Slevyr.DataAccess.Model
                     catch (Exception ex)
                     {
                         AktualDefectTabule = float.NaN;
-                        Logger.Error(ex);
+                        //Logger.Error(ex);
                     }
                 }
 

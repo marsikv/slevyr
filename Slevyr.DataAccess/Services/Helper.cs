@@ -4,11 +4,14 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NLog;
 
 namespace Slevyr.DataAccess.Services
 {
     public static class Helper
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         public static short ToShort(byte lsb, byte msb)
         {
             return (short) ((msb << 8) + lsb);
@@ -27,11 +30,20 @@ namespace Slevyr.DataAccess.Services
 
         public static string GetDescriptionFromEnumValue(Enum value)
         {
-            DescriptionAttribute attribute = value.GetType()
-                .GetField(value.ToString())
-                .GetCustomAttributes(typeof(DescriptionAttribute), false)
-                .SingleOrDefault() as DescriptionAttribute;
-            return attribute == null ? value.ToString() : attribute.Description;
+            try
+            {
+                DescriptionAttribute attribute = value.GetType()
+                       .GetField(value.ToString())
+                       .GetCustomAttributes(typeof(DescriptionAttribute), false)
+                       .SingleOrDefault() as DescriptionAttribute;
+                return attribute == null ? value.ToString() : attribute.Description;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex);
+                return "Error: Neznámý stav";
+            }
+
         }
 
     }
