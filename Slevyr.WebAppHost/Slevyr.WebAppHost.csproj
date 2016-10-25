@@ -157,6 +157,7 @@
     <Content Include="readme.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="deploy.ps1" />
     <Content Include="WWW\LinkaParams.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -194,6 +195,18 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\System.Data.SQLite.Core.1.0.103\build\net451\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.Data.SQLite.Core.1.0.103\build\net451\System.Data.SQLite.Core.targets'))" />
   </Target>
+  <PropertyGroup>
+    <PostBuildEvent>robocopy $(TargetDir)  $(SolutionDir)..\deploy *.dll *.exe *.config
+robocopy $(TargetDir)WWW  $(SolutionDir)..\deploy\WWW
+robocopy $(TargetDir)x64  $(SolutionDir)..\deploy\x64
+robocopy $(TargetDir)x86  $(SolutionDir)..\deploy\x86
+
+del  $(SolutionDir)..\deploy\EntityFramework.*
+del  $(SolutionDir)..\deploy\System.Data.SQLite.EF6.dll
+del  $(SolutionDir)..\deploy\System.Data.SQLite.Linq.dll
+del  $(SolutionDir)..\deploy\Slevyr.WebAppHost.vshost.exe
+del  $(SolutionDir)..\deploy\Slevyr.WebAppHost.vshost.exe.config</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

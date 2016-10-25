@@ -30,6 +30,7 @@ namespace Slevyr.DataAccess.Services
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly Logger UnitsLogger = LogManager.GetLogger("Units");
         private static readonly Logger Units2Logger = LogManager.GetLogger("Units2");
+        private static readonly Logger ErrorsLogger = LogManager.GetLogger("Errors");
 
         private static BackgroundWorker _bw;
         private static bool _isWorkerStarted;
@@ -38,6 +39,8 @@ namespace Slevyr.DataAccess.Services
         public static int SelectedUnit { get; set; }
 
         private static ConcurrentQueue<UnitCommand> _unitCommandsQueue = new ConcurrentQueue<UnitCommand>();
+        private static bool _ErrorRecorded;
+        private static int _ErrorRecordedCnt;
 
         #endregion
 
@@ -147,8 +150,26 @@ namespace Slevyr.DataAccess.Services
             int ok, ng;
             Single casOk=-1, casNg=-1;
             var res = _unitDictionary[addr].ReadStavCitacu(out ok, out ng);
-            string s = res ? "" : "err";
+            var s = res ? "" : "err";
             Logger.Info($">ok:{ok} ng:{ng} " + s);
+
+            if (!res)
+            {
+                _ErrorRecordedCnt++;
+                if (!_ErrorRecorded)
+                {
+                    ErrorsLogger.Error($"ReadStavCitacu;{addr};total errors:{_ErrorRecordedCnt}");
+                    _ErrorRecorded = true;
+                }
+            }
+            else
+            {
+                if (_ErrorRecorded)
+                {
+                    ErrorsLogger.Info($"ReadStavCitacu;{addr};recovered");
+                    _ErrorRecorded = false;
+                }
+            }
 
             if (res && _runConfig.IsReadOkNgTime)
             {

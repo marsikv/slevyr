@@ -14,6 +14,7 @@ namespace Slevyr.DataAccess.DAO
     public static class SqlliteDao
     {
         #region consts
+
         const string DbFileName = @"slevyr.sqlite";
         const string DbFolder = @"data";
         const string SqlCreateUnitstatusTable = @"CREATE TABLE `observations` (
@@ -37,10 +38,8 @@ namespace Slevyr.DataAccess.DAO
         const string SqlInsertIntoObservations = @"insert into observations 
 (timeStamp,cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
 
-        const string SqlCreateStavLinkyTable = @"CREATE TABLE `ProductionLineStatus` (
-	`id`	INTEGER,
-	`name`	TEXT
-);";
+        const string SqlCreateStavLinkyTable = @"CREATE TABLE `ProductionLineStatus` 
+(`id`	INTEGER,	`name`	TEXT);";
 
         const string SqlCreateIndex = @"CREATE INDEX `observations_time_idx` ON `observations` (`timeStamp` ASC)";
 
@@ -54,7 +53,6 @@ namespace Slevyr.DataAccess.DAO
  
         #endregion
 
-
         public static void CreateDatabase()
         {
             if (!Directory.Exists(DbFolder))
@@ -66,7 +64,7 @@ namespace Slevyr.DataAccess.DAO
                 if (File.Exists(DbFilePath))
                 {
                     File.Delete(DbFilePath + "0");
-                    File.Move(DbFilePath, DbFilePath + "0");   //uchovam jednu kopii
+                    File.Move(DbFilePath, DbFilePath + "0");   //uchovam jednu kopii, ale je to asi zbytecne
                 }
             }
 
@@ -109,13 +107,17 @@ namespace Slevyr.DataAccess.DAO
         {
             //(timeStamp,cmd,unitId,isPrestavka, cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
 
-            string sql = SqlInsertIntoObservations + 
-                $"(datetime('now'),4,{addr},{(u.IsPrestavkaTabule?1:0)},{u.CilKusuTabule},{u.Ok},{u.CasOk},{u.PrumCasVyrobyOkStr},{u.CilDefectTabule},{u.Ng},{u.CasNg},{u.PrumCasVyrobyNgStr},{u.RozdilTabule},{u.AktualDefectTabuleStr},{(int)u.MachineStatus})";
+            string sql = SqlInsertIntoObservations +
+                         $"(CURRENT_TIMESTAMP,4,{addr},{(u.IsPrestavkaTabule ? 1 : 0)},{u.CilKusuTabule},{u.Ok},{u.CasOk}," +
+                         $"{u.PrumCasVyrobyOkStr},{u.CilDefectTabule},{u.Ng},{u.CasNg},{u.PrumCasVyrobyNgStr}," +
+                         $"{u.RozdilTabule},{u.AktualDefectTabuleStr},{(int)u.MachineStatus})";
 
             SQLiteCommand command = new SQLiteCommand(sql, _dbConnection);
             command.ExecuteNonQuery();
         }
 
+        //takto lze vypsat cas v lokalnim formatovani:
+        // select time(timeStamp,'localtime'),time(timeStamp,'utc'),date(timeStamp,'localtime'), datetime(timeStamp,'localtime'), unitId from observations order by timeStamp
 
     }
 }

@@ -206,7 +206,8 @@ namespace Slevyr.DataAccess.Model
         }
 
         //odesle prikaz, v _inBuffer musi byt prikaz nachystany
-        //provede kontrolu odeslani
+        //provede kontrolu odeslani, 
+        //udela 3 pokusy
         private bool SendCommand(int a)
         {
             Logger.Debug("+");
@@ -592,7 +593,6 @@ namespace Slevyr.DataAccess.Model
             ok = 0;
             ng = 0;
 
-            //var sendOk = SendCommand();
             var res = SendReceiveResults();
 
             if (res)
