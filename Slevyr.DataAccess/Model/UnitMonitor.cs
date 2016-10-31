@@ -574,24 +574,24 @@ namespace Slevyr.DataAccess.Model
             return res;
         }
 
-        public bool ReadStavCitacu(out int ok, out int ng)
+        public bool ReadStavCitacu(out int okVal, out int ngVal)
         {
             Logger.Debug($"+ unit {_address}");
 
             if (_isMockupMode)
             {
-                ok = (short)DateTime.Now.Minute;  //minuta poslouzi jako hodnota ok
-                ng = (short)((ok + 1) / 2);
-                UnitStatus.Ok = ok;
-                UnitStatus.Ng = ng;
+                okVal = (short)DateTime.Now.Minute;  //minuta poslouzi jako hodnota ok
+                ngVal = (short)((okVal + 1) / 2);
+                UnitStatus.Ok = okVal;
+                UnitStatus.Ng = ngVal;
                 UnitStatus.OkNgTime = DateTime.Now;
                 return true;
             }
 
             PrepareCommand(CmdReadStavCitacu);
 
-            ok = 0;
-            ng = 0;
+            okVal = 0;
+            ngVal = 0;
 
             var res = SendReceiveResults();
 
@@ -599,13 +599,13 @@ namespace Slevyr.DataAccess.Model
             {
                 //načtení výsledku
                
-                ok = Helper.ToShort(_outBuff[4], _outBuff[5]);
-                ng = Helper.ToShort(_outBuff[6], _outBuff[7]);
+                okVal = Helper.ToShort(_outBuff[4], _outBuff[5]);
+                ngVal = Helper.ToShort(_outBuff[6], _outBuff[7]);
                 short machineStatus = _outBuff[8];
                 short shutdownTime = Helper.ToShort(_outBuff[9], _outBuff[10]);
 
-                UnitStatus.Ok = ok;
-                UnitStatus.Ng = ng;
+                UnitStatus.Ok = okVal;
+                UnitStatus.Ng = ngVal;
                 UnitStatus.MachineStatus = (MachineStateEnum)machineStatus;
                 UnitStatus.MachineShutdownTime = shutdownTime;
 
@@ -613,6 +613,8 @@ namespace Slevyr.DataAccess.Model
             }
             else
             {
+                UnitStatus.Ok = -1;
+                UnitStatus.Ng = -1;
                 UnitStatus.OkNgTime = DateTime.MaxValue;
                 UnitStatus.ErrorTime = DateTime.Now;
                 UnitStatus.MachineStatus = MachineStateEnum.Neznamy; 

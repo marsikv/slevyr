@@ -66,6 +66,8 @@ namespace Slevyr.DataAccess.Model
         public bool IsOkNg { get; set; }
         public float CasOk { get; set; }
 
+        public string CasOkStr => CasOk.ToString(CultureInfo.InvariantCulture);
+
         public float PrumCasVyrobyOk => (Ok != 0) ? UbehlyCasSmenySec /(float) Ok:float.NaN;
         public string PrumCasVyrobyOkStr => (Ok != 0) ? (UbehlyCasSmenySec / (float)Ok).ToString(CultureInfo.InvariantCulture) : "null";
 
@@ -75,6 +77,7 @@ namespace Slevyr.DataAccess.Model
         public DateTime CasOkTime { get; set; }
         public bool IsCasOk { get; set; }
         public float CasNg { get; set; }
+        public string CasNgStr => CasNg.ToString(CultureInfo.InvariantCulture);
         public DateTime CasNgTime { get; set; }
         public bool IsCasNg { get; set; }
         public int RozdilKusu { get; set; }
@@ -86,6 +89,7 @@ namespace Slevyr.DataAccess.Model
         public bool IsPrestavkaTabule { get; set; }
         public int CilKusuTabule { get; set; }
         public float CilDefectTabule { get; set; }
+        public string CilDefectTabuleStr => CilDefectTabule.ToString(CultureInfo.InvariantCulture);
         public float AktualDefectTabule { get; set; }
         public string AktualDefectTabuleTxt => (float.IsNaN(AktualDefectTabule) || Ok == 0)  ? "-" : Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.CurrentCulture);
         public string AktualDefectTabuleStr => (float.IsNaN(AktualDefectTabule) || Ok == 0) ? "null" : Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.InvariantCulture);

@@ -37,6 +37,15 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>true</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>mykey.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.0.0\lib\net45\EntityFramework.dll</HintPath>
@@ -137,6 +146,7 @@
     <Content Include="NLog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="mykey.snk" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -157,7 +167,6 @@
     <Content Include="readme.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="deploy.ps1" />
     <Content Include="WWW\LinkaParams.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -173,10 +182,16 @@
     <Content Include="WWW\scripts\linkaTabuleScripts.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="WWW\scripts\exportScripts.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="WWW\scripts\mainSettingScripts.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="WWW\scripts\linkaParamScripts.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="WWW\Export.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="WWW\settings.html">
@@ -197,9 +212,9 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>robocopy $(TargetDir)  $(SolutionDir)..\deploy *.dll *.exe *.config
-robocopy $(TargetDir)WWW  $(SolutionDir)..\deploy\WWW
-robocopy $(TargetDir)x64  $(SolutionDir)..\deploy\x64
-robocopy $(TargetDir)x86  $(SolutionDir)..\deploy\x86
+robocopy $(TargetDir)WWW  $(SolutionDir)..\deploy\WWW /S
+robocopy $(TargetDir)x64  $(SolutionDir)..\deploy\x64 /S
+robocopy $(TargetDir)x86  $(SolutionDir)..\deploy\x86 /S
 
 del  $(SolutionDir)..\deploy\EntityFramework.*
 del  $(SolutionDir)..\deploy\System.Data.SQLite.EF6.dll

@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Web.Http;
 using NLog;
 using SledovaniVyroby.SerialPortWraper;
+using Slevyr.DataAccess.DAO;
 using Slevyr.DataAccess.Model;
 using Slevyr.DataAccess.Services;
 using Slevyr.WebAppHost.Properties;
@@ -458,6 +459,19 @@ namespace Slevyr.WebAppHost
             }
         }
 
+        [HttpPost]
+        public IHttpActionResult ExportInterval([FromBody]IntervalExport value)
+        {
+            Logger.Info($"exportFilename:{value.FileName} from:{value.TimeFromStr} to:{value.TimeToStr}");
+            if (string.IsNullOrWhiteSpace(value.FileName) || string.IsNullOrWhiteSpace(value.TimeFromStr) ||
+                string.IsNullOrWhiteSpace(value.TimeToStr))
+            {
+                return BadRequest("Neplatné parametry");
+            }
+
+            var cnt = SqlliteDao.ExportToCsv(value);
+            return Ok($"Počet exportovaných záznamů: {cnt}");
+        }
 
 
     }
