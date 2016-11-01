@@ -383,9 +383,9 @@ namespace Slevyr.DataAccess.Model
             UnitConfig.Def2Smeny = def2;
             UnitConfig.Def3Smeny = def3;
 
-            Helper.FromShort(def1, out _inBuff[5], out _inBuff[6]);
-            Helper.FromShort(def2, out _inBuff[7], out _inBuff[8]);
-            Helper.FromShort(def3, out _inBuff[9], out _inBuff[10]);
+            Helper.FromShort((short)(def1 * 10.0), out _inBuff[5], out _inBuff[6]);
+            Helper.FromShort((short)(def2 * 10.0), out _inBuff[7], out _inBuff[8]);
+            Helper.FromShort((short)(def3 * 10.0), out _inBuff[9], out _inBuff[10]);
 
             return SendCommand(1);
 

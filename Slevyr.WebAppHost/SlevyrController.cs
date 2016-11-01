@@ -349,7 +349,7 @@ namespace Slevyr.WebAppHost
             try
             {
                 Logger.Info($"cil1:{def1Val}");
-                return SlevyrService.NastavDefektivitu(addr, varianta, (short)(def1Val * 10), (short)(def2Val * 10), (short)(def3Val * 10));
+                return SlevyrService.NastavDefektivitu(addr, varianta, (short)def1Val, (short)def2Val, (short)def3Val);
             }
             catch (KeyNotFoundException)
             {

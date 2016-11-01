@@ -134,12 +134,10 @@ namespace Slevyr.DataAccess.DAO
 
         public static int ExportToCsv(IntervalExport export)
         {
-
-
             string sql =
                 "select datetime(obTime,'localtime') as time,cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky from observations " +
                 "where obTime between @timeFrom and @timeTo";
-            if (export.UnitId > 0)
+            if (!export.ExportAll)
             {
                 sql += " and unitId = @unitId";
             }
@@ -148,7 +146,7 @@ namespace Slevyr.DataAccess.DAO
             {                
                 command.Parameters.Add(new SQLiteParameter("@timeFrom", export.TimeFrom.ToUniversalTime()));
                 command.Parameters.Add(new SQLiteParameter("@timeTo", export.TimeTo.ToUniversalTime()));
-                if (export.UnitId > 0)
+                if (!export.ExportAll)
                 {
                     command.Parameters.Add(new SQLiteParameter("@unitId", export.UnitId));
                 }
@@ -177,7 +175,7 @@ namespace Slevyr.DataAccess.DAO
                 sw.Write(dt.Columns[i]);
                 if (i < iColCount - 1)
                 {
-                    sw.Write(",");
+                    sw.Write(";");
                 }
             }       
             sw.Write(sw.NewLine);

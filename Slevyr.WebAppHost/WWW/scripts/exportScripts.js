@@ -14,7 +14,9 @@ function exportInterval(event) {
         FileName: $('#exportFilename').val(),
         TimeFromStr: $('#exportTimeFrom').val(),
         TimeToStr: $('#exportTimeTo').val(),
-        UnitId: $('#linkaId').val()
+        UnitId: $('#linkaId').val(),
+        ExportAll: $('#exportAll').prop('checked'),
+        ExportAllSeparated: $('#exportAllSeparated').prop('checked')
     };
 
     $.ajax({
