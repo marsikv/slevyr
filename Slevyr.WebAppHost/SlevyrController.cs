@@ -76,8 +76,10 @@ namespace Slevyr.WebAppHost
 
             Logger.Info("unit count: " + SlevyrService.UnitCount);
 
-            if (RunConfig.IsRefreshTimerOn) SlevyrService.StartWorker();
-            
+            if (RunConfig.IsRefreshTimerOn) SlevyrService.StartSendWorker();
+
+            SlevyrService.StartChunkWorker();
+
         }
 
         #endregion
@@ -113,9 +115,11 @@ namespace Slevyr.WebAppHost
             //RunConfig.RelaxTime = relaxTime;
 
             if (isTimerOn)
-                SlevyrService.StartWorker();
+                SlevyrService.StartSendWorker();
             else
-                SlevyrService.StopWorker();
+                SlevyrService.StopSendWorker();
+
+            SlevyrService.StartChunkWorker();
 
             return true;
         }
@@ -173,6 +177,11 @@ namespace Slevyr.WebAppHost
             }
         }
 
+        /// <summary>
+        /// Deprecated
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <returns></returns>
         [HttpGet]
         public UnitStatus RefreshStatus([FromUri] byte addr)
         {
@@ -181,7 +190,7 @@ namespace Slevyr.WebAppHost
 
             try
             {
-                return SlevyrService.ObtainStatus(addr);
+                return SlevyrService.SendUnitStatusRequests(addr);
             }
             catch (KeyNotFoundException)
             {
@@ -415,7 +424,7 @@ namespace Slevyr.WebAppHost
             {
                 float ok;
                 float ng;
-                return SlevyrService.CtiCyklusOkNg(addr);
+                return SlevyrService.SendCtiCyklusOkNg(addr);
             }
             catch (KeyNotFoundException)
             {
@@ -425,7 +434,6 @@ namespace Slevyr.WebAppHost
         }
 
         #endregion
-
 
         [HttpPost]
         public void SaveUnitConfig([FromBody] UnitConfig unitCfg)

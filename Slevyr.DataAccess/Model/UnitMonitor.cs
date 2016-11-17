@@ -59,18 +59,18 @@ namespace Slevyr.DataAccess.Model
         //const byte Get = 26	; //Vrati hodnoty citace 1 2 3
         //const byte Get = 27	; //Vrati hodnoty citace 4 5 6
         //const byte Get = 28	; //Vrati hodnoty citace 7 8
-        const byte CmdReadStavCitacu = 96; //Vrati stav citacu
-        const byte CmdReadHodnotuPoslCykluOk = 97; //vrati hodnotu posledniho cyklu OK
-        const byte CmdReadHodnotuPoslCykluNg = 98; //vrati hodnotu posledniho cyklu NG
-        const byte CmdReadHodnotuPrumCykluOk = 99; //vrati hodnotu prumerneho cyklu OK
-        const byte CmdReadHodnotuPrumCykluNg = 100; //vrati hodnotu prumerneho cyklu NG
-        const byte CmdReadTeplotu1Cidla = 101; //vrati teplotu z prvniho cidla DS18B20
-        const byte CmdReadTeplotu2Cidla = 102; //vrati teplotu z druheho cidla DS18B20
-        const byte CmdReadTeplotu3Cidla = 103; //vrati teplotu z tretiho cidla DS18B20
-        const byte CmdReadTeplotu4Cidla = 104; //vrati teplotu ze ctvrteho cidla DS18B20
-        const byte CmdReadTeplotu5Cidla = 105; //vrati teplotu z pateho cidla DS18B20
-        const byte CmdReadRozdilusu = 106; //vraci rozdil kusu
-        const byte CmdReadDefektivita = 107; //vraci defektivitu
+        public const byte CmdReadStavCitacu = 96; //Vrati stav citacu
+        public const byte CmdReadHodnotuPoslCykluOk = 97; //vrati hodnotu posledniho cyklu OK
+        public const byte CmdReadHodnotuPoslCykluNg = 98; //vrati hodnotu posledniho cyklu NG
+        public const byte CmdReadHodnotuPrumCykluOk = 99; //vrati hodnotu prumerneho cyklu OK
+        public const byte CmdReadHodnotuPrumCykluNg = 100; //vrati hodnotu prumerneho cyklu NG
+        public const byte CmdReadTeplotu1Cidla = 101; //vrati teplotu z prvniho cidla DS18B20
+        public const byte CmdReadTeplotu2Cidla = 102; //vrati teplotu z druheho cidla DS18B20
+        public const byte CmdReadTeplotu3Cidla = 103; //vrati teplotu z tretiho cidla DS18B20
+        public const byte CmdReadTeplotu4Cidla = 104; //vrati teplotu ze ctvrteho cidla DS18B20
+        public const byte CmdReadTeplotu5Cidla = 105; //vrati teplotu z pateho cidla DS18B20
+        public const byte CmdReadRozdilusu = 106; //vraci rozdil kusu
+        public const byte CmdReadDefektivita = 107; //vraci defektivitu
 
         #endregion
 
@@ -105,6 +105,18 @@ namespace Slevyr.DataAccess.Model
         {
             get { return _address; }
         }
+
+        public DateTime ReadStavCitacuStartTime { get; set; }
+
+        public bool IsReadStavCitacuPending { get; set; }
+
+        public DateTime ReadCasOkStartTime { get; set; }
+
+        public bool IsSendReadCasOkPending { get; set; }
+
+        public DateTime ReadCasNgStartTime { get; set; }
+
+        public bool IsSendReadCasNgPending { get; set; }
 
         #endregion
 
@@ -151,15 +163,13 @@ namespace Slevyr.DataAccess.Model
         }
 
         /// <summary>
-        /// posle prikaz na port, parametry jsou jen pro logovani cisla pokusu
+        /// posle prikaz na port
         /// </summary>
-        /// <param name="a1"></param>
-        /// <param name="a2"></param>
-        /// <returns></returns>
-        private bool SendCommandBasic(int a1, int a2)
+       /// <returns></returns>
+        private bool SendCommand()
         {
             bool res;
-            Logger.Debug($"+ attempt:{a1}.{a2}");
+            Logger.Debug("+");
             //lock (lockobj)
             //{
             if (!_sp.IsOpen) return false;
@@ -177,8 +187,8 @@ namespace Slevyr.DataAccess.Model
                 Logger.Debug(" -w");
 
                 //kontrola odeslání
+                /*
                 var task = _sp.ReadAsync(11);
-
                 task.Wait(_runConfig.SendCommandTimeOut);
 
                 if (!task.IsCompleted)
@@ -192,6 +202,8 @@ namespace Slevyr.DataAccess.Model
                     _outBuff = task.Result;
                     res = true;
                 }
+                */
+                res = true;
             }
             catch (Exception ex)
             {
@@ -199,8 +211,8 @@ namespace Slevyr.DataAccess.Model
                 res = false;
             }
 
-            res = res && CheckSendOk();
-            Logger.Debug($"-");
+            //res = res && CheckSendOk();
+            Logger.Debug("-");
 
             return res;
         }
@@ -208,6 +220,7 @@ namespace Slevyr.DataAccess.Model
         //odesle prikaz, v _inBuffer musi byt prikaz nachystany
         //provede kontrolu odeslani, 
         //udela 3 pokusy
+        /*
         private bool SendCommand(int a)
         {
             Logger.Debug("+");
@@ -216,20 +229,20 @@ namespace Slevyr.DataAccess.Model
 
             lock (lockobj)
             {
-                sendOk = SendCommandBasic(a,1);
+                sendOk = SendCommand(a,1);
 
                 if (!sendOk)
                 {
                     Thread.Sleep(_runConfig.RelaxTime);
                     DiscardBuffers();
-                    sendOk = SendCommandBasic(a,2);
+                    sendOk = SendCommand(a,2);
                 }
 
                 if (!sendOk)
                 {
                     Thread.Sleep(_runConfig.RelaxTime);
                     DiscardBuffers();
-                    sendOk = SendCommandBasic(a,3);
+                    sendOk = SendCommand(a,3);
                 }
 
                 if (!sendOk)
@@ -241,6 +254,7 @@ namespace Slevyr.DataAccess.Model
             Logger.Debug($"- res:{sendOk}");        
             return sendOk;
         }
+        */
 
         private bool ReceiveResults(int a)
         {
@@ -289,7 +303,7 @@ namespace Slevyr.DataAccess.Model
         /// provadi dva pokusy
         /// </summary>
         /// <returns></returns>
-        private bool SendReceiveResults()
+        private bool SendAndReceive()
         {
             bool res = false;
 
@@ -298,27 +312,11 @@ namespace Slevyr.DataAccess.Model
             lock (lockobj)
             {
 
-                if (SendCommand(1))
+                if (SendCommand())
                 {
                     Thread.Sleep(_runConfig.RelaxTime);
 
-                    res = ReceiveResults(1);
-
-                    if (!res)
-                    {
-                        Thread.Sleep(_runConfig.RelaxTime);
-                        DiscardBuffers();
-                        if (SendCommand(2))
-                        {
-                            Thread.Sleep(_runConfig.RelaxTime);
-                            res = ReceiveResults(2);
-                            if (!res)
-                            {
-                                Thread.Sleep(_runConfig.RelaxTime);
-                                DiscardBuffers();
-                            }
-                        }
-                    }
+                    res = ReceiveResults(1);                    
 
                 }
 
@@ -329,12 +327,6 @@ namespace Slevyr.DataAccess.Model
             return res;
         }
         
-
-        private void _sp_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
         #endregion
 
         #region public methods
@@ -347,7 +339,7 @@ namespace Slevyr.DataAccess.Model
 
             UnitConfig.TypSmennosti = varianta.ToString();
 
-            var res = SendReceiveResults();
+            var res = SendAndReceive();
 
             return res;
         }
@@ -367,7 +359,7 @@ namespace Slevyr.DataAccess.Model
             Helper.FromShort(cil2, out _inBuff[7], out _inBuff[8]);
             Helper.FromShort(cil3, out _inBuff[9], out _inBuff[10]);
 
-            var res = SendReceiveResults();
+            var res = SendAndReceive();
 
             Logger.Debug("-");
             return res;
@@ -387,7 +379,7 @@ namespace Slevyr.DataAccess.Model
             Helper.FromShort((short)(def2 * 10.0), out _inBuff[7], out _inBuff[8]);
             Helper.FromShort((short)(def3 * 10.0), out _inBuff[9], out _inBuff[10]);
 
-            return SendCommand(1);
+            return SendCommand();
 
         }
 
@@ -411,7 +403,7 @@ namespace Slevyr.DataAccess.Model
             _inBuff[9] = (byte)prest3.Hours;
             _inBuff[10] = (byte)prest3.Minutes;
 
-            return SendCommand(1);
+            return SendCommand();
         }
 
         public bool SetCas(DateTime dt)
@@ -428,7 +420,7 @@ namespace Slevyr.DataAccess.Model
             _inBuff[9] = (byte)(dt.Year-2000);
             _inBuff[10] = (byte)dt.DayOfWeek;
 
-            var res = SendCommand(1); 
+            var res = SendCommand(); 
 
             Logger.Debug($"- {res} unit {_address}");
 
@@ -442,7 +434,7 @@ namespace Slevyr.DataAccess.Model
 
             _inBuff[4] = jas;
 
-            return SendCommand(1);
+            return SendCommand();
         }
 
         public bool SetCitace(short ok, short ng)
@@ -453,14 +445,14 @@ namespace Slevyr.DataAccess.Model
             Helper.FromShort(ok, out _inBuff[4], out _inBuff[5]);
             Helper.FromShort(ng, out _inBuff[6], out _inBuff[7]);
 
-            return SendCommand(1);
+            return SendCommand();
         }
 
         public bool Reset()
         {
             PrepareCommand(CmdResetJednotky);
 
-            return SendCommand(1);
+            return SendCommand();
 
             //TODO otestovat
 
@@ -483,7 +475,7 @@ namespace Slevyr.DataAccess.Model
         {
             PrepareCommand(0x6f);
 
-            return SendCommand(1);
+            return SendCommand();
 
             //TODO otestovat
 
@@ -509,7 +501,7 @@ namespace Slevyr.DataAccess.Model
             _inBuff[4] = handshake;
             _inBuff[5] = prumTyp;
 
-            var res = SendCommand(1);
+            var res = SendCommand();
 
 
             if (res)
@@ -546,7 +538,7 @@ namespace Slevyr.DataAccess.Model
             _inBuff[9] = rozliseniCidel;
             _inBuff[10] = pracovniJasLed;
 
-            return SendCommand(1);
+            return SendCommand();
         }
 
         public bool ReadZaklNastaveni(out byte minOk, out byte minNg, out byte adrLocal, out byte verzeSw1, out byte verzeSw2, out byte verzeSw3)
@@ -558,7 +550,7 @@ namespace Slevyr.DataAccess.Model
             adrLocal = 0;
             verzeSw1 = verzeSw2 = verzeSw3 = 0;
 
-            var res = SendReceiveResults();
+            var res = SendAndReceive();
 
             if (res)
             {
@@ -574,129 +566,130 @@ namespace Slevyr.DataAccess.Model
             return res;
         }
 
-        public bool ReadStavCitacu(out int okVal, out int ngVal)
+        public bool SendReadStavCitacu()
         {
             Logger.Debug($"+ unit {_address}");
 
-            if (_isMockupMode)
-            {
-                okVal = (short)DateTime.Now.Minute;  //minuta poslouzi jako hodnota ok
-                ngVal = (short)((okVal + 1) / 2);
-                UnitStatus.Ok = okVal;
-                UnitStatus.Ng = ngVal;
-                UnitStatus.OkNgTime = DateTime.Now;
-                return true;
-            }
+            //if (_isMockupMode)
+            //{
+            //    okVal = (short)DateTime.Now.Minute;  //minuta poslouzi jako hodnota ok
+            //    ngVal = (short)((okVal + 1) / 2);
+            //    UnitStatus.Ok = okVal;
+            //    UnitStatus.Ng = ngVal;
+            //    UnitStatus.OkNgTime = DateTime.Now;
+            //    return true;
+            //}
 
             PrepareCommand(CmdReadStavCitacu);
 
-            okVal = 0;
-            ngVal = 0;
-
-            var res = SendReceiveResults();
+            var res = SendCommand();
 
             if (res)
             {
-                //načtení výsledku
-               
-                okVal = Helper.ToShort(_outBuff[4], _outBuff[5]);
-                ngVal = Helper.ToShort(_outBuff[6], _outBuff[7]);
-                short machineStatus = _outBuff[8];
-                short shutdownTime = Helper.ToShort(_outBuff[9], _outBuff[10]);
-
-                UnitStatus.Ok = okVal;
-                UnitStatus.Ng = ngVal;
-                UnitStatus.MachineStatus = (MachineStateEnum)machineStatus;
-                UnitStatus.MachineShutdownTime = shutdownTime;
-
-                UnitStatus.OkNgTime = DateTime.Now;                   
+                IsReadStavCitacuPending = true;
+                ReadStavCitacuStartTime = DateTime.Now;
             }
             else
             {
-                UnitStatus.Ok = -1;
-                UnitStatus.Ng = -1;
-                UnitStatus.OkNgTime = DateTime.MaxValue;
-                UnitStatus.ErrorTime = DateTime.Now;
-                UnitStatus.MachineStatus = MachineStateEnum.Neznamy; 
+                IsReadStavCitacuPending = false;
             }
-
-            UnitStatus.IsOkNg = res;
-
-            Logger.Debug($"- {res} machineState {UnitStatus.MachineStatus}/unit {_address}");
 
             return res;
         }
 
-        public bool ReadStavCitacu()
+        public void ReadStavCitacu(byte[] buff)
         {
-            int ok;
-            int ng;
-            return ReadStavCitacu(out ok, out ng);
+            var okVal = Helper.ToShort(buff[4], buff[5]);
+            var ngVal = Helper.ToShort(buff[6], buff[7]);
+            short machineStatus = buff[8];
+            short shutdownTime = Helper.ToShort(buff[9], buff[10]);
+
+            UnitStatus.Ok = okVal;
+            UnitStatus.Ng = ngVal;
+            UnitStatus.MachineStatus = (MachineStateEnum)machineStatus;
+            UnitStatus.MachineShutdownTime = shutdownTime;
+
+            UnitStatus.OkNgTime = DateTime.Now;
+            UnitStatus.IsOkNg = true;
+
+            Logger.Info($"okVal:{okVal} ngVal:{ngVal} machineStatus:{machineStatus} unit: {_address}");
         }
 
-        public bool ReadCasOK(out Single value)
+
+        public bool SendReadCasOK()
         {
             Logger.Debug($"+ unit {_address}");
 
-            if (_isMockupMode)
-            {
-                value = (Single)DateTime.Now.Hour * 2;  //hod. poslouzi jako hodnota casu ok
-                UnitStatus.CasOk = value;
-                UnitStatus.CasOkTime = DateTime.Now;
-                return true;
-            }
-
+            //if (_isMockupMode)
+            //{
+            //    value = (Single)DateTime.Now.Hour * 2;  //hod. poslouzi jako hodnota casu ok
+            //    UnitStatus.CasOk = value;
+            //    UnitStatus.CasOkTime = DateTime.Now;
+            //    return true;
+            //}
 
             PrepareCommand(CmdReadHodnotuPoslCykluOk);
 
-            value = 0;
-
-            var res = SendReceiveResults();
+            var res = SendCommand();
 
             if (res)
             {
-                value = Helper.ToSingle(_outBuff, 7);
-                UnitStatus.CasOk = value;
-                UnitStatus.CasOkTime = DateTime.Now;
+                IsSendReadCasOkPending = true;
+                ReadCasOkStartTime = DateTime.Now;
             }
-
-            UnitStatus.IsCasOk = res;
-
-            Logger.Debug($"- unit {_address}");
+            else
+            {
+                IsSendReadCasOkPending = false;
+            }
 
             return res;
         }
 
-        public bool ReadCasNG(out Single value)
+        public void ReadCasOk(byte[] buff)
+        {
+            var value = Helper.ToSingle(buff, 7);
+            UnitStatus.CasOk = value;
+            UnitStatus.CasOkTime = DateTime.Now;
+            UnitStatus.IsCasOk = true;
+            Logger.Debug($"unit {_address}");
+        }
+
+        public bool SendReadCasNG()
         {
             Logger.Debug($"+ unit {_address}");
 
-            if (_isMockupMode)
-            {
-                value = (Single)(DateTime.Now.Hour * 1.5);  //hod. poslouzi jako hodnota casu ng
-                UnitStatus.CasNg = value;
-                UnitStatus.CasNgTime = DateTime.Now;
-                return true;
-            }
+            //if (_isMockupMode)
+            //{
+            //    value = (Single)(DateTime.Now.Hour * 1.5);  //hod. poslouzi jako hodnota casu ng
+            //    UnitStatus.CasNg = value;
+            //    UnitStatus.CasNgTime = DateTime.Now;
+            //    return true;
+            //}
 
             PrepareCommand(CmdReadHodnotuPoslCykluNg);
 
-            value = 0;
-
-            var res = SendReceiveResults();
+            var res = SendCommand();
 
             if (res)
             {
-                value = Helper.ToSingle(_outBuff, 7);
-                UnitStatus.CasNg = value;
-                UnitStatus.CasNgTime = DateTime.Now;             
+                IsSendReadCasNgPending = true;
+                ReadCasNgStartTime = DateTime.Now;
+            }
+            else
+            {
+                IsSendReadCasNgPending = false;
             }
 
-            UnitStatus.IsCasNg = res;
-
-            Logger.Debug($"- unit {_address}");
-
             return res;
+        }
+
+        public void ReadCasNg(byte[] buff)
+        {
+            var value = Helper.ToSingle(buff, 7);
+            UnitStatus.CasNg = value;
+            UnitStatus.CasNgTime = DateTime.Now;
+            UnitStatus.IsCasNg = true;
+            Logger.Debug($"unit {_address}");
         }
 
         public bool ReadRozdilKusu(out short value)
@@ -705,13 +698,13 @@ namespace Slevyr.DataAccess.Model
 
             value = 0;
 
-            var res = SendReceiveResults();
+            var res = SendAndReceive();
 
             if (res)
             {
-                    value = Helper.ToShort(_outBuff[8], _outBuff[9]);
-                    UnitStatus.RozdilKusu = value;
-                    UnitStatus.RozdilKusuTime = DateTime.Now;                
+                 value = Helper.ToShort(_outBuff[8], _outBuff[9]);
+                 UnitStatus.RozdilKusu = value;
+                 UnitStatus.RozdilKusuTime = DateTime.Now;                
               
             }
 
@@ -726,7 +719,7 @@ namespace Slevyr.DataAccess.Model
 
             value = 0;
 
-            var res = SendReceiveResults();
+            var res = SendAndReceive();
 
             if (res)
             {

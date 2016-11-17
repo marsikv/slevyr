@@ -91,9 +91,7 @@ namespace TestConsoleApp
 
                 while (c++ < 10)
                 {
-                    var res = m.ReadStavCitacu(out ok, out ng);
-
-                    Console.WriteLine($"res = {res}  OK = {ok}  NG = {ng}");
+                    var res = m.SendReadStavCitacu();
 
                     Thread.Sleep(300);
                 }

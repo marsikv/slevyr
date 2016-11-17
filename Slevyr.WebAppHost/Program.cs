@@ -98,6 +98,10 @@ namespace Slevyr.WebAppHost
             Console.ReadLine();
 
             SlevyrService.ClosePort();
+
+            SlevyrService.StopChunkWorker();
+
+            SlevyrService.StopSendWorker();
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

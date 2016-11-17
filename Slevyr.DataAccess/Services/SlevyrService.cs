@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.IO.Ports;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.Remoting.Channels;
 using System.Text;
 using System.Threading;
 using System.Timers;
@@ -21,22 +24,27 @@ namespace Slevyr.DataAccess.Services
     public static class SlevyrService
     {
         #region Fields
-        static SerialPortWraper _serialPort;
-
-        static Dictionary<int, UnitMonitor> _unitDictionary;
-
-        static RunConfig _runConfig = new RunConfig();
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly Logger UnitsLogger = LogManager.GetLogger("Units");
         private static readonly Logger Units2Logger = LogManager.GetLogger("Units2");
         private static readonly Logger ErrorsLogger = LogManager.GetLogger("Errors");
 
-        private static BackgroundWorker _bw;
-        private static bool _isWorkerStarted;
-        private static int _workerCycleCnt;
 
-        public static int SelectedUnit { get; set; }
+        private static SerialPortWraper _serialPort;
+
+        private static Dictionary<int, UnitMonitor> _unitDictionary;
+
+        private static RunConfig _runConfig = new RunConfig();
+
+        private static ByteQueue _receivedByteQueue = new ByteQueue();
+        private static BlockingCollection<byte[]> _chunkCollection = new BlockingCollection<byte[]>();
+
+        private static BackgroundWorker _sendBw;
+        private static BackgroundWorker _chunkBw;
+        private static bool _isSendWorkerStarted;
+        private static bool _isChunkWorkerStarted;
+        private static int _sendWorkerCycleCnt;
 
         private static ConcurrentQueue<UnitCommand> _unitCommandsQueue = new ConcurrentQueue<UnitCommand>();
         private static bool _ErrorRecorded;
@@ -53,6 +61,11 @@ namespace Slevyr.DataAccess.Services
         }
 
         public static bool SerialPortIsOpen => _serialPort.IsOpen;
+
+        public static IEnumerable<int> UnitAddresses => _runConfig.UnitAddrs;
+
+        public static int UnitCount => _unitDictionary.Count;
+        //public static int SelectedUnit { get; set; }
 
         #endregion
 
@@ -77,6 +90,10 @@ namespace Slevyr.DataAccess.Services
                  m.LoadUnitConfigFromFile(m.Address, _runConfig.DataFilePath);
             }
 
+            _serialPort.DataReceived += SerialPortOnDataReceived;
+
+            _serialPort.ErrorReceived += _serialPort_ErrorReceived;
+
             Logger.Info("unit count: " + _unitDictionary.Count);
 
             Logger.Info($"Open port {_serialPort.PortName} baud rate: {_serialPort.BaudRate}");
@@ -86,11 +103,42 @@ namespace Slevyr.DataAccess.Services
             Logger.Info($"Port open: {_serialPort.IsOpen}");
         }
 
+        private static void _serialPort_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
+        {
+            Logger.Error($"--- Serial port error received: {e.EventType} ---" );
+        }
+
+        
+
+        private static void SerialPortOnDataReceived(object sender, SerialDataReceivedEventArgs serialDataReceivedEventArgs)
+        {
+            SerialPort sp = (SerialPort)sender;
+
+            if (!sp.IsOpen) return;
+
+            var len = sp.BytesToRead;
+            Logger.Info($"Data received {len}");
+
+            Byte[] buf = new Byte[len];
+
+            sp.Read(buf, 0, len);
+
+            _receivedByteQueue.Enqueue(buf,0,len);
+
+            if (_receivedByteQueue.Length >= 11)
+            {
+                Byte[] chunk = new Byte[11];
+                _receivedByteQueue.Dequeue(chunk, 0, 11);
+
+                var checkOk = (chunk[0] == 0) && (chunk[1] == 0) && (chunk[2] > 0) && (chunk[3] > 0);
+                if (checkOk)
+                {
+                    _chunkCollection.Add(chunk);                    
+                }
+            }           
+        }
+
         #endregion
-
-        public static IEnumerable<int> UnitAddresses => _runConfig.UnitAddrs;
-
-        public static int UnitCount => _unitDictionary.Count;
 
         #region open close port
 
@@ -137,96 +185,90 @@ namespace Slevyr.DataAccess.Services
         }
 
         /// <summary>
-        /// Získá status jednoty načtením stavu čítačů a výpočtem parametrů zobrazovaných na tabuli
+        /// --Získá status jednoty načtením stavu čítačů a výpočtem parametrů zobrazovaných na tabuli
+        /// Odešle požadavek o předání stavu linky (jednotky) 
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
-        public static UnitStatus ObtainStatus(byte addr)
+        public static UnitStatus SendUnitStatusRequests(byte addr)
         {
             Logger.Info($"+ *** unit {addr}");
 
             if (_runConfig.IsMockupMode) return _unitDictionary[addr].UnitStatus;
 
-            int ok, ng;
-            Single casOk=-1, casNg=-1;
-            var res = _unitDictionary[addr].ReadStavCitacu(out ok, out ng);
-            var s = res ? "" : "err";
-            Logger.Info($">ok:{ok} ng:{ng} " + s);
+            //if (_unitDictionary[addr].IsReadStavCitacuPending)
+            //{
+            //    //kontrola probihajiciho casu - pripadne zruseni a nove odeslani
+            //    Logger.Info($"ReadStavCitacu pending from {_unitDictionary[addr].ReadStavCitacuStartTime}");
+            //    return _unitDictionary[addr].UnitStatus; 
+            //}
 
-            if (!res)
-            {
-                _ErrorRecordedCnt++;
-                if (!_ErrorRecorded)
-                {
-                    ErrorsLogger.Error($"ReadStavCitacu;{addr};total errors:{_ErrorRecordedCnt}");
-                    _ErrorRecorded = true;
-                }
-            }
-            else
-            {
-                if (_ErrorRecorded)
-                {
-                    ErrorsLogger.Info($"ReadStavCitacu;{addr};recovered");
-                    _ErrorRecorded = false;
-                }
-            }
+            var res = _unitDictionary[addr].SendReadStavCitacu();
 
             if (res && _runConfig.IsReadOkNgTime)
             {
-                _unitDictionary[addr].ReadCasOK(out casOk);
-                Logger.Info($">casOk:{casOk}");
+                _unitDictionary[addr].SendReadCasOK();
 
-                _unitDictionary[addr].ReadCasNG(out casNg);
-                Logger.Info($">casNg:{casNg}");
+                _unitDictionary[addr].SendReadCasNG();
             }
 
-            if (res)
+            Logger.Info("-");
+
+            return _unitDictionary[addr].UnitStatus;
+        }
+
+        /// <summary>
+        /// prepocitat pro zobrazeni tabule
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <returns></returns>
+        public static UnitStatus UpdateUnitStatus(byte addr)
+        {
+            var ok = _unitDictionary[addr].UnitStatus.Ok;
+            var ng = _unitDictionary[addr].UnitStatus.Ng;
+            var casOk = _unitDictionary[addr].UnitStatus.CasOk;
+            var casNg = _unitDictionary[addr].UnitStatus.CasNg;
+
+            try
             {
-                //prepocitat pro zobrazeni tabule
-                try
-                {
-                    _unitDictionary[addr].RecalcTabule();
+                _unitDictionary[addr].RecalcTabule();
 
-                    _unitDictionary[addr].UnitStatus.LastCheckTime = DateTime.Now;
+                _unitDictionary[addr].UnitStatus.LastCheckTime = DateTime.Now;
 
-                    string casOkStr = (_runConfig.IsReadOkNgTime)
-                        ? casOk.ToString(CultureInfo.InvariantCulture)
-                        : string.Empty;
-                    string casNgStr = (_runConfig.IsReadOkNgTime)
-                        ? casNg.ToString(CultureInfo.InvariantCulture)
-                        : string.Empty;
+                string casOkStr = (_runConfig.IsReadOkNgTime)
+                    ? casOk.ToString(CultureInfo.InvariantCulture)
+                    : string.Empty;
+                string casNgStr = (_runConfig.IsReadOkNgTime)
+                    ? casNg.ToString(CultureInfo.InvariantCulture)
+                    : string.Empty;
 
-                    UnitsLogger.Info($"4;{addr};{ok};{ng};{casOkStr};{casNgStr};{(int)_unitDictionary[addr].UnitStatus.MachineStatus}");
+                UnitsLogger.Info($"4;{addr};{ok};{ng};{casOkStr};{casNgStr};{(int)_unitDictionary[addr].UnitStatus.MachineStatus}");
 
-                    StringBuilder sb = new StringBuilder();
-                    sb.Append($"4;{_unitDictionary[addr].UnitConfig.UnitName};{addr}"); //az po 4
-                    sb.Append($";{_unitDictionary[addr].UnitStatus.CilKusuTabule}"); //5
-                    sb.Append($";{ok}"); //6
-                    sb.Append(_runConfig.IsReadOkNgTime ? $";{_unitDictionary[addr].UnitStatus.CasOk}" : ";"); //7
-                    sb.Append(ok != 0 ? $";{_unitDictionary[addr].UnitStatus.UbehlyCasSmenySec / (float)ok:F}" : ";");
-                    sb.Append($";{_unitDictionary[addr].UnitStatus.CilDefectTabule:F}"); //9
-                    sb.Append($";{ng}"); //10
-                    sb.Append(_runConfig.IsReadOkNgTime ? $";{_unitDictionary[addr].UnitStatus.CasNg}" : ";"); //11
-                    sb.Append(ng != 0 ? $";{_unitDictionary[addr].UnitStatus.UbehlyCasSmenySec / (float)ng:F}" : ";"); //12
-                    sb.Append($";{_unitDictionary[addr].UnitStatus.RozdilTabuleTxt}"); //13
-                    sb.Append($";{_unitDictionary[addr].UnitStatus.AktualDefectTabuleTxt}"); //14
-                    sb.Append($";{_unitDictionary[addr].UnitStatus.MachineStatus}"); //15
-                    sb.Append($";{Convert.ToInt32(_unitDictionary[addr].UnitStatus.IsPrestavkaTabule)}"); //16
-                    Units2Logger.Info(sb.ToString);
+                StringBuilder sb = new StringBuilder();
+                sb.Append($"4;{_unitDictionary[addr].UnitConfig.UnitName};{addr}"); //az po 4
+                sb.Append($";{_unitDictionary[addr].UnitStatus.CilKusuTabule}"); //5
+                sb.Append($";{ok}"); //6
+                sb.Append(_runConfig.IsReadOkNgTime ? $";{casOk}" : ";"); //7
+                sb.Append(ok != 0 ? $";{_unitDictionary[addr].UnitStatus.UbehlyCasSmenySec / (float)ok:F}" : ";");
+                sb.Append($";{_unitDictionary[addr].UnitStatus.CilDefectTabule:F}"); //9
+                sb.Append($";{ng}"); //10
+                sb.Append(_runConfig.IsReadOkNgTime ? $";{casNg}" : ";"); //11
+                sb.Append(ng != 0 ? $";{_unitDictionary[addr].UnitStatus.UbehlyCasSmenySec / (float)ng:F}" : ";"); //12
+                sb.Append($";{_unitDictionary[addr].UnitStatus.RozdilTabuleTxt}"); //13
+                sb.Append($";{_unitDictionary[addr].UnitStatus.AktualDefectTabuleTxt}"); //14
+                sb.Append($";{_unitDictionary[addr].UnitStatus.MachineStatus}"); //15
+                sb.Append($";{Convert.ToInt32(_unitDictionary[addr].UnitStatus.IsPrestavkaTabule)}"); //16
+                Units2Logger.Info(sb.ToString);
 
-                    SqlliteDao.AddUnitState(addr, _unitDictionary[addr].UnitStatus);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error(ex);
-                }
+                SqlliteDao.AddUnitState(addr, _unitDictionary[addr].UnitStatus);
             }
-            else
+            catch (Exception ex)
             {
-                if (_runConfig.IsWriteEmptyToLog) UnitsLogger.Info($" 4;{addr};;;;;");
+                Logger.Error(ex);
             }
 
-            Logger.Info($"-");
+
+            //Logger.Info($"-");
 
             return _unitDictionary[addr].UnitStatus;
         }
@@ -329,12 +371,12 @@ namespace Slevyr.DataAccess.Services
                 return true;
             }
 
-            return _unitDictionary[addr].ReadStavCitacu();
+            return _unitDictionary[addr].SendReadStavCitacu();
 
         }
 
 
-        public static bool CtiCyklusOkNg(byte addr)
+        public static bool SendCtiCyklusOkNg(byte addr)
         {
             Logger.Info("+");
 
@@ -344,11 +386,8 @@ namespace Slevyr.DataAccess.Services
                 Mock.MockUnitStatus().CasNgTime = DateTime.Now;
                 return true;
             }
-
-            float ok;
-            float ng;
-            return _unitDictionary[addr].ReadCasOK(out ok) && _unitDictionary[addr].ReadCasNG(out ng);
-
+          
+            return _unitDictionary[addr].SendReadCasOK() && _unitDictionary[addr].SendReadCasNG();
         }
 
         #endregion
@@ -374,33 +413,48 @@ namespace Slevyr.DataAccess.Services
             return _unitDictionary[addr].UnitConfig;          
         }
 
-        public static void StartWorker()
+        public static void StartSendWorker()
         {
-            if (_isWorkerStarted) return;
-
-            _isWorkerStarted = true;
-            _bw = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
-            _bw.DoWork += _bw_DoWork;
-            _bw.RunWorkerAsync();
-
-            Logger.Info("***  worker started ***");
+            if (!_isSendWorkerStarted)
+            {
+                _isSendWorkerStarted = true;
+                _sendBw = new BackgroundWorker {WorkerReportsProgress = true, WorkerSupportsCancellation = true};
+                _sendBw.DoWork += SendBwDoWork;
+                _sendBw.RunWorkerAsync();
+                Logger.Info("*** send worker started ***");
+            }
         }
 
-        public static void StopWorker()
+        public static void StartChunkWorker()
         {
-            _bw.CancelAsync();
+            if (!_isChunkWorkerStarted)
+            {
+                _isChunkWorkerStarted = true;
+                _chunkBw = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
+                _chunkBw.DoWork += ChunkBwDoWork;
+                _chunkBw.RunWorkerAsync();
+                Logger.Info("*** chunk worker started ***");
+            }
         }
 
-        private static void _bw_DoWork(object sender, DoWorkEventArgs e)
+        public static void StopSendWorker()
+        {
+            _sendBw.CancelAsync();
+        }
+
+        public static void StopChunkWorker()
+        {
+            _chunkBw.CancelAsync();
+        }
+
+        private static void SendBwDoWork(object sender, DoWorkEventArgs e)
         {
 
             OpenPort();
 
-            SqlliteDao.OpenConnection(true);
-
             while (true)
             {
-                Logger.Info($"worker cycle {++_workerCycleCnt}");
+                Logger.Info($"send worker cycle {++_sendWorkerCycleCnt}");
 
                 try
                 {
@@ -415,33 +469,21 @@ namespace Slevyr.DataAccess.Services
                         Logger.Debug($"command invoke res:{unitCommand.Result}");
                     }
 
-                    //provedu nacitani ze vsech jednotek v cyklu
+                    //provedu odeslani pozadavku na vsechny jednotky v cyklu
                     foreach (var addr in UnitAddresses)
                     {
-                        if (_bw.CancellationPending)
+                        if (_sendBw.CancellationPending)
                         {
-                            Logger.Info("*** read worker canceled ***");
-                            _isWorkerStarted = false;
-                            SqlliteDao.CloseConnection();
+                            Logger.Info("*** send worker canceled ***");
+                            _isSendWorkerStarted = false;
                             return;
                         }
 
-                        ObtainStatus((byte)addr);
+                        SendUnitStatusRequests((byte)addr);
 
-                        Logger.Debug($"+worker sleep: {_runConfig.WorkerSleepPeriod}");
-                        Thread.Sleep(_runConfig.WorkerSleepPeriod);  //pauza pred ctenim dalsi jednotky - parametr
-                        Logger.Debug("-worker sleep");
+                        Logger.Debug($"+send worker sleep: {_runConfig.WorkerSleepPeriod}");
+                        Thread.Sleep(_runConfig.WorkerSleepPeriod);  //pauza pred odeslanim prikazu na dalsi jednotku - parametr
                     }
-
-                    //ClosePort();  //- muze byt problem ze prijimani dat neste neskoncilo
-
-                    //pokud o vynuceni uvolneni zdroju
-                    //Thread.Sleep(100);
-
-                    //GC.Collect();
-                    //GC.WaitForPendingFinalizers();
-
-                    //Thread.Sleep(100);
                 }
                 catch (Exception ex)
                 {
@@ -452,6 +494,57 @@ namespace Slevyr.DataAccess.Services
 
         }
 
+
+        private static void ChunkBwDoWork(object sender, DoWorkEventArgs e)
+        {
+
+            SqlliteDao.OpenConnection(true);
+
+            while (true)
+            {
+                try
+                {
+                    if (_chunkBw.CancellationPending)
+                    {
+                        Logger.Info("*** chunk worker canceled ***");
+                        SqlliteDao.CloseConnection();
+                        return;
+                    }
+
+                    var chunk =_chunkCollection.Take();
+
+                    byte addr = chunk[2];
+                    byte cmd = chunk[3];
+
+                    Logger.Info($"Received addr:{addr} cmd:{cmd}");
+
+                    switch (cmd)
+                    {
+                       case UnitMonitor.CmdReadStavCitacu:
+                            _unitDictionary[addr].ReadStavCitacu(chunk);
+                            UpdateUnitStatus(addr);
+                            break;
+                        case UnitMonitor.CmdReadHodnotuPoslCykluOk:
+                            _unitDictionary[addr].ReadCasOk(chunk);
+                            break;
+                        case UnitMonitor.CmdReadHodnotuPoslCykluNg:
+                            _unitDictionary[addr].ReadCasNg(chunk);
+                            break;
+                    }
+                    if (cmd == UnitMonitor.CmdReadStavCitacu)
+                    {
+                        _unitDictionary[addr].ReadStavCitacu(chunk);
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex);
+                }
+            }
+
+
+        }
 
     }
 }

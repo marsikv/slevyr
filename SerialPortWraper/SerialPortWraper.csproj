@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ByteQueue.cs" />
     <Compile Include="SerialPortConfig.cs" />
     <Compile Include="SerialPortDetector.cs" />
     <Compile Include="SerialPortFixer.cs" />
