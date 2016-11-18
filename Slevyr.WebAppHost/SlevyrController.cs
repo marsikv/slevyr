@@ -265,8 +265,6 @@ namespace Slevyr.WebAppHost
         {
             Logger.Info($"addr:{addr} var:{varianta} cil1:{cil1} cil2:{cil2} cil3:{cil3}");
 
-            bool res = false;
-
             if (RunConfig.IsMockupMode) return true;
 
             try
@@ -277,7 +275,6 @@ namespace Slevyr.WebAppHost
             {
                 throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
             }
-            return res;
         }
 
         [HttpGet]
@@ -422,8 +419,6 @@ namespace Slevyr.WebAppHost
 
             try
             {
-                float ok;
-                float ng;
                 return SlevyrService.SendCtiCyklusOkNg(addr);
             }
             catch (KeyNotFoundException)

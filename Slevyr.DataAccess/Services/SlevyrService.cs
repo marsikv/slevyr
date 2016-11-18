@@ -47,8 +47,8 @@ namespace Slevyr.DataAccess.Services
         private static int _sendWorkerCycleCnt;
 
         private static ConcurrentQueue<UnitCommand> _unitCommandsQueue = new ConcurrentQueue<UnitCommand>();
-        private static bool _ErrorRecorded;
-        private static int _ErrorRecordedCnt;
+        //private static bool _ErrorRecorded;
+        //private static int _ErrorRecordedCnt;
 
         #endregion
 
@@ -199,7 +199,7 @@ namespace Slevyr.DataAccess.Services
             //if (_unitDictionary[addr].IsReadStavCitacuPending)
             //{
             //    //kontrola probihajiciho casu - pripadne zruseni a nove odeslani
-            //    Logger.Info($"ReadStavCitacu pending from {_unitDictionary[addr].ReadStavCitacuStartTime}");
+            //    Logger.Info($"DoReadStavCitacu pending from {_unitDictionary[addr].ReadStavCitacuStartTime}");
             //    return _unitDictionary[addr].UnitStatus; 
             //}
 
@@ -521,19 +521,25 @@ namespace Slevyr.DataAccess.Services
                     switch (cmd)
                     {
                        case UnitMonitor.CmdReadStavCitacu:
-                            _unitDictionary[addr].ReadStavCitacu(chunk);
+                            _unitDictionary[addr].DoReadStavCitacu(chunk);
                             UpdateUnitStatus(addr);
                             break;
                         case UnitMonitor.CmdReadHodnotuPoslCykluOk:
-                            _unitDictionary[addr].ReadCasOk(chunk);
+                            _unitDictionary[addr].DoReadCasOk(chunk);
                             break;
                         case UnitMonitor.CmdReadHodnotuPoslCykluNg:
-                            _unitDictionary[addr].ReadCasNg(chunk);
+                            _unitDictionary[addr].DoReadCasNg(chunk);
+                            break;
+                        case UnitMonitor.CmdReadRozdilKusu:
+                            _unitDictionary[addr].DoReadRozdilKusu(chunk);
+                            break;
+                        case UnitMonitor.CmdReadDefektivita:
+                            _unitDictionary[addr].DoReadDefectivita(chunk);
                             break;
                     }
                     if (cmd == UnitMonitor.CmdReadStavCitacu)
                     {
-                        _unitDictionary[addr].ReadStavCitacu(chunk);
+                        _unitDictionary[addr].DoReadStavCitacu(chunk);
                     }
 
                 }

@@ -103,6 +103,11 @@ namespace Slevyr.DataAccess.Model
         public int UbehlyCasSmenySec { get; set; }
 
         public bool IsTabuleOk { get; set; }
+        public byte MinOk { get; set; }
+        public byte MinNg { get; set; }
+        public byte VerzeSw1 { get; set; }
+        public byte VerzeSw2 { get; set; }
+        public byte VerzeSw3 { get; set; }
 
         #endregion
 
@@ -154,7 +159,7 @@ namespace Slevyr.DataAccess.Model
                 int konecPrestavkySmeny2Sec = zacatekPrestavkySmeny2Sec + prestavkaSec;
                 int konecPrestavkySmeny3Sec = zacatekPrestavkySmeny3Sec + prestavkaSec;
 
-                int odZacatkuSmenySec = 0;
+                //int odZacatkuSmenySec = 0;
 
                 IsPrestavkaTabule = false;
 
@@ -261,7 +266,7 @@ namespace Slevyr.DataAccess.Model
                     {
                         AktualDefectTabule = (float)Ng / (float)Ok;
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         AktualDefectTabule = float.NaN;
                         //Logger.Error(ex);
