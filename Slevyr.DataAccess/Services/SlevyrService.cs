@@ -26,19 +26,18 @@ namespace Slevyr.DataAccess.Services
         #region Fields
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        private static readonly Logger UnitsLogger = LogManager.GetLogger("Units");
-        private static readonly Logger Units2Logger = LogManager.GetLogger("Units2");
+        private static readonly Logger UnitsLogger = LogManager.GetLogger("Units2");
+        private static readonly Logger DataReceivedLogger = LogManager.GetLogger("DataReceived");
         private static readonly Logger ErrorsLogger = LogManager.GetLogger("Errors");
-
-
+        
         private static SerialPortWraper _serialPort;
 
         private static Dictionary<int, UnitMonitor> _unitDictionary;
 
         private static RunConfig _runConfig = new RunConfig();
 
-        private static ByteQueue _receivedByteQueue = new ByteQueue();
-        private static BlockingCollection<byte[]> _chunkCollection = new BlockingCollection<byte[]>();
+        private static readonly ByteQueue _receivedByteQueue = new ByteQueue();
+        private static readonly BlockingCollection<byte[]> _chunkCollection = new BlockingCollection<byte[]>();
 
         private static BackgroundWorker _sendBw;
         private static BackgroundWorker _chunkBw;
@@ -46,10 +45,8 @@ namespace Slevyr.DataAccess.Services
         private static bool _isChunkWorkerStarted;
         private static int _sendWorkerCycleCnt;
 
-        private static ConcurrentQueue<UnitCommand> _unitCommandsQueue = new ConcurrentQueue<UnitCommand>();
-        //private static bool _ErrorRecorded;
-        //private static int _ErrorRecordedCnt;
-
+        private static readonly ConcurrentQueue<UnitCommand> _unitCommandsQueue = new ConcurrentQueue<UnitCommand>();
+        
         #endregion
 
         #region Properties
@@ -94,21 +91,18 @@ namespace Slevyr.DataAccess.Services
 
             _serialPort.ErrorReceived += _serialPort_ErrorReceived;
 
-            Logger.Info("unit count: " + _unitDictionary.Count);
-
-            Logger.Info($"Open port {_serialPort.PortName} baud rate: {_serialPort.BaudRate}");
+            Logger.Info("Unit count: " + _unitDictionary.Count);
 
             OpenPort();
 
-            Logger.Info($"Port open: {_serialPort.IsOpen}");
+            Logger.Info("-");
         }
 
         private static void _serialPort_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
         {
             Logger.Error($"--- Serial port error received: {e.EventType} ---" );
-        }
-
-        
+            ErrorsLogger.Error($"--- Serial port error received: {e.EventType} ---");
+        }       
 
         private static void SerialPortOnDataReceived(object sender, SerialDataReceivedEventArgs serialDataReceivedEventArgs)
         {
@@ -117,11 +111,14 @@ namespace Slevyr.DataAccess.Services
             if (!sp.IsOpen) return;
 
             var len = sp.BytesToRead;
-            Logger.Info($"Data received {len}");
 
             Byte[] buf = new Byte[len];
 
+            if (!sp.IsOpen) return;
+
             sp.Read(buf, 0, len);
+
+            DataReceivedLogger.Debug($"{len}; {BitConverter.ToString(buf)}");
 
             _receivedByteQueue.Enqueue(buf,0,len);
 
@@ -144,18 +141,21 @@ namespace Slevyr.DataAccess.Services
 
         public static bool OpenPort()
         {
-            Logger.Info("+");
+            Logger.Info("+ Open port {_serialPort.PortName} baud rate: {_serialPort.BaudRate}");
             try
             {
                 if (_runConfig.IsMockupMode) return true;
+
                 if (!_serialPort.IsOpen) _serialPort.Open();
+
+                Logger.Info($"Port open: {_serialPort.IsOpen}");
+
                 return _serialPort.IsOpen;
             }
             catch (Exception ex)
             {
                 Logger.Error(ex);
                 throw;
-                //return false;
             }
         }
 
@@ -170,6 +170,7 @@ namespace Slevyr.DataAccess.Services
                 _serialPort.DiscardOutBuffer();
                 _serialPort.Close();
             }
+            Logger.Info("-");
             return !_serialPort.IsOpen;
         }
 
@@ -179,7 +180,7 @@ namespace Slevyr.DataAccess.Services
 
         public static UnitStatus Status(byte addr)
         {
-            Logger.Info($"+ {addr}");
+            Logger.Debug($"+ {addr}");
 
             return _unitDictionary[addr].UnitStatus;
         }
@@ -192,16 +193,9 @@ namespace Slevyr.DataAccess.Services
         /// <returns></returns>
         public static UnitStatus SendUnitStatusRequests(byte addr)
         {
-            Logger.Info($"+ *** unit {addr}");
+            Logger.Debug($"+ *** unit {addr}");
 
             if (_runConfig.IsMockupMode) return _unitDictionary[addr].UnitStatus;
-
-            //if (_unitDictionary[addr].IsReadStavCitacuPending)
-            //{
-            //    //kontrola probihajiciho casu - pripadne zruseni a nove odeslani
-            //    Logger.Info($"DoReadStavCitacu pending from {_unitDictionary[addr].ReadStavCitacuStartTime}");
-            //    return _unitDictionary[addr].UnitStatus; 
-            //}
 
             var res = _unitDictionary[addr].SendReadStavCitacu();
 
@@ -212,7 +206,7 @@ namespace Slevyr.DataAccess.Services
                 _unitDictionary[addr].SendReadCasNG();
             }
 
-            Logger.Info("-");
+            Logger.Debug("-");
 
             return _unitDictionary[addr].UnitStatus;
         }
@@ -235,14 +229,13 @@ namespace Slevyr.DataAccess.Services
 
                 _unitDictionary[addr].UnitStatus.LastCheckTime = DateTime.Now;
 
-                string casOkStr = (_runConfig.IsReadOkNgTime)
-                    ? casOk.ToString(CultureInfo.InvariantCulture)
-                    : string.Empty;
-                string casNgStr = (_runConfig.IsReadOkNgTime)
-                    ? casNg.ToString(CultureInfo.InvariantCulture)
-                    : string.Empty;
-
-                UnitsLogger.Info($"4;{addr};{ok};{ng};{casOkStr};{casNgStr};{(int)_unitDictionary[addr].UnitStatus.MachineStatus}");
+                //string casOkStr = (_runConfig.IsReadOkNgTime)
+                //    ? casOk.ToString(CultureInfo.InvariantCulture)
+                //    : string.Empty;
+                //string casNgStr = (_runConfig.IsReadOkNgTime)
+                //    ? casNg.ToString(CultureInfo.InvariantCulture)
+                //    : string.Empty;
+                //UnitsLogger.Info($"4;{addr};{ok};{ng};{casOkStr};{casNgStr};{(int)_unitDictionary[addr].UnitStatus.MachineStatus}");
 
                 StringBuilder sb = new StringBuilder();
                 sb.Append($"4;{_unitDictionary[addr].UnitConfig.UnitName};{addr}"); //az po 4
@@ -258,7 +251,7 @@ namespace Slevyr.DataAccess.Services
                 sb.Append($";{_unitDictionary[addr].UnitStatus.AktualDefectTabuleTxt}"); //14
                 sb.Append($";{_unitDictionary[addr].UnitStatus.MachineStatus}"); //15
                 sb.Append($";{Convert.ToInt32(_unitDictionary[addr].UnitStatus.IsPrestavkaTabule)}"); //16
-                Units2Logger.Info(sb.ToString);
+                UnitsLogger.Info(sb.ToString);
 
                 SqlliteDao.AddUnitState(addr, _unitDictionary[addr].UnitStatus);
             }
@@ -267,9 +260,6 @@ namespace Slevyr.DataAccess.Services
                 Logger.Error(ex);
             }
 
-
-            //Logger.Info($"-");
-
             return _unitDictionary[addr].UnitStatus;
         }
 
@@ -277,7 +267,7 @@ namespace Slevyr.DataAccess.Services
         public static bool NastavStatus(byte addr, bool writeProtectEEprom, byte minOK, byte minNG, bool bootloaderOn, byte parovanyLED,
             byte rozliseniCidel, byte pracovniJasLed)
         {
-            Logger.Info($"addr:{addr} writeProtectEEprom:{writeProtectEEprom} minOK:{minOK} minNG:{minNG} parovanyLED:{parovanyLED}");
+            Logger.Debug($"addr:{addr} writeProtectEEprom:{writeProtectEEprom} minOK:{minOK} minNG:{minNG} parovanyLED:{parovanyLED}");
 
             if (_runConfig.IsMockupMode) return true;
 
@@ -289,7 +279,7 @@ namespace Slevyr.DataAccess.Services
 
         public static bool NastavCileSmen(byte addr, char varianta, short cil1, short cil2, short cil3)
         {
-            Logger.Info($"addr:{addr} var:{varianta} cil1:{cil1} cil2:{cil2} cil3:{cil3}");
+            Logger.Debug($"addr:{addr} var:{varianta} cil1:{cil1} cil2:{cil2} cil3:{cil3}");
 
             if (_runConfig.IsMockupMode) return true;
 
@@ -298,7 +288,7 @@ namespace Slevyr.DataAccess.Services
 
         public static bool NastavPrestavky(byte addr, char varianta, TimeSpan prest1, TimeSpan prest2, TimeSpan prest3)
         {
-            Logger.Info($"addr:{addr} var:{varianta} prest1:{prest1} prest2:{prest2} prest3:{prest3}");
+            Logger.Debug($"addr:{addr} var:{varianta} prest1:{prest1} prest2:{prest2} prest3:{prest3}");
 
             if (_runConfig.IsMockupMode) return true;
 
@@ -307,7 +297,7 @@ namespace Slevyr.DataAccess.Services
 
         public static bool NastavOkNg(byte addr, short ok, short ng)
         {
-            Logger.Info($"addr:{addr} ok:{ok} ng:{ng}");
+            Logger.Debug($"addr:{addr} ok:{ok} ng:{ng}");
 
             if (_runConfig.IsMockupMode) return true;
 
@@ -317,7 +307,7 @@ namespace Slevyr.DataAccess.Services
 
         public static bool NastavAktualniCas(int addr)
         {
-            Logger.Info($"addr:{ addr}");
+            Logger.Debug($"addr:{ addr}");
 
             if (_runConfig.IsMockupMode) return true;
 
@@ -328,7 +318,7 @@ namespace Slevyr.DataAccess.Services
 
         public static void NastavAktualniCasQueued(int addr)
         {
-            Logger.Info("");
+            Logger.Debug("");
 
             var uc = new UnitCommand(() => _unitDictionary[addr].SetCas(DateTime.Now), "NastavAktualniCas", addr);
             _unitCommandsQueue.Enqueue(uc);           
@@ -337,18 +327,18 @@ namespace Slevyr.DataAccess.Services
 
         public static bool NastavDefektivitu(byte addr, char varianta, short def1Val, short def2Val, short def3Val)
         {
-            Logger.Info($"addr:{addr} varianta:{varianta} def1:{def1Val} def2:{def2Val} def3:{def3Val}");
+            Logger.Debug($"addr:{addr} varianta:{varianta} def1:{def1Val} def2:{def2Val} def3:{def3Val}");
 
             if (_runConfig.IsMockupMode) return true;
             
-            Logger.Info($"cil1:{def1Val}");
+            Logger.Debug($"cil1:{def1Val}");
             return _unitDictionary[addr].SetDefektivita(varianta, def1Val, def2Val, def3Val );
         }
 
 
         public static bool NastavHandshake(byte addr, bool value)
         {
-            Logger.Info($"addr:{addr} val:{value}");
+            Logger.Debug($"addr:{addr} val:{value}");
 
             if (_runConfig.IsMockupMode) return true;
 
@@ -362,7 +352,7 @@ namespace Slevyr.DataAccess.Services
 
         public static bool CtiStavCitacu(byte addr)
         {
-            Logger.Info("+");
+            Logger.Debug("+");
 
             if (_runConfig.IsMockupMode)
             {
@@ -378,7 +368,7 @@ namespace Slevyr.DataAccess.Services
 
         public static bool SendCtiCyklusOkNg(byte addr)
         {
-            Logger.Info("+");
+            Logger.Debug("+");
 
             if (_runConfig.IsMockupMode)
             {
@@ -396,7 +386,7 @@ namespace Slevyr.DataAccess.Services
 
         public static void SaveUnitConfig(UnitConfig unitCfg)
         {
-            Logger.Info($"addr:{unitCfg.Addr}");
+            Logger.Debug($"addr:{unitCfg.Addr}");
 
             _unitDictionary[unitCfg.Addr].UnitConfig = unitCfg;
             unitCfg.SaveToFile(_runConfig.DataFilePath);                        
@@ -406,7 +396,7 @@ namespace Slevyr.DataAccess.Services
 
         public static UnitConfig GetUnitConfig(byte addr)
         {
-            Logger.Info($"addr:{addr}");
+            Logger.Debug($"addr:{addr}");
 
             //nacteno je jiz pri startu
             //_unitDictionary[addr].LoadUnitConfigFromFile(addr, _runConfig.DataFilePath);
@@ -489,15 +479,12 @@ namespace Slevyr.DataAccess.Services
                 {
                     Logger.Error(ex);
                 }
-            }
-           
-
+            }          
         }
 
 
         private static void ChunkBwDoWork(object sender, DoWorkEventArgs e)
         {
-
             SqlliteDao.OpenConnection(true);
 
             while (true)
@@ -516,7 +503,7 @@ namespace Slevyr.DataAccess.Services
                     byte addr = chunk[2];
                     byte cmd = chunk[3];
 
-                    Logger.Info($"Received addr:{addr} cmd:{cmd}");
+                    Logger.Debug($"Received addr:{addr} cmd:{cmd}");
 
                     switch (cmd)
                     {

@@ -11,6 +11,7 @@ namespace Slevyr.DataAccess.Model
         #region fields
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger ErrorsLogger = LogManager.GetLogger("Errors");
 
         private const int BuffLength = 11;
 
@@ -20,8 +21,10 @@ namespace Slevyr.DataAccess.Model
         private readonly byte[] _inBuff;
         private byte _cmd;
         private SerialPortWraper _sp;
-        private bool _isMockupMode;
 
+        private bool _isMockupMode;
+        private bool _errorRecorded;
+        private int _errorRecordedCnt;
 
         public UnitStatus UnitStatus { get; set; }
 
@@ -108,11 +111,11 @@ namespace Slevyr.DataAccess.Model
 
         public DateTime ReadCasOkStartTime { get; set; }
 
-        public bool IsSendReadCasOkPending { get; set; }
+        public bool IsReadCasOkPending { get; set; }
 
         public DateTime ReadCasNgStartTime { get; set; }
 
-        public bool IsSendReadCasNgPending { get; set; }
+        public bool IsReadCasNgPending { get; set; }
 
         #endregion
 
@@ -197,79 +200,7 @@ namespace Slevyr.DataAccess.Model
 
             return res;
         }
-     
-
-        //private bool ReceiveResults(int a)
-        //{
-        //    bool res = false;
-        //    Logger.Debug($"+ attempt:{a}");
-
-        //    if (!_sp.IsOpen) return false;
-
-        //    lock (lockobj)
-        //    {
-        //        //precte vysledky
-        //        try
-        //        {
-        //            var task = _sp.ReadAsync(11);
-
-        //            task.Wait(_runConfig.ReadResultTimeOut);
-        //            if (!task.IsCompleted)
-        //            {
-        //                Logger.Debug(" -timeout");
-        //            }
-        //            else
-        //            {
-        //                Logger.Debug(" -ok");
-        //                _outBuff = task.Result;
-        //                res = true;
-        //            }
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            Logger.Error(ex);
-        //            res = false;
-        //        }
-        //    }
-
-        //    res = res && CheckResponseOk();
-
-        //    Thread.Sleep(_runConfig.RelaxTime);  //cekame po precteni vysledku pred tim nez se posle dalsi pozadavek
-
-        //    Logger.Debug($"-");
-        //    return res;
-        //}
-
-
-        /// <summary>
-        /// posle pozadavek a precte vysledek.
-        /// provadi dva pokusy
-        /// </summary>
-        /// <returns></returns>
-        //private bool SendAndReceive()
-        //{
-        //    bool res = false;
-
-        //    Logger.Debug("+");
-
-        //    lock (lockobj)
-        //    {
-
-        //        if (SendCommand())
-        //        {
-        //            Thread.Sleep(_runConfig.RelaxTime);
-
-        //            res = ReceiveResults(1);                    
-
-        //        }
-
-        //    }
-
-        //    Logger.Debug($"- res:{res}");
-
-        //    return res;
-        //}
-        
+       
         #endregion
 
         #region public methods
@@ -437,6 +368,22 @@ namespace Slevyr.DataAccess.Model
         {
             Logger.Debug($"+ unit {_address}");
 
+            if (IsReadStavCitacuPending)
+            {
+                ErrorsLogger.Error($"ReadStavCitacu;{_address};total errors:{_errorRecordedCnt++}");
+
+                if ((DateTime.Now - ReadStavCitacuStartTime).TotalMilliseconds > 1000)
+                {
+                    //jdeme na dalsi pokus
+                    ErrorsLogger.Error($"ReadStavCitacu;{_address};next attempt");
+                    ReadStavCitacuStartTime = DateTime.MinValue;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
             //if (_isMockupMode)
             //{
             //    okVal = (short)DateTime.Now.Minute;  //minuta poslouzi jako hodnota ok
@@ -487,6 +434,22 @@ namespace Slevyr.DataAccess.Model
         {
             Logger.Debug($"+ unit {_address}");
 
+            if (IsReadCasOkPending)
+            {
+                ErrorsLogger.Error($"ReadCasOk;{_address};total errors:{_errorRecordedCnt++}");
+
+                if ((DateTime.Now - ReadCasOkStartTime).TotalMilliseconds > _runConfig.WorkerSleepPeriod * 2)  //todo zavest na to param do cfg
+                {
+                    //jdeme na dalsi pokus
+                    ErrorsLogger.Error($"ReadCasOk;{_address};next attempt");
+                    ReadCasOkStartTime = DateTime.MinValue;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
             //if (_isMockupMode)
             //{
             //    value = (Single)DateTime.Now.Hour * 2;  //hod. poslouzi jako hodnota casu ok
@@ -499,12 +462,12 @@ namespace Slevyr.DataAccess.Model
 
             if (res)
             {
-                IsSendReadCasOkPending = true;
+                IsReadCasOkPending = true;
                 ReadCasOkStartTime = DateTime.Now;
             }
             else
             {
-                IsSendReadCasOkPending = false;
+                IsReadCasOkPending = false;
             }
 
             return res;
@@ -516,13 +479,29 @@ namespace Slevyr.DataAccess.Model
             UnitStatus.CasOk = value;
             UnitStatus.CasOkTime = DateTime.Now;
             UnitStatus.IsCasOk = true;
-            IsSendReadCasOkPending = false;
+            IsReadCasOkPending = false;
             Logger.Debug($"unit {_address}");
         }
 
         public bool SendReadCasNG()
         {
             Logger.Debug($"+ unit {_address}");
+
+            if (IsReadCasNgPending)
+            {
+                ErrorsLogger.Error($"ReadCasNg;{_address};total errors:{_errorRecordedCnt++}");
+
+                if ((DateTime.Now - ReadCasNgStartTime).TotalMilliseconds > 1000)
+                {
+                    //jdeme na dalsi pokus
+                    ErrorsLogger.Error($"ReadCasNg;{_address};next attempt");
+                    ReadCasNgStartTime = DateTime.MinValue;
+                }
+                else
+                {
+                    return false;
+                }
+            }
 
             //if (_isMockupMode)
             //{
@@ -536,12 +515,12 @@ namespace Slevyr.DataAccess.Model
 
             if (res)
             {
-                IsSendReadCasNgPending = true;
+                IsReadCasNgPending = true;
                 ReadCasNgStartTime = DateTime.Now;
             }
             else
             {
-                IsSendReadCasNgPending = false;
+                IsReadCasNgPending = false;
             }
 
             return res;
@@ -553,7 +532,7 @@ namespace Slevyr.DataAccess.Model
             UnitStatus.CasNg = value;
             UnitStatus.CasNgTime = DateTime.Now;
             UnitStatus.IsCasNg = true;
-            IsSendReadCasNgPending = false;
+            IsReadCasNgPending = false;
             Logger.Debug($"unit {_address}");
         }
 
