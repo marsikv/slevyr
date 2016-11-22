@@ -23,66 +23,6 @@ namespace Slevyr.WebAppHost.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("data")]
-        public string JsonFilePath {
-            get {
-                return ((string)(this["JsonFilePath"]));
-            }
-            set {
-                this["JsonFilePath"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("19200")]
-        public int BaudRate {
-            get {
-                return ((int)(this["BaudRate"]));
-            }
-            set {
-                this["BaudRate"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool IsRefreshTimerOn {
-            get {
-                return ((bool)(this["IsRefreshTimerOn"]));
-            }
-            set {
-                this["IsRefreshTimerOn"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("COM4")]
-        public string Port {
-            get {
-                return ((string)(this["Port"]));
-            }
-            set {
-                this["Port"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("300")]
-        public int RelaxTime {
-            get {
-                return ((int)(this["RelaxTime"]));
-            }
-            set {
-                this["RelaxTime"] = value;
-            }
-        }
-        
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("5000")]
@@ -92,111 +32,129 @@ namespace Slevyr.WebAppHost.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("5000")]
+        [global::System.Configuration.DefaultSettingValueAttribute("data")]
+        public string JsonFilePath {
+            get {
+                return ((string)(this["JsonFilePath"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("19200")]
+        public int BaudRate {
+            get {
+                return ((int)(this["BaudRate"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool IsRefreshTimerOn {
+            get {
+                return ((bool)(this["IsRefreshTimerOn"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("COM4")]
+        public string Port {
+            get {
+                return ((string)(this["Port"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("300")]
+        public int RelaxTime {
+            get {
+                return ((int)(this["RelaxTime"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10000")]
         public int WorkerSleepPeriod {
             get {
                 return ((int)(this["WorkerSleepPeriod"]));
             }
-            set {
-                this["WorkerSleepPeriod"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("200")]
         public int SendCommandTimeOut {
             get {
                 return ((int)(this["SendCommandTimeOut"]));
             }
-            set {
-                this["SendCommandTimeOut"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("5000")]
+        [global::System.Configuration.DefaultSettingValueAttribute("500")]
         public int ReadResultTimeOut {
             get {
                 return ((int)(this["ReadResultTimeOut"]));
             }
-            set {
-                this["ReadResultTimeOut"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool IsReadOkNgTime {
             get {
                 return ((bool)(this["IsReadOkNgTime"]));
             }
-            set {
-                this["IsReadOkNgTime"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool IsWriteEmptyToLog {
             get {
                 return ((bool)(this["IsWriteEmptyToLog"]));
             }
-            set {
-                this["IsWriteEmptyToLog"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("5000")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
         public int RefreshTimerPeriod {
             get {
                 return ((int)(this["RefreshTimerPeriod"]));
             }
-            set {
-                this["RefreshTimerPeriod"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool UseLocalHost {
             get {
                 return ((bool)(this["UseLocalHost"]));
             }
-            set {
-                this["UseLocalHost"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("100;171;172;173;174")]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
         public string UnitAddrs {
             get {
                 return ((string)(this["UnitAddrs"]));
             }
-            set {
-                this["UnitAddrs"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool MockupMode {
             get {
                 return ((bool)(this["MockupMode"]));
-            }
-            set {
-                this["MockupMode"] = value;
             }
         }
     }

@@ -186,8 +186,11 @@ namespace Slevyr.DataAccess.Model
 
                 Logger.Debug(" -w");
 
-                //kontrola odeslání ?
-                
+                //provadet kontrola odeslání ?
+                //tzn. _outBuff[0] == 4 && _outBuff[1] == 0 && _outBuff[2] == _address
+                //- muselo by se implementovat casove omezenym cekanim na event ktery by generoval handler SerialPortOnDataReceived  
+
+
                 res = true;
             }
             catch (Exception ex)
@@ -368,14 +371,15 @@ namespace Slevyr.DataAccess.Model
         {
             Logger.Debug($"+ unit {_address}");
 
+
             if (IsReadStavCitacuPending)
             {
-                ErrorsLogger.Error($"ReadStavCitacu;{_address};total errors:{_errorRecordedCnt++}");
+                Logger.Info($"ReadStavCitacu for addr:{_address} is pending");
 
-                if ((DateTime.Now - ReadStavCitacuStartTime).TotalMilliseconds > 1000)
+                if ((DateTime.Now - ReadStavCitacuStartTime).TotalMilliseconds > _runConfig.ReadResultTimeOut)
                 {
                     //jdeme na dalsi pokus
-                    ErrorsLogger.Error($"ReadStavCitacu;{_address};next attempt");
+                    ErrorsLogger.Error($"ReadStavCitacu for addr:{_address};timeout is:{_runConfig.ReadResultTimeOut} -> next attempt");
                     ReadStavCitacuStartTime = DateTime.MinValue;
                 }
                 else
@@ -436,12 +440,13 @@ namespace Slevyr.DataAccess.Model
 
             if (IsReadCasOkPending)
             {
-                ErrorsLogger.Error($"ReadCasOk;{_address};total errors:{_errorRecordedCnt++}");
+                //ErrorsLogger.Error($"ReadCasOk;{_address};total errors:{_errorRecordedCnt++}");
+                Logger.Info($"ReadCasOk for addr:{_address} is pending");
 
-                if ((DateTime.Now - ReadCasOkStartTime).TotalMilliseconds > _runConfig.WorkerSleepPeriod * 2)  //todo zavest na to param do cfg
+                if ((DateTime.Now - ReadCasOkStartTime).TotalMilliseconds > _runConfig.ReadResultTimeOut)  
                 {
                     //jdeme na dalsi pokus
-                    ErrorsLogger.Error($"ReadCasOk;{_address};next attempt");
+                    ErrorsLogger.Error($"ReadCasOk for addr:{_address};timeout is:{_runConfig.ReadResultTimeOut} -> next attempt");
                     ReadCasOkStartTime = DateTime.MinValue;
                 }
                 else
@@ -489,12 +494,12 @@ namespace Slevyr.DataAccess.Model
 
             if (IsReadCasNgPending)
             {
-                ErrorsLogger.Error($"ReadCasNg;{_address};total errors:{_errorRecordedCnt++}");
+                Logger.Info($"ReadCasNg for addr:{_address} is pending");
 
-                if ((DateTime.Now - ReadCasNgStartTime).TotalMilliseconds > 1000)
+                if ((DateTime.Now - ReadCasNgStartTime).TotalMilliseconds > _runConfig.ReadResultTimeOut)
                 {
                     //jdeme na dalsi pokus
-                    ErrorsLogger.Error($"ReadCasNg;{_address};next attempt");
+                    ErrorsLogger.Error($"ReadCasNg for addr:{_address};timeout is:{_runConfig.ReadResultTimeOut} -> next attempt");
                     ReadCasNgStartTime = DateTime.MinValue;
                 }
                 else
@@ -502,6 +507,7 @@ namespace Slevyr.DataAccess.Model
                     return false;
                 }
             }
+
 
             //if (_isMockupMode)
             //{

@@ -11,6 +11,7 @@ using System.Net.Http;
 using System.Runtime.Remoting.Channels;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Timers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -26,7 +27,7 @@ namespace Slevyr.DataAccess.Services
         #region Fields
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        private static readonly Logger UnitsLogger = LogManager.GetLogger("Units2");
+        //private static readonly Logger UnitsLogger = LogManager.GetLogger("Units2");
         private static readonly Logger DataReceivedLogger = LogManager.GetLogger("DataReceived");
         private static readonly Logger ErrorsLogger = LogManager.GetLogger("Errors");
         
@@ -37,7 +38,7 @@ namespace Slevyr.DataAccess.Services
         private static RunConfig _runConfig = new RunConfig();
 
         private static readonly ByteQueue _receivedByteQueue = new ByteQueue();
-        private static readonly BlockingCollection<byte[]> _chunkCollection = new BlockingCollection<byte[]>();
+        private static readonly BlockingCollection<byte[]> _packedCollection = new BlockingCollection<byte[]>();
 
         private static BackgroundWorker _sendBw;
         private static BackgroundWorker _chunkBw;
@@ -102,7 +103,11 @@ namespace Slevyr.DataAccess.Services
         {
             Logger.Error($"--- Serial port error received: {e.EventType} ---" );
             ErrorsLogger.Error($"--- Serial port error received: {e.EventType} ---");
-        }       
+        }
+
+        //public delegate Task SendConfirmationEventHandler(EventArgs e);
+
+        //public static event SendConfirmationEventHandler SendConfirmationEvent;
 
         private static void SerialPortOnDataReceived(object sender, SerialDataReceivedEventArgs serialDataReceivedEventArgs)
         {
@@ -114,7 +119,7 @@ namespace Slevyr.DataAccess.Services
 
             Byte[] buf = new Byte[len];
 
-            if (!sp.IsOpen) return;
+            //if (!sp.IsOpen) return;
 
             sp.Read(buf, 0, len);
 
@@ -124,13 +129,25 @@ namespace Slevyr.DataAccess.Services
 
             if (_receivedByteQueue.Length >= 11)
             {
-                Byte[] chunk = new Byte[11];
-                _receivedByteQueue.Dequeue(chunk, 0, 11);
+                Byte[] packet = new Byte[11];
+                _receivedByteQueue.Dequeue(packet, 0, 11);
 
-                var checkOk = (chunk[0] == 0) && (chunk[1] == 0) && (chunk[2] > 0) && (chunk[3] > 0);
-                if (checkOk)
+                //signatura potvrzeni odeslani
+                //  _outBuff[0] == 4 && _outBuff[1] == 0 && _outBuff[2] == _address
+                //signatura prichozich dat - response
+                //  _outBuff[0] == 0 && _outBuff[1] == 0 && _outBuff[2] == _address &&  && _outBuff[2] == cmd
+
+                var isSendConfirmation = packet[0] == 4 && packet[1] == 0 && packet[2] > 0;
+                if (isSendConfirmation)
                 {
-                    _chunkCollection.Add(chunk);                    
+                    //SendConfirmationEvent?.Invoke(new EventArgs());
+                    return;
+                }
+
+                var isResult = packet[0] == 0 && packet[1] == 0 && packet[2] > 0 && packet[3] > 0;
+                if (isResult)
+                {
+                    _packedCollection.Add(packet);                    
                 }
             }           
         }
@@ -229,14 +246,17 @@ namespace Slevyr.DataAccess.Services
 
                 _unitDictionary[addr].UnitStatus.LastCheckTime = DateTime.Now;
 
-                //string casOkStr = (_runConfig.IsReadOkNgTime)
-                //    ? casOk.ToString(CultureInfo.InvariantCulture)
-                //    : string.Empty;
-                //string casNgStr = (_runConfig.IsReadOkNgTime)
-                //    ? casNg.ToString(CultureInfo.InvariantCulture)
-                //    : string.Empty;
-                //UnitsLogger.Info($"4;{addr};{ok};{ng};{casOkStr};{casNgStr};{(int)_unitDictionary[addr].UnitStatus.MachineStatus}");
+                /* hodne stary zapis do CSV
+                string casOkStr = (_runConfig.IsReadOkNgTime)
+                    ? casOk.ToString(CultureInfo.InvariantCulture)
+                    : string.Empty;
+                string casNgStr = (_runConfig.IsReadOkNgTime)
+                    ? casNg.ToString(CultureInfo.InvariantCulture)
+                    : string.Empty;
+                UnitsLogger.Info($"4;{addr};{ok};{ng};{casOkStr};{casNgStr};{(int)_unitDictionary[addr].UnitStatus.MachineStatus}");
+                */
 
+                /* stary zapis do CSV
                 StringBuilder sb = new StringBuilder();
                 sb.Append($"4;{_unitDictionary[addr].UnitConfig.UnitName};{addr}"); //az po 4
                 sb.Append($";{_unitDictionary[addr].UnitStatus.CilKusuTabule}"); //5
@@ -252,6 +272,7 @@ namespace Slevyr.DataAccess.Services
                 sb.Append($";{_unitDictionary[addr].UnitStatus.MachineStatus}"); //15
                 sb.Append($";{Convert.ToInt32(_unitDictionary[addr].UnitStatus.IsPrestavkaTabule)}"); //16
                 UnitsLogger.Info(sb.ToString);
+                */
 
                 SqlliteDao.AddUnitState(addr, _unitDictionary[addr].UnitStatus);
             }
@@ -498,7 +519,7 @@ namespace Slevyr.DataAccess.Services
                         return;
                     }
 
-                    var chunk =_chunkCollection.Take();
+                    var chunk =_packedCollection.Take();
 
                     byte addr = chunk[2];
                     byte cmd = chunk[3];
@@ -509,7 +530,6 @@ namespace Slevyr.DataAccess.Services
                     {
                        case UnitMonitor.CmdReadStavCitacu:
                             _unitDictionary[addr].DoReadStavCitacu(chunk);
-                            UpdateUnitStatus(addr);
                             break;
                         case UnitMonitor.CmdReadHodnotuPoslCykluOk:
                             _unitDictionary[addr].DoReadCasOk(chunk);

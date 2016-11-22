@@ -31,8 +31,6 @@ namespace Slevyr.WebAppHost
 
         static readonly string ApiVersion = "1.0";
 
-        static readonly RunConfig RunConfig;
-
         static readonly SerialPortConfig PortConfig;
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -45,38 +43,24 @@ namespace Slevyr.WebAppHost
         {
             Logger.Info("+");
 
-            var unitAddrs = Settings.Default.UnitAddrs.Split(';').Select(int.Parse);
-
-            RunConfig = new RunConfig
-            {
-                IsMockupMode = Settings.Default.MockupMode,
-                IsRefreshTimerOn = Settings.Default.IsRefreshTimerOn,
-                IsReadOkNgTime = Settings.Default.IsReadOkNgTime,
-                RefreshTimerPeriod = Settings.Default.RefreshTimerPeriod,
-                WorkerSleepPeriod = Settings.Default.WorkerSleepPeriod,
-                RelaxTime = Settings.Default.RelaxTime,
-                ReadResultTimeOut = Settings.Default.ReadResultTimeOut,
-                SendCommandTimeOut = Settings.Default.SendCommandTimeOut,
-                DataFilePath = Settings.Default.JsonFilePath,
-                UnitAddrs = unitAddrs,
-                IsWriteEmptyToLog = Settings.Default.IsWriteEmptyToLog
-            };
+            Globals.LoadSettings();
 
             PortConfig = new SerialPortConfig
             {
-                Port = Settings.Default.Port,
-                BaudRate = Settings.Default.BaudRate,
+                Port = Globals.Port,
+                BaudRate = Globals.BaudRate,
+                ReceivedBytesThreshold = Globals.ReceivedBytesThreshold,
                 Parity = System.IO.Ports.Parity.None,
                 DataBits = 8,
                 StopBits = System.IO.Ports.StopBits.One,
                 ReceiveLength = 11
             };
 
-            SlevyrService.Init(PortConfig, RunConfig); 
+            SlevyrService.Init(PortConfig, Globals.RunConfig); 
 
             Logger.Info("unit count: " + SlevyrService.UnitCount);
 
-            if (RunConfig.IsRefreshTimerOn) SlevyrService.StartSendWorker();
+            if (Globals.RunConfig.IsRefreshTimerOn) SlevyrService.StartSendWorker();
 
             SlevyrService.StartChunkWorker();
 
@@ -99,7 +83,7 @@ namespace Slevyr.WebAppHost
         {
             Logger.Info("+");
  
-            return RunConfig;
+            return Globals.RunConfig;
         }
 
 
@@ -107,10 +91,10 @@ namespace Slevyr.WebAppHost
         public bool SetConfig([FromUri] bool isMockupMode,[FromUri] bool isTimerOn, [FromUri] int refreshTimerPeriod, [FromUri] bool readCasOkNg)
         {
             Logger.Info($"isMockupMode: {isMockupMode}, isTimerOn: {isTimerOn},timerPeriod: {refreshTimerPeriod}");
-            RunConfig.IsMockupMode = isMockupMode;
-            RunConfig.IsRefreshTimerOn = isTimerOn;
-            RunConfig.RefreshTimerPeriod = refreshTimerPeriod;
-            RunConfig.IsReadOkNgTime = readCasOkNg;
+            Globals.RunConfig.IsMockupMode = isMockupMode;
+            Globals.RunConfig.IsRefreshTimerOn = isTimerOn;
+            Globals.RunConfig.RefreshTimerPeriod = refreshTimerPeriod;
+            Globals.RunConfig.IsReadOkNgTime = readCasOkNg;
             //RunConfig.PortReadTimeout = portReadTimeout;
             //RunConfig.RelaxTime = relaxTime;
 
@@ -134,7 +118,7 @@ namespace Slevyr.WebAppHost
             Logger.Info("+");
             try
             {
-                if (RunConfig.IsMockupMode) return true;
+                if (Globals.RunConfig.IsMockupMode) return true;
                 SlevyrService.OpenPort();
                
                 Logger.Info($"Port name:{PortConfig.Port} isOpen:{SlevyrService.SerialPortIsOpen}");
@@ -165,7 +149,7 @@ namespace Slevyr.WebAppHost
         public UnitStatus Status([FromUri] byte addr)
         {
             Logger.Info("+");
-            if (RunConfig.IsMockupMode) return Mock.MockUnitStatus();
+            if (Globals.RunConfig.IsMockupMode) return Mock.MockUnitStatus();
 
             try
             {
@@ -203,7 +187,7 @@ namespace Slevyr.WebAppHost
         {
             Logger.Info($"+ {addr}");
 
-            if (RunConfig.IsMockupMode) return Mock.MockUnitStatus();
+            if (Globals.RunConfig.IsMockupMode) return Mock.MockUnitStatus();
 
             try
             {
@@ -223,7 +207,7 @@ namespace Slevyr.WebAppHost
         {
             Logger.Info($"addr:{addr} writeProtectEEprom:{writeProtectEEprom} minOK:{minOK} minNG:{minNG} parovanyLED:{parovanyLED}");
 
-            if (RunConfig.IsMockupMode) return true;
+            if (Globals.RunConfig.IsMockupMode) return true;
 
             try
             {
@@ -243,7 +227,7 @@ namespace Slevyr.WebAppHost
         {
             Logger.Info($"addr:{addr}  prest1:{prest1} prest2:{prest2} prest2:{prest2}");
 
-            if (RunConfig.IsMockupMode) return true;
+            if (Globals.RunConfig.IsMockupMode) return true;
 
             var p1 = TimeSpan.Parse(prest1);
             var p2 = TimeSpan.Parse(prest2);
@@ -265,7 +249,7 @@ namespace Slevyr.WebAppHost
         {
             Logger.Info($"addr:{addr} var:{varianta} cil1:{cil1} cil2:{cil2} cil3:{cil3}");
 
-            if (RunConfig.IsMockupMode) return true;
+            if (Globals.RunConfig.IsMockupMode) return true;
 
             try
             {
@@ -282,7 +266,7 @@ namespace Slevyr.WebAppHost
         {
             Logger.Info($"addr:{addr} ok:{ok} ng:{ng}");
 
-            if (RunConfig.IsMockupMode) return true;
+            if (Globals.RunConfig.IsMockupMode) return true;
 
             try
             {
@@ -299,7 +283,7 @@ namespace Slevyr.WebAppHost
         {
             Logger.Info("+");
 
-            if (RunConfig.IsMockupMode) return true;
+            if (Globals.RunConfig.IsMockupMode) return true;
 
             try
             {
@@ -318,11 +302,11 @@ namespace Slevyr.WebAppHost
         {
             Logger.Info("+");
 
-            if (RunConfig.IsMockupMode) return true;
+            if (Globals.RunConfig.IsMockupMode) return true;
 
             try
             {
-                foreach (var addr in RunConfig.UnitAddrs)
+                foreach (var addr in Globals.RunConfig.UnitAddrs)
                 {
                     SlevyrService.NastavAktualniCasQueued(addr);
                 }
@@ -339,7 +323,7 @@ namespace Slevyr.WebAppHost
         {
             Logger.Info($"addr:{addr} varianta:{varianta} def1:{def1} def2:{def2} def3:{def3}");
 
-            if (RunConfig.IsMockupMode) return true;
+            if (Globals.RunConfig.IsMockupMode) return true;
 
             double def1Val; 
             double def2Val;
@@ -368,7 +352,7 @@ namespace Slevyr.WebAppHost
         {
             Logger.Info($"addr:{addr} val:{value}");
 
-            if (RunConfig.IsMockupMode) return true;
+            if (Globals.RunConfig.IsMockupMode) return true;
 
             try
             {
@@ -387,7 +371,7 @@ namespace Slevyr.WebAppHost
         {
             Logger.Info("+");
 
-            if (RunConfig.IsMockupMode)
+            if (Globals.RunConfig.IsMockupMode)
             {
                 Mock.MockUnitStatus().Ok++;
                 Mock.MockUnitStatus().Ng++;
@@ -410,7 +394,7 @@ namespace Slevyr.WebAppHost
         {
             Logger.Info("+");
 
-            if (RunConfig.IsMockupMode)
+            if (Globals.RunConfig.IsMockupMode)
             {
                 Mock.MockUnitStatus().CasOkTime = DateTime.Now;
                 Mock.MockUnitStatus().CasNgTime = DateTime.Now;

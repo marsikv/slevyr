@@ -54,6 +54,7 @@ namespace SledovaniVyroby.SerialPortWraper
 
 
         public int ReceiveLength{ get; set; }
+        public int ReceivedBytesThreshold { get; set; }
 
         public override string ToString()
         {
@@ -71,6 +72,7 @@ namespace SledovaniVyroby.SerialPortWraper
             Parity = parent.Parity;
             DataBits = parent.DataBits;
             StopBits = parent.StopBits;
+            ReceivedBytesThreshold = parent.ReceivedBytesThreshold;
         }
     }
 }
