@@ -12,6 +12,7 @@ namespace Slevyr.DataAccess.Model
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly Logger ErrorsLogger = LogManager.GetLogger("Errors");
+        private static readonly Logger DataSendReceivedLogger = LogManager.GetLogger("DataReceived");
 
         private const int BuffLength = 11;
 
@@ -156,7 +157,7 @@ namespace Slevyr.DataAccess.Model
 
         private void DiscardBuffers()
         {
-            Logger.Debug("");
+            Logger.Info("");
             _sp.DiscardInBuffer();
             _sp.DiscardOutBuffer();
         }
@@ -181,6 +182,8 @@ namespace Slevyr.DataAccess.Model
  
                 var wtask = _sp.WriteAsync(_inBuff, BuffLength);
                 wtask.Wait(_runConfig.SendCommandTimeOut);
+
+                DataSendReceivedLogger.Debug($"->  {BuffLength}; {BitConverter.ToString(_inBuff)}");
 
                 Thread.Sleep(7);
 
@@ -210,6 +213,8 @@ namespace Slevyr.DataAccess.Model
 
         public bool SetSmennost(char varianta)
         {
+            Logger.Info($"+ unit {_address}");
+
             _inBuff[4] = (byte)varianta;
 
             UnitConfig.TypSmennosti = varianta.ToString();
@@ -224,7 +229,7 @@ namespace Slevyr.DataAccess.Model
        
         public bool SetCileSmen(char varianta, short cil1, short cil2, short cil3)
         {
-            Logger.Debug("+");
+            Logger.Info($"+ unit {_address}");
 
             _inBuff[4] = (byte)varianta;
 
@@ -238,12 +243,13 @@ namespace Slevyr.DataAccess.Model
 
             var res = SendCommand(CmdSetCilSmen);
 
-            Logger.Debug("-");
             return res;
         }
 
         public bool SetDefektivita(char varianta, short def1, short def2, short def3)
         {
+            Logger.Info($"+ unit {_address}");
+
             _inBuff[4] = (byte)varianta;
 
             UnitConfig.Def1Smeny = def1;
@@ -261,6 +267,8 @@ namespace Slevyr.DataAccess.Model
         //TODO - v jakych jednotkach se zadavaji prestavky ?
         public bool SetPrestavky(char varianta, TimeSpan prest1, TimeSpan prest2, TimeSpan prest3)
         {
+            Logger.Info($"+ unit {_address}");
+
             _inBuff[4] = (byte)varianta;
 
             UnitConfig.Prestavka1Smeny = prest1.ToString();  //TODO ukladat TimeSpan, ne string
@@ -281,7 +289,7 @@ namespace Slevyr.DataAccess.Model
 
         public bool SetCas(DateTime dt)
         {
-            Logger.Debug($"+ unit {_address}");
+            Logger.Info($"+ unit {_address}");
 
             _inBuff[4] = (byte)dt.Hour;
             _inBuff[5] = (byte)dt.Minute;
@@ -293,13 +301,13 @@ namespace Slevyr.DataAccess.Model
 
             var res = SendCommand(CmdSetDatumDen); 
 
-            Logger.Debug($"- {res} unit {_address}");
-
             return res;
         }
 
         public bool SetJasLcd(byte jas)
         {
+            Logger.Info($"+ unit {_address}");
+
             _inBuff[4] = jas;
 
             return SendCommand(CmdSetJasLed);
@@ -307,6 +315,8 @@ namespace Slevyr.DataAccess.Model
 
         public bool SetCitace(short ok, short ng)
         {
+            Logger.Info($"+ unit {_address}");
+
             Helper.FromShort(ok, out _inBuff[4], out _inBuff[5]);
             Helper.FromShort(ng, out _inBuff[6], out _inBuff[7]);
 
@@ -315,11 +325,14 @@ namespace Slevyr.DataAccess.Model
 
         public bool Reset()
         {
+            Logger.Info($"+ unit {_address}");
+
             return SendCommand(CmdResetJednotky);
         }
 
         public bool Set6f()
         {
+            Logger.Info($"+ unit {_address}");
 
             return SendCommand(0x6f);
       
@@ -327,6 +340,7 @@ namespace Slevyr.DataAccess.Model
 
         public bool SetHandshake(byte handshake, byte prumTyp)
         {
+            Logger.Info($"+ unit {_address}");
 
             _inBuff[4] = handshake;
             _inBuff[5] = prumTyp;
@@ -338,6 +352,8 @@ namespace Slevyr.DataAccess.Model
 
         public bool SetStatus(byte writeProtectEEprom, byte minOK, byte minNG, byte bootloaderOn, byte parovanyLED, byte rozliseniCidel, byte pracovniJasLed)
         {
+            Logger.Info($"+ unit {_address}");
+
             _inBuff[4] = writeProtectEEprom;
             _inBuff[5] = minOK;
             _inBuff[6] = minNG;
@@ -351,6 +367,7 @@ namespace Slevyr.DataAccess.Model
 
         public bool SendReadZaklNastaveni()
         {
+            Logger.Info($"+ unit {_address}");
 
             var res = SendCommand(CmdReadZakSysNast);
 
@@ -369,7 +386,7 @@ namespace Slevyr.DataAccess.Model
 
         public bool SendReadStavCitacu()
         {
-            Logger.Debug($"+ unit {_address}");
+            Logger.Info($"+ unit {_address}");
 
 
             if (IsReadStavCitacuPending)
@@ -436,7 +453,7 @@ namespace Slevyr.DataAccess.Model
 
         public bool SendReadCasOK()
         {
-            Logger.Debug($"+ unit {_address}");
+            Logger.Info($"+ unit {_address}");
 
             if (IsReadCasOkPending)
             {
@@ -490,7 +507,7 @@ namespace Slevyr.DataAccess.Model
 
         public bool SendReadCasNG()
         {
-            Logger.Debug($"+ unit {_address}");
+            Logger.Info($"+ unit {_address}");
 
             if (IsReadCasNgPending)
             {
@@ -544,6 +561,8 @@ namespace Slevyr.DataAccess.Model
 
         public bool SendReadRozdilKusu()
         {
+            Logger.Info($"+ unit {_address}");
+
             var res = SendCommand(CmdReadRozdilKusu);
 
             return res;
@@ -559,6 +578,8 @@ namespace Slevyr.DataAccess.Model
 
         public bool ReadDefektivita()
         {
+            Logger.Info($"+ unit {_address}");
+
             var res = SendCommand(CmdReadDefektivita);
 
             return res;

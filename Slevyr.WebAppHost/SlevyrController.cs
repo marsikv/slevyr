@@ -166,21 +166,21 @@ namespace Slevyr.WebAppHost
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
-        [HttpGet]
-        public UnitStatus RefreshStatus([FromUri] byte addr)
-        {
-            Logger.Info($"+ {addr}");
-            //if (RunConfig.IsMockupMode) return Mock.MockUnitStatus();
+        //[HttpGet]
+        //public UnitStatus RefreshStatus([FromUri] byte addr)
+        //{
+        //    Logger.Info($"+ {addr}");
+        //    //if (RunConfig.IsMockupMode) return Mock.MockUnitStatus();
 
-            try
-            {
-                return SlevyrService.SendUnitStatusRequests(addr);
-            }
-            catch (KeyNotFoundException)
-            {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
-            }
-        }
+        //    try
+        //    {
+        //        return SlevyrService.SendUnitStatusRequests(addr);
+        //    }
+        //    catch (KeyNotFoundException)
+        //    {
+        //        throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+        //    }
+        //}
 
         [HttpGet]
         public UnitStatus GetStatus([FromUri] byte addr)

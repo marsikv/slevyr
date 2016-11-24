@@ -28,7 +28,7 @@ namespace Slevyr.DataAccess.Services
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         //private static readonly Logger UnitsLogger = LogManager.GetLogger("Units2");
-        private static readonly Logger DataReceivedLogger = LogManager.GetLogger("DataReceived");
+        private static readonly Logger DataSendReceivedLogger = LogManager.GetLogger("DataReceived");
         private static readonly Logger ErrorsLogger = LogManager.GetLogger("Errors");
         
         private static SerialPortWraper _serialPort;
@@ -41,7 +41,7 @@ namespace Slevyr.DataAccess.Services
         private static readonly BlockingCollection<byte[]> _packedCollection = new BlockingCollection<byte[]>();
 
         private static BackgroundWorker _sendBw;
-        private static BackgroundWorker _chunkBw;
+        private static BackgroundWorker _packetBw;
         private static bool _isSendWorkerStarted;
         private static bool _isChunkWorkerStarted;
         private static int _sendWorkerCycleCnt;
@@ -123,7 +123,7 @@ namespace Slevyr.DataAccess.Services
 
             sp.Read(buf, 0, len);
 
-            DataReceivedLogger.Debug($"{len}; {BitConverter.ToString(buf)}");
+            DataSendReceivedLogger.Debug($" <- {len}; {BitConverter.ToString(buf)}");
 
             _receivedByteQueue.Enqueue(buf,0,len);
 
@@ -143,10 +143,14 @@ namespace Slevyr.DataAccess.Services
                     //SendConfirmationEvent?.Invoke(new EventArgs());
                     return;
                 }
-
+                
                 var isResult = packet[0] == 0 && packet[1] == 0 && packet[2] > 0 && packet[3] > 0;
                 if (isResult)
                 {
+                    var cmd = packet[3];
+                    if (cmd == 96) _tsc100_96?.TrySetResult(true);
+                    else if (cmd == 97) _tsc100_97?.TrySetResult(true);
+                    else if (cmd == 98) _tsc100_98?.TrySetResult(true);
                     _packedCollection.Add(packet);                    
                 }
             }           
@@ -202,25 +206,41 @@ namespace Slevyr.DataAccess.Services
             return _unitDictionary[addr].UnitStatus;
         }
 
+        static TaskCompletionSource<bool> _tsc100_96 = null;
+        static TaskCompletionSource<bool> _tsc100_97 = null;
+        static TaskCompletionSource<bool> _tsc100_98 = null;
+
         /// <summary>
         /// --Získá status jednoty načtením stavu čítačů a výpočtem parametrů zobrazovaných na tabuli
         /// Odešle požadavek o předání stavu linky (jednotky) 
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
-        public static UnitStatus SendUnitStatusRequests(byte addr)
+        public static async Task<UnitStatus> SendUnitStatusRequests(byte addr)
         {
             Logger.Debug($"+ *** unit {addr}");
 
             if (_runConfig.IsMockupMode) return _unitDictionary[addr].UnitStatus;
 
             var res = _unitDictionary[addr].SendReadStavCitacu();
+            _tsc100_96 = new TaskCompletionSource<bool>();
+            await _tsc100_96.Task;
+
+            Thread.Sleep(_runConfig.RelaxTime);
 
             if (res && _runConfig.IsReadOkNgTime)
             {
                 _unitDictionary[addr].SendReadCasOK();
+                _tsc100_97 = new TaskCompletionSource<bool>();
+                await _tsc100_97.Task;
+
+                Thread.Sleep(_runConfig.RelaxTime);
 
                 _unitDictionary[addr].SendReadCasNG();
+
+                _tsc100_98 = new TaskCompletionSource<bool>();
+                await _tsc100_98.Task;
+
             }
 
             Logger.Debug("-");
@@ -441,9 +461,9 @@ namespace Slevyr.DataAccess.Services
             if (!_isChunkWorkerStarted)
             {
                 _isChunkWorkerStarted = true;
-                _chunkBw = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
-                _chunkBw.DoWork += ChunkBwDoWork;
-                _chunkBw.RunWorkerAsync();
+                _packetBw = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
+                _packetBw.DoWork += PacketBwDoWork;
+                _packetBw.RunWorkerAsync();
                 Logger.Info("*** chunk worker started ***");
             }
         }
@@ -455,17 +475,17 @@ namespace Slevyr.DataAccess.Services
 
         public static void StopChunkWorker()
         {
-            _chunkBw.CancelAsync();
+            _packetBw.CancelAsync();
         }
 
-        private static void SendBwDoWork(object sender, DoWorkEventArgs e)
+        private static async void SendBwDoWork(object sender, DoWorkEventArgs e)
         {
 
             OpenPort();
 
             while (true)
             {
-                Logger.Info($"send worker cycle {++_sendWorkerCycleCnt}");
+                Logger.Info($"worker cycle {++_sendWorkerCycleCnt}");
 
                 try
                 {
@@ -490,7 +510,7 @@ namespace Slevyr.DataAccess.Services
                             return;
                         }
 
-                        SendUnitStatusRequests((byte)addr);
+                        await SendUnitStatusRequests((byte)addr);
 
                         Logger.Debug($"+send worker sleep: {_runConfig.WorkerSleepPeriod}");
                         Thread.Sleep(_runConfig.WorkerSleepPeriod);  //pauza pred odeslanim prikazu na dalsi jednotku - parametr
@@ -504,7 +524,7 @@ namespace Slevyr.DataAccess.Services
         }
 
 
-        private static void ChunkBwDoWork(object sender, DoWorkEventArgs e)
+        private static void PacketBwDoWork(object sender, DoWorkEventArgs e)
         {
             SqlliteDao.OpenConnection(true);
 
@@ -512,42 +532,38 @@ namespace Slevyr.DataAccess.Services
             {
                 try
                 {
-                    if (_chunkBw.CancellationPending)
+                    if (_packetBw.CancellationPending)
                     {
                         Logger.Info("*** chunk worker canceled ***");
                         SqlliteDao.CloseConnection();
                         return;
                     }
 
-                    var chunk =_packedCollection.Take();
+                    var packet =_packedCollection.Take();
 
-                    byte addr = chunk[2];
-                    byte cmd = chunk[3];
+                    byte addr = packet[2];
+                    byte cmd = packet[3];
 
                     Logger.Debug($"Received addr:{addr} cmd:{cmd}");
 
                     switch (cmd)
                     {
                        case UnitMonitor.CmdReadStavCitacu:
-                            _unitDictionary[addr].DoReadStavCitacu(chunk);
+                            _unitDictionary[addr].DoReadStavCitacu(packet);
                             break;
                         case UnitMonitor.CmdReadHodnotuPoslCykluOk:
-                            _unitDictionary[addr].DoReadCasOk(chunk);
+                            _unitDictionary[addr].DoReadCasOk(packet);
                             break;
                         case UnitMonitor.CmdReadHodnotuPoslCykluNg:
-                            _unitDictionary[addr].DoReadCasNg(chunk);
+                            _unitDictionary[addr].DoReadCasNg(packet);
                             break;
                         case UnitMonitor.CmdReadRozdilKusu:
-                            _unitDictionary[addr].DoReadRozdilKusu(chunk);
+                            _unitDictionary[addr].DoReadRozdilKusu(packet);
                             break;
                         case UnitMonitor.CmdReadDefektivita:
-                            _unitDictionary[addr].DoReadDefectivita(chunk);
+                            _unitDictionary[addr].DoReadDefectivita(packet);
                             break;
-                    }
-                    if (cmd == UnitMonitor.CmdReadStavCitacu)
-                    {
-                        _unitDictionary[addr].DoReadStavCitacu(chunk);
-                    }
+                    }                    
 
                 }
                 catch (Exception ex)
