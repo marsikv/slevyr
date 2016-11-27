@@ -3,18 +3,8 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
-using System.IO;
 using System.IO.Ports;
-using System.Net;
-using System.Net.Http;
-using System.Runtime.Remoting.Channels;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Timers;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using NLog;
 using SledovaniVyroby.SerialPortWraper;
 using Slevyr.DataAccess.DAO;
@@ -30,7 +20,8 @@ namespace Slevyr.DataAccess.Services
         //private static readonly Logger UnitsLogger = LogManager.GetLogger("Units2");
         private static readonly Logger DataSendReceivedLogger = LogManager.GetLogger("DataReceived");
         private static readonly Logger ErrorsLogger = LogManager.GetLogger("Errors");
-        
+        private static readonly Logger TplLogger = LogManager.GetLogger("Tpl");
+
         private static SerialPortWraper _serialPort;
 
         private static Dictionary<int, UnitMonitor> _unitDictionary;
@@ -147,11 +138,27 @@ namespace Slevyr.DataAccess.Services
                 var isResult = packet[0] == 0 && packet[1] == 0 && packet[2] > 0 && packet[3] > 0;
                 if (isResult)
                 {
+                    var adr = packet[2];
                     var cmd = packet[3];
-                    if (cmd == 96) _tsc100_96?.TrySetResult(true);
-                    else if (cmd == 97) _tsc100_97?.TrySetResult(true);
-                    else if (cmd == 98) _tsc100_98?.TrySetResult(true);
-                    _packedCollection.Add(packet);                    
+                    if (cmd == 96)
+                    {
+                        //_tsc100_96?.TrySetResult(true);
+                        _unitDictionary[adr].WaitEvent96.Set();
+                        TplLogger.Debug("WaitEvent96.set");
+                    }
+                    else if (cmd == 97)
+                    {
+                        //_tsc100_97?.TrySetResult(true);
+                        _unitDictionary[adr].WaitEvent97.Set();
+                        TplLogger.Debug("WaitEvent97.set");
+                    }
+                    else if (cmd == 98)
+                    {
+                        //_tsc100_98?.TrySetResult(true);
+                        _unitDictionary[adr].WaitEvent98.Set();
+                        TplLogger.Debug("WaitEvent98.set");
+                    }
+                    _packedCollection.Add(packet);                    //zaradim ke zpracovani ktere probiha v PacketBw
                 }
             }           
         }
@@ -206,47 +213,9 @@ namespace Slevyr.DataAccess.Services
             return _unitDictionary[addr].UnitStatus;
         }
 
-        static TaskCompletionSource<bool> _tsc100_96 = null;
-        static TaskCompletionSource<bool> _tsc100_97 = null;
-        static TaskCompletionSource<bool> _tsc100_98 = null;
-
-        /// <summary>
-        /// --Získá status jednoty načtením stavu čítačů a výpočtem parametrů zobrazovaných na tabuli
-        /// Odešle požadavek o předání stavu linky (jednotky) 
-        /// </summary>
-        /// <param name="addr"></param>
-        /// <returns></returns>
-        public static async Task<UnitStatus> SendUnitStatusRequests(byte addr)
-        {
-            Logger.Debug($"+ *** unit {addr}");
-
-            if (_runConfig.IsMockupMode) return _unitDictionary[addr].UnitStatus;
-
-            var res = _unitDictionary[addr].SendReadStavCitacu();
-            _tsc100_96 = new TaskCompletionSource<bool>();
-            await _tsc100_96.Task;
-
-            Thread.Sleep(_runConfig.RelaxTime);
-
-            if (res && _runConfig.IsReadOkNgTime)
-            {
-                _unitDictionary[addr].SendReadCasOK();
-                _tsc100_97 = new TaskCompletionSource<bool>();
-                await _tsc100_97.Task;
-
-                Thread.Sleep(_runConfig.RelaxTime);
-
-                _unitDictionary[addr].SendReadCasNG();
-
-                _tsc100_98 = new TaskCompletionSource<bool>();
-                await _tsc100_98.Task;
-
-            }
-
-            Logger.Debug("-");
-
-            return _unitDictionary[addr].UnitStatus;
-        }
+        //static TaskCompletionSource<bool> _tsc100_96 = null;
+        //static TaskCompletionSource<bool> _tsc100_97 = null;
+        //static TaskCompletionSource<bool> _tsc100_98 = null;
 
         /// <summary>
         /// prepocitat pro zobrazeni tabule
@@ -255,10 +224,10 @@ namespace Slevyr.DataAccess.Services
         /// <returns></returns>
         public static UnitStatus UpdateUnitStatus(byte addr)
         {
-            var ok = _unitDictionary[addr].UnitStatus.Ok;
-            var ng = _unitDictionary[addr].UnitStatus.Ng;
-            var casOk = _unitDictionary[addr].UnitStatus.CasOk;
-            var casNg = _unitDictionary[addr].UnitStatus.CasNg;
+            //var ok = _unitDictionary[addr].UnitStatus.Ok;
+            //var ng = _unitDictionary[addr].UnitStatus.Ng;
+            //var casOk = _unitDictionary[addr].UnitStatus.CasOk;
+            //var casNg = _unitDictionary[addr].UnitStatus.CasNg;
 
             try
             {
@@ -478,9 +447,8 @@ namespace Slevyr.DataAccess.Services
             _packetBw.CancelAsync();
         }
 
-        private static async void SendBwDoWork(object sender, DoWorkEventArgs e)
+        private static void SendBwDoWork(object sender, DoWorkEventArgs e)
         {
-
             OpenPort();
 
             while (true)
@@ -510,9 +478,25 @@ namespace Slevyr.DataAccess.Services
                             return;
                         }
 
-                        await SendUnitStatusRequests((byte)addr);
+                        bool res = false;
 
-                        Logger.Debug($"+send worker sleep: {_runConfig.WorkerSleepPeriod}");
+                        if (_unitDictionary[addr].IsUpdateStatusPending)
+                        {
+                            if ((DateTime.Now - _unitDictionary[addr].UpdateStatusStartTime).TotalMilliseconds > _runConfig.ReadResultTimeOut * 4) //TODO jeste jednu konstantu ktera bude interval pro preruseni spusteneho tasku
+                            {
+                                 ErrorsLogger.Error($"UpdateStatus timeout for {addr}");
+                                //_unitDictionary[addr].CancelationToken.Cancel;
+                                // vyvolam cancelationToken
+                                _unitDictionary[addr].IsUpdateStatusPending = false;
+                            }
+                        }
+                        else
+                        {
+                            res = _unitDictionary[addr].UpdateStatus();
+                        }
+
+
+                        Logger.Debug($"+send worker sleep: {_runConfig.WorkerSleepPeriod}, res:{res}");
                         Thread.Sleep(_runConfig.WorkerSleepPeriod);  //pauza pred odeslanim prikazu na dalsi jednotku - parametr
                     }
                 }
@@ -550,12 +534,21 @@ namespace Slevyr.DataAccess.Services
                     {
                        case UnitMonitor.CmdReadStavCitacu:
                             _unitDictionary[addr].DoReadStavCitacu(packet);
+                            _unitDictionary[addr].RecalcTabule();
+                            SqlliteDao.AddUnitState(addr, _unitDictionary[addr].UnitStatus);
+                            if (!_runConfig.IsReadOkNgTime)
+                            {
+                                _unitDictionary[addr].IsUpdateStatusPending = false;
+                            }
                             break;
                         case UnitMonitor.CmdReadHodnotuPoslCykluOk:
                             _unitDictionary[addr].DoReadCasOk(packet);
+                            //SqlliteDao.UpdateUnitStateCasOk(addr, _unitDictionary[addr].UnitStatus);
                             break;
                         case UnitMonitor.CmdReadHodnotuPoslCykluNg:
                             _unitDictionary[addr].DoReadCasNg(packet);
+                            _unitDictionary[addr].IsUpdateStatusPending = false;
+                            //SqlliteDao.UpdateUnitStateCasNg(addr, _unitDictionary[addr].UnitStatus);
                             break;
                         case UnitMonitor.CmdReadRozdilKusu:
                             _unitDictionary[addr].DoReadRozdilKusu(packet);

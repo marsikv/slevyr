@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using NLog;
 using SledovaniVyroby.SerialPortWraper;
+using Slevyr.DataAccess.DAO;
 using Slevyr.DataAccess.Services;
 
 namespace Slevyr.DataAccess.Model
@@ -13,6 +15,7 @@ namespace Slevyr.DataAccess.Model
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly Logger ErrorsLogger = LogManager.GetLogger("Errors");
         private static readonly Logger DataSendReceivedLogger = LogManager.GetLogger("DataReceived");
+        private static readonly Logger TplLogger = LogManager.GetLogger("Tpl");
 
         private const int BuffLength = 11;
 
@@ -30,6 +33,11 @@ namespace Slevyr.DataAccess.Model
         public UnitStatus UnitStatus { get; set; }
 
         public UnitConfig UnitConfig { get; set; }
+
+        public AutoResetEvent WaitEvent96 = new AutoResetEvent(false);
+        public AutoResetEvent WaitEvent97 = new AutoResetEvent(false);
+        public AutoResetEvent WaitEvent98 = new AutoResetEvent(false);
+
 
         #endregion
 
@@ -106,17 +114,12 @@ namespace Slevyr.DataAccess.Model
             get { return _address; }
         }
 
-        public DateTime ReadStavCitacuStartTime { get; set; }
+        public DateTime UpdateStatusStartTime { get; private set; }
 
-        public bool IsReadStavCitacuPending { get; set; }
+        public bool IsUpdateStatusPending { get; set; }
 
-        public DateTime ReadCasOkStartTime { get; set; }
+        CancellationTokenSource UpdateStatusTokenSource { get; set; }
 
-        public bool IsReadCasOkPending { get; set; }
-
-        public DateTime ReadCasNgStartTime { get; set; }
-
-        public bool IsReadCasNgPending { get; set; }
 
         #endregion
 
@@ -167,7 +170,7 @@ namespace Slevyr.DataAccess.Model
         /// posle prikaz na port
         /// </summary>
         /// <returns></returns>
-        private bool SendCommand(byte cmd)
+        public bool SendCommand(byte cmd)
         {
             bool res;
             Logger.Debug("+");
@@ -384,26 +387,162 @@ namespace Slevyr.DataAccess.Model
             UnitStatus.VerzeSw3 = buff[9];
         }
 
+        public bool UpdateStatus()
+        {
+            IsUpdateStatusPending = true;
+            UpdateStatusStartTime = DateTime.Now;
+            //UpdateStatusTokenSource = new CancellationTokenSource(_runConfig.ReadResultTimeOut * 3);
+            UpdateStatusTokenSource = new CancellationTokenSource();
+            CancellationToken token = UpdateStatusTokenSource.Token;
+
+            Task<bool> readHodnotuCykluNgTask = null;
+
+            try
+            {
+                Task<bool> readStavCitacuTask = Task.Factory.StartNew(() =>
+                   {
+                       TplLogger.Debug("readStavCitacuTask - start");
+                       var sendOk = SendCommand(CmdReadStavCitacu);
+                       TplLogger.Debug("readStavCitacuTask - wait for 96");
+                       token.ThrowIfCancellationRequested();
+                       var respReceived = WaitEvent96.WaitOne(_runConfig.ReadResultTimeOut);
+
+                       token.ThrowIfCancellationRequested();
+                       if (!respReceived) TplLogger.Debug($"readHodnotuCykluOk - timeout");
+                       var res = sendOk && respReceived && UnitStatus.MachineStatus == MachineStateEnum.Vyroba; //kdyz zjistim ze stroj nebezi nebo ma poruchu tak cteni casu neprovadet, 
+                       TplLogger.Debug($"readStavCitacuTask - res:{res} machine:{UnitStatus.MachineStatus}");
+                       return res;
+                   }, token);
+              
+                if (_runConfig.IsReadOkNgTime)
+                {
+                    Task<bool> readHodnotuCykluOkTask = readStavCitacuTask.ContinueWith<bool>((ant) =>
+                    {
+                        TplLogger.Debug("readHodnotuCykluOkTask - start");
+                        if (ant.Status == TaskStatus.Faulted)
+                            throw ant.Exception.InnerException;
+
+                        bool res = false;
+                        if (ant.Result)
+                        {
+                            var sendOk = SendCommand(CmdReadHodnotuPoslCykluOk);
+                            token.ThrowIfCancellationRequested();
+                            TplLogger.Debug($"readHodnotuCykluOkTask - wait for 97 {(sendOk ? "":"- skip")}");
+                            if (sendOk)
+                            {
+                                var respReceived = WaitEvent97.WaitOne(_runConfig.ReadResultTimeOut);
+                                token.ThrowIfCancellationRequested();
+                                if (!respReceived) TplLogger.Debug($"readHodnotuCykluOk - timeout");
+                                res = respReceived;
+                            }                            
+                        }
+
+                        TplLogger.Debug($"readHodnotuCykluOkTask - res: {res}");
+                        return res;
+                    }, token, TaskContinuationOptions.OnlyOnRanToCompletion,TaskScheduler.Current );
+
+                    readHodnotuCykluNgTask = readHodnotuCykluOkTask.ContinueWith<bool>((ant) =>
+                    {
+                        TplLogger.Debug("readHodnotuCykluNgTask - start");
+                        if (ant.Status == TaskStatus.Faulted)
+                            throw ant.Exception.InnerException;
+
+                        bool res = false;
+                        if (ant.Result)
+                        {
+                            var sendOk = SendCommand(CmdReadHodnotuPoslCykluNg);
+                            token.ThrowIfCancellationRequested();
+                            TplLogger.Debug($"readHodnotuCykluNgTask - wait for 98 {(sendOk ? "" : "- skip")}");
+                            if (sendOk)
+                            {
+                                var respReceived = WaitEvent98.WaitOne(_runConfig.ReadResultTimeOut);
+                                token.ThrowIfCancellationRequested();
+                                if (!respReceived) TplLogger.Debug($"readHodnotuCykluNg - timeout");
+                                res = respReceived;
+                            }                           
+                        }
+
+                        TplLogger.Debug($"readHodnotuCykluNgTask - res: {res}");
+                        return res;
+                    }, token, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Current);
+
+
+                    //Task<bool> recalcTabuleTask = readHodnotuCykluNgTask.ContinueWith<bool>((ant) =>
+                    //{
+                    //    TplLogger.Debug("recalcTabuleTask - start");
+                    //    if (ant.Status == TaskStatus.Faulted)
+                    //        throw ant.Exception.InnerException;
+
+                    //    if (ant.Result)
+                    //    {
+                    //        RecalcTabule();
+                    //        SqlliteDao.AddUnitState(_address, UnitStatus);
+                    //    }
+
+                    //    IsUpdateStatusPending = false;
+                    //    TplLogger.Debug($"recalcTabuleTask - res: {ant.Result}");
+                    //    return ant.Result;
+                    //}, TaskContinuationOptions.OnlyOnRanToCompletion);
+                }
+                //else
+                //{
+                //    Task<bool> recalcTabuleTask = readStavCitacuTask.ContinueWith<bool>((ant) =>
+                //    {
+                //        bool res = true;
+
+                //        TplLogger.Debug("recalcTabuleTask - start");
+
+                //        if (ant.Status == TaskStatus.Faulted)
+                //            throw ant.Exception.InnerException;
+
+                //        RecalcTabule();
+
+                //        SqlliteDao.AddUnitState(_address, UnitStatus);
+
+                //        IsUpdateStatusPending = false;
+
+                //        TplLogger.Debug($"recalcTabuleTask - res: {res}");
+
+                //        return res;
+                //    }, TaskContinuationOptions.OnlyOnRanToCompletion);
+                //}
+
+            }
+            catch (AggregateException aggEx)
+            {
+                foreach (Exception ex in aggEx.InnerExceptions)
+                {
+                    Logger.Error("Caught exception '{0}'", ex.Message);
+                    IsUpdateStatusPending = false;
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            try
+            {                
+                readHodnotuCykluNgTask?.Wait();
+            }
+            catch (AggregateException e)
+            {
+                foreach (Exception ie in e.InnerExceptions)
+                    Console.WriteLine("{0}: {1}", ie.GetType().Name,
+                                      ie.Message);
+            }
+            finally
+            {
+                UpdateStatusTokenSource.Dispose();
+            }
+
+            return true;
+        }
+
+
         public bool SendReadStavCitacu()
         {
             Logger.Info($"+ unit {_address}");
-
-
-            if (IsReadStavCitacuPending)
-            {
-                Logger.Info($"ReadStavCitacu for addr:{_address} is pending");
-
-                if ((DateTime.Now - ReadStavCitacuStartTime).TotalMilliseconds > _runConfig.ReadResultTimeOut)
-                {
-                    //jdeme na dalsi pokus
-                    ErrorsLogger.Error($"ReadStavCitacu for addr:{_address};timeout is:{_runConfig.ReadResultTimeOut} -> next attempt");
-                    ReadStavCitacuStartTime = DateTime.MinValue;
-                }
-                else
-                {
-                    return false;
-                }
-            }
 
             //if (_isMockupMode)
             //{
@@ -416,16 +555,6 @@ namespace Slevyr.DataAccess.Model
             //}
 
             var res = SendCommand(CmdReadStavCitacu);
-
-            if (res)
-            {
-                IsReadStavCitacuPending = true;
-                ReadStavCitacuStartTime = DateTime.Now;
-            }
-            else
-            {
-                IsReadStavCitacuPending = false;
-            }
 
             return res;
         }
@@ -445,8 +574,6 @@ namespace Slevyr.DataAccess.Model
             UnitStatus.OkNgTime = DateTime.Now;
             UnitStatus.IsOkNg = true;
 
-            IsReadStavCitacuPending = false;
-
             Logger.Info($"okVal:{okVal} ngVal:{ngVal} machineStatus:{machineStatus} unit: {_address}");
         }
 
@@ -455,22 +582,7 @@ namespace Slevyr.DataAccess.Model
         {
             Logger.Info($"+ unit {_address}");
 
-            if (IsReadCasOkPending)
-            {
-                //ErrorsLogger.Error($"ReadCasOk;{_address};total errors:{_errorRecordedCnt++}");
-                Logger.Info($"ReadCasOk for addr:{_address} is pending");
-
-                if ((DateTime.Now - ReadCasOkStartTime).TotalMilliseconds > _runConfig.ReadResultTimeOut)  
-                {
-                    //jdeme na dalsi pokus
-                    ErrorsLogger.Error($"ReadCasOk for addr:{_address};timeout is:{_runConfig.ReadResultTimeOut} -> next attempt");
-                    ReadCasOkStartTime = DateTime.MinValue;
-                }
-                else
-                {
-                    return false;
-                }
-            }
+          
 
             //if (_isMockupMode)
             //{
@@ -482,15 +594,7 @@ namespace Slevyr.DataAccess.Model
 
             var res = SendCommand(CmdReadHodnotuPoslCykluOk);
 
-            if (res)
-            {
-                IsReadCasOkPending = true;
-                ReadCasOkStartTime = DateTime.Now;
-            }
-            else
-            {
-                IsReadCasOkPending = false;
-            }
+          
 
             return res;
         }
@@ -501,7 +605,6 @@ namespace Slevyr.DataAccess.Model
             UnitStatus.CasOk = value;
             UnitStatus.CasOkTime = DateTime.Now;
             UnitStatus.IsCasOk = true;
-            IsReadCasOkPending = false;
             Logger.Debug($"unit {_address}");
         }
 
@@ -509,21 +612,7 @@ namespace Slevyr.DataAccess.Model
         {
             Logger.Info($"+ unit {_address}");
 
-            if (IsReadCasNgPending)
-            {
-                Logger.Info($"ReadCasNg for addr:{_address} is pending");
-
-                if ((DateTime.Now - ReadCasNgStartTime).TotalMilliseconds > _runConfig.ReadResultTimeOut)
-                {
-                    //jdeme na dalsi pokus
-                    ErrorsLogger.Error($"ReadCasNg for addr:{_address};timeout is:{_runConfig.ReadResultTimeOut} -> next attempt");
-                    ReadCasNgStartTime = DateTime.MinValue;
-                }
-                else
-                {
-                    return false;
-                }
-            }
+            
 
 
             //if (_isMockupMode)
@@ -536,15 +625,6 @@ namespace Slevyr.DataAccess.Model
 
             var res = SendCommand(CmdReadHodnotuPoslCykluNg);
 
-            if (res)
-            {
-                IsReadCasNgPending = true;
-                ReadCasNgStartTime = DateTime.Now;
-            }
-            else
-            {
-                IsReadCasNgPending = false;
-            }
 
             return res;
         }
@@ -555,7 +635,6 @@ namespace Slevyr.DataAccess.Model
             UnitStatus.CasNg = value;
             UnitStatus.CasNgTime = DateTime.Now;
             UnitStatus.IsCasNg = true;
-            IsReadCasNgPending = false;
             Logger.Debug($"unit {_address}");
         }
 
