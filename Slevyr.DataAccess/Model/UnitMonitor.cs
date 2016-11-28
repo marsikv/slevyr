@@ -37,6 +37,7 @@ namespace Slevyr.DataAccess.Model
         public AutoResetEvent WaitEvent96 = new AutoResetEvent(false);
         public AutoResetEvent WaitEvent97 = new AutoResetEvent(false);
         public AutoResetEvent WaitEvent98 = new AutoResetEvent(false);
+        public AutoResetEvent WaitEventSendConfirm = new AutoResetEvent(false);
 
 
         #endregion
@@ -118,7 +119,7 @@ namespace Slevyr.DataAccess.Model
 
         public bool IsUpdateStatusPending { get; set; }
 
-        CancellationTokenSource UpdateStatusTokenSource { get; set; }
+        public CancellationTokenSource UpdateStatusTokenSource { get; private set; }
 
 
         #endregion
@@ -170,7 +171,7 @@ namespace Slevyr.DataAccess.Model
         /// posle prikaz na port
         /// </summary>
         /// <returns></returns>
-        public bool SendCommand(byte cmd)
+        public bool SendCommand(byte cmd, bool checkSendConfirmation=false)
         {
             bool res;
             Logger.Debug("+");
@@ -182,20 +183,29 @@ namespace Slevyr.DataAccess.Model
             try
             {
                 //odeslat pripraveny command s parametry
- 
+                TplLogger.Debug($" SendCommand {cmd} to [{_address}] - start");
+
+                /*
                 var wtask = _sp.WriteAsync(_inBuff, BuffLength);
                 wtask.Wait(_runConfig.SendCommandTimeOut);
+                wtask.Dispose();
+                */
+                _sp.Write(_inBuff, 0,BuffLength);
 
                 DataSendReceivedLogger.Debug($"->  {BuffLength}; {BitConverter.ToString(_inBuff)}");
 
-                Thread.Sleep(7);
+                Thread.Sleep(10);
 
                 Logger.Debug(" -w");
 
-                //provadet kontrola odeslání ?
-                //tzn. _outBuff[0] == 4 && _outBuff[1] == 0 && _outBuff[2] == _address
-                //- muselo by se implementovat casove omezenym cekanim na event ktery by generoval handler SerialPortOnDataReceived  
+                if (checkSendConfirmation)
+                {
+                    var sendConfirmReceived = WaitEventSendConfirm.WaitOne(_runConfig.SendCommandTimeOut);
+                    TplLogger.Debug($" SendCommand {cmd} to [{_address}] - confirmed:{sendConfirmReceived}");
+                    return sendConfirmReceived;
+                }
 
+                Thread.Sleep(10);
 
                 res = true;
             }
@@ -387,12 +397,15 @@ namespace Slevyr.DataAccess.Model
             UnitStatus.VerzeSw3 = buff[9];
         }
 
-        public bool UpdateStatus()
+        public bool ObtainStatus()
         {
+            TplLogger.Debug($"ObtainStatus [{_address}] - start");
             IsUpdateStatusPending = true;
             UpdateStatusStartTime = DateTime.Now;
             //UpdateStatusTokenSource = new CancellationTokenSource(_runConfig.ReadResultTimeOut * 3);
+            UpdateStatusTokenSource?.Cancel();
             UpdateStatusTokenSource = new CancellationTokenSource();
+
             CancellationToken token = UpdateStatusTokenSource.Token;
 
             Task<bool> readHodnotuCykluNgTask = null;
@@ -401,16 +414,29 @@ namespace Slevyr.DataAccess.Model
             {
                 Task<bool> readStavCitacuTask = Task.Factory.StartNew(() =>
                    {
-                       TplLogger.Debug("readStavCitacuTask - start");
-                       var sendOk = SendCommand(CmdReadStavCitacu);
-                       TplLogger.Debug("readStavCitacuTask - wait for 96");
-                       token.ThrowIfCancellationRequested();
-                       var respReceived = WaitEvent96.WaitOne(_runConfig.ReadResultTimeOut);
+                       TplLogger.Debug($"readStavCitacuTask [{_address}] - start");
+                       bool res = false;
 
+                       var sendOk = SendCommand(CmdReadStavCitacu, true) || SendCommand(CmdReadStavCitacu, true) || SendCommand(CmdReadStavCitacu, true);
+                       
                        token.ThrowIfCancellationRequested();
-                       if (!respReceived) TplLogger.Debug($"readHodnotuCykluOk - timeout");
-                       var res = sendOk && respReceived && UnitStatus.MachineStatus == MachineStateEnum.Vyroba; //kdyz zjistim ze stroj nebezi nebo ma poruchu tak cteni casu neprovadet, 
-                       TplLogger.Debug($"readStavCitacuTask - res:{res} machine:{UnitStatus.MachineStatus}");
+
+                       if (sendOk)
+                       {
+                           TplLogger.Debug($"readStavCitacuTask [{_address}] - wait for 96");
+                           var respReceived = WaitEvent96.WaitOne(_runConfig.ReadResultTimeOut);
+                           token.ThrowIfCancellationRequested();
+                           if (!respReceived) TplLogger.Debug($"readStavCitacuTask [{_address}] - timeout");
+                           res = respReceived;
+                       }
+                       else
+                       {
+                           TplLogger.Debug($"readStavCitacuTask [{_address}] - send failed");
+                       }
+
+                       TplLogger.Debug($"readStavCitacuTask [{_address}] - res:{res}");
+                       //var res = sendOk && respReceived && UnitStatus.MachineStatus == MachineStateEnum.Vyroba; //kdyz zjistim ze stroj nebezi nebo ma poruchu tak cteni casu neprovadet, 
+                       //TplLogger.Debug($"readStavCitacuTask - res:{res} machine:{(respReceived ? UnitStatus.MachineStatus.ToString() : "-")}");
                        return res;
                    }, token);
               
@@ -418,51 +444,63 @@ namespace Slevyr.DataAccess.Model
                 {
                     Task<bool> readHodnotuCykluOkTask = readStavCitacuTask.ContinueWith<bool>((ant) =>
                     {
-                        TplLogger.Debug("readHodnotuCykluOkTask - start");
+                        TplLogger.Debug($"readHodnotuCykluOkTask [{_address}] - start");
                         if (ant.Status == TaskStatus.Faulted)
                             throw ant.Exception.InnerException;
 
                         bool res = false;
                         if (ant.Result)
                         {
-                            var sendOk = SendCommand(CmdReadHodnotuPoslCykluOk);
+                            Thread.Sleep(_runConfig.RelaxTime);
+                            var sendOk = SendCommand(CmdReadHodnotuPoslCykluOk,true) || SendCommand(CmdReadHodnotuPoslCykluOk, true) || SendCommand(CmdReadHodnotuPoslCykluOk, true);
+
                             token.ThrowIfCancellationRequested();
-                            TplLogger.Debug($"readHodnotuCykluOkTask - wait for 97 {(sendOk ? "":"- skip")}");
+
                             if (sendOk)
                             {
+                                TplLogger.Debug($"readHodnotuCykluOkTask [{_address}] - wait for 97");
                                 var respReceived = WaitEvent97.WaitOne(_runConfig.ReadResultTimeOut);
                                 token.ThrowIfCancellationRequested();
-                                if (!respReceived) TplLogger.Debug($"readHodnotuCykluOk - timeout");
+                                if (!respReceived) TplLogger.Debug($"readHodnotuCykluOk [{_address}] - timeout");
                                 res = respReceived;
-                            }                            
+                            }
+                            else
+                            {
+                                TplLogger.Debug($"readHodnotuCykluOkTask [{_address}] - send failed");
+                            }
+                                               
                         }
-
-                        TplLogger.Debug($"readHodnotuCykluOkTask - res: {res}");
+                        TplLogger.Debug($"readHodnotuCykluOkTask [{_address}] - res: {res}");
                         return res;
                     }, token, TaskContinuationOptions.OnlyOnRanToCompletion,TaskScheduler.Current );
 
                     readHodnotuCykluNgTask = readHodnotuCykluOkTask.ContinueWith<bool>((ant) =>
                     {
-                        TplLogger.Debug("readHodnotuCykluNgTask - start");
+                        TplLogger.Debug($"readHodnotuCykluNgTask [{_address}] - start");
                         if (ant.Status == TaskStatus.Faulted)
                             throw ant.Exception.InnerException;
 
                         bool res = false;
                         if (ant.Result)
                         {
-                            var sendOk = SendCommand(CmdReadHodnotuPoslCykluNg);
+                            Thread.Sleep(_runConfig.RelaxTime);
+                            var sendOk = SendCommand(CmdReadHodnotuPoslCykluNg, true) || SendCommand(CmdReadHodnotuPoslCykluNg, true) || SendCommand(CmdReadHodnotuPoslCykluNg, true);
+
                             token.ThrowIfCancellationRequested();
-                            TplLogger.Debug($"readHodnotuCykluNgTask - wait for 98 {(sendOk ? "" : "- skip")}");
                             if (sendOk)
                             {
+                                TplLogger.Debug($"readHodnotuCykluNg [{_address}] - wait for 97");
                                 var respReceived = WaitEvent98.WaitOne(_runConfig.ReadResultTimeOut);
                                 token.ThrowIfCancellationRequested();
-                                if (!respReceived) TplLogger.Debug($"readHodnotuCykluNg - timeout");
+                                if (!respReceived) TplLogger.Debug($"readHodnotuCykluNg [{_address}] - timeout");
                                 res = respReceived;
-                            }                           
+                            }
+                            else
+                            {
+                                TplLogger.Debug($"readHodnotuCykluNg [{_address}] - send failed");
+                            }                      
                         }
-
-                        TplLogger.Debug($"readHodnotuCykluNgTask - res: {res}");
+                        TplLogger.Debug($"readHodnotuCykluNgTask [{_address}] - res: {res}");
                         return res;
                     }, token, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Current);
 
@@ -521,20 +559,20 @@ namespace Slevyr.DataAccess.Model
                 throw;
             }
 
-            try
-            {                
-                readHodnotuCykluNgTask?.Wait();
-            }
-            catch (AggregateException e)
-            {
-                foreach (Exception ie in e.InnerExceptions)
-                    Console.WriteLine("{0}: {1}", ie.GetType().Name,
-                                      ie.Message);
-            }
-            finally
-            {
-                UpdateStatusTokenSource.Dispose();
-            }
+            //try
+            //{                
+            //    readHodnotuCykluNgTask?.Wait();
+            //}
+            //catch (AggregateException e)
+            //{
+            //    foreach (Exception ie in e.InnerExceptions)
+            //        Console.WriteLine("{0}: {1}", ie.GetType().Name,
+            //                          ie.Message);
+            //}
+            //finally
+            //{
+            //    UpdateStatusTokenSource.Dispose();
+            //}
 
             return true;
         }

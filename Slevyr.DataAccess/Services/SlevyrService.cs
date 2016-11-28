@@ -131,7 +131,9 @@ namespace Slevyr.DataAccess.Services
                 var isSendConfirmation = packet[0] == 4 && packet[1] == 0 && packet[2] > 0;
                 if (isSendConfirmation)
                 {
-                    //SendConfirmationEvent?.Invoke(new EventArgs());
+                    var adr = packet[2];
+                    _unitDictionary[adr].WaitEventSendConfirm.Set();
+                    TplLogger.Debug($"WaitEventSendConfirm.set - adr:{adr}");
                     return;
                 }
                 
@@ -144,19 +146,19 @@ namespace Slevyr.DataAccess.Services
                     {
                         //_tsc100_96?.TrySetResult(true);
                         _unitDictionary[adr].WaitEvent96.Set();
-                        TplLogger.Debug("WaitEvent96.set");
+                        TplLogger.Debug($"WaitEvent96.set - adr:{adr}");
                     }
                     else if (cmd == 97)
                     {
                         //_tsc100_97?.TrySetResult(true);
                         _unitDictionary[adr].WaitEvent97.Set();
-                        TplLogger.Debug("WaitEvent97.set");
+                        TplLogger.Debug($"WaitEvent97.set - adr:{adr}");
                     }
                     else if (cmd == 98)
                     {
                         //_tsc100_98?.TrySetResult(true);
                         _unitDictionary[adr].WaitEvent98.Set();
-                        TplLogger.Debug("WaitEvent98.set");
+                        TplLogger.Debug($"WaitEvent98.set - adr:{adr}");
                     }
                     _packedCollection.Add(packet);                    //zaradim ke zpracovani ktere probiha v PacketBw
                 }
@@ -482,19 +484,18 @@ namespace Slevyr.DataAccess.Services
 
                         if (_unitDictionary[addr].IsUpdateStatusPending)
                         {
-                            if ((DateTime.Now - _unitDictionary[addr].UpdateStatusStartTime).TotalMilliseconds > _runConfig.ReadResultTimeOut * 4) //TODO jeste jednu konstantu ktera bude interval pro preruseni spusteneho tasku
+                            TplLogger.Info($"..ObtainStatus [{addr}] is pending..");
+                            if ((DateTime.Now - _unitDictionary[addr].UpdateStatusStartTime).TotalMilliseconds > _runConfig.ReadResultTimeOut * 5) //TODO jeste jednu konstantu ktera bude interval pro preruseni spusteneho tasku
                             {
-                                 ErrorsLogger.Error($"UpdateStatus timeout for {addr}");
-                                //_unitDictionary[addr].CancelationToken.Cancel;
-                                // vyvolam cancelationToken
+                                TplLogger.Error($"ObtainStatus timeout for [{addr}] - try cancel");
+                                _unitDictionary[addr].UpdateStatusTokenSource.Cancel();
                                 _unitDictionary[addr].IsUpdateStatusPending = false;
                             }
                         }
                         else
                         {
-                            res = _unitDictionary[addr].UpdateStatus();
+                            res = _unitDictionary[addr].ObtainStatus();
                         }
-
 
                         Logger.Debug($"+send worker sleep: {_runConfig.WorkerSleepPeriod}, res:{res}");
                         Thread.Sleep(_runConfig.WorkerSleepPeriod);  //pauza pred odeslanim prikazu na dalsi jednotku - parametr
@@ -518,7 +519,7 @@ namespace Slevyr.DataAccess.Services
                 {
                     if (_packetBw.CancellationPending)
                     {
-                        Logger.Info("*** chunk worker canceled ***");
+                        Logger.Info("*** packet worker canceled ***");
                         SqlliteDao.CloseConnection();
                         return;
                     }

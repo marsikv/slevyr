@@ -185,7 +185,7 @@ namespace UnitTest
 
                 Assert.IsTrue(serialPort.IsOpen, $"port {_portCfg.Port} nelze otevřít");
 
-                UnitMonitor m = new UnitMonitor(100);
+                UnitMonitor m = new UnitMonitor(176);
                 m.SerialPort = serialPort;
 
                 var res = m.SetCitace(99, 33);
@@ -222,6 +222,7 @@ namespace UnitTest
             Console.WriteLine($"TestMethodReset7 - OK");
         }
 
+        /*
         [TestMethod]
         public void TestMethodVratitZaklNastaveni9()
         {
@@ -255,7 +256,7 @@ namespace UnitTest
                 Thread.Sleep(500);
             }
             Console.WriteLine($"TestMethodVratitZaklNastaveni9 - OK");
-        }
+        }*/
 
         //[TestMethod]
         public void TestMethodNastavJas()
@@ -280,6 +281,7 @@ namespace UnitTest
             Console.WriteLine($"TestMethodVratitZaklNastaveni9 - OK");
         }
 
+        /*
         [TestMethod]
         public void TestMethodVratitStavCitacu96()
         {
@@ -312,7 +314,7 @@ namespace UnitTest
             }
             Console.WriteLine($"TestMethodVratitStavCitacu96 - OK");
         }
-
+        */
         [TestMethod]
         public void TestMethodZapsatNacistCitace()
         {
@@ -321,7 +323,7 @@ namespace UnitTest
                 serialPort.Open();
                 Assert.IsTrue(serialPort.IsOpen, $"port {_portCfg.Port} nelze otevřít");
 
-                UnitMonitor m = new UnitMonitor(100);
+                UnitMonitor m = new UnitMonitor(176);
                 m.SerialPort = serialPort;
 
                 short okVal = 123;
@@ -334,6 +336,7 @@ namespace UnitTest
                 int ok;
                 int ng;
 
+                /*
                 Thread.Sleep(500);
 
                 Assert.IsTrue(m.ReadStavCitacu(out ok, out ng));
@@ -342,6 +345,7 @@ namespace UnitTest
 
                 Assert.AreEqual(ok, okVal);
                 Assert.AreEqual(ng, ngVal);
+                */
 
                 serialPort.Close();
                 Assert.IsFalse(serialPort.IsOpen, $"port {_portCfg.Port} nelze uzařít");

@@ -70,7 +70,7 @@ namespace UnitTest
         // public void MyTestCleanup() { }
         //
         #endregion
-
+            /*
         [TestMethod]
         public void TestMethod1()
         {
@@ -96,7 +96,7 @@ namespace UnitTest
 
                 while (c++ < 100)
                 {
-                    var res = m.ReadStavCitacu(out ok, out ng);
+                    var res = m.r();
 
                     if (res)
                     {
@@ -117,6 +117,7 @@ namespace UnitTest
             }
             Console.WriteLine($"TestMethodZapsatNacistCitace - OK");
         }
+        */
     }
     
 }
