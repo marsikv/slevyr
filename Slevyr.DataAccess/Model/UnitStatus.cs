@@ -43,15 +43,15 @@ namespace Slevyr.DataAccess.Model
         public int Ng { get; set; }
 
         /// <summary>
-        /// Stav stroje, byte 9
+        /// Stav stroje
         /// </summary>
         public MachineStateEnum MachineStatus { get; set; }
         public string MachineStatusTxt => Helper.GetDescriptionFromEnumValue(MachineStatus);
 
         /// <summary>
-        /// Jak dlouho stroj stoji v sec (byte 10 a 11)
+        /// Jak dlouho stroj stoji v sec
         /// </summary>
-        public int MachineShutdownTime { get; set; }
+        public int MachineStopTime { get; set; }
 
         public DateTime LastCheckTime { get; set; }
         public string LastCheckTimeTxt => LastCheckTime.ToShortTimeString();
@@ -64,7 +64,20 @@ namespace Slevyr.DataAccess.Model
         public string OkNgTimeTxt => OkNgTime.ToShortTimeString();
 
         public bool IsOkNg { get; set; }
+        /// <summary>
+        /// čas posledního OK kusu, Sekundy na desetiny
+        /// </summary>
         public float CasOk { get; set; }
+
+        /// <summary>
+        /// Průměrný čas OK kusu, sekundy na desetiny
+        /// </summary>
+        public float AvgCasOk { get; set; }
+
+        /// <summary>
+        /// Průměrný čas NG kusu, sekundy na desetiny
+        /// </summary>
+        public float AvgCasNg { get; set; }
 
         public string CasOkStr => CasOk.ToString(CultureInfo.InvariantCulture);
 
@@ -74,12 +87,15 @@ namespace Slevyr.DataAccess.Model
         public float PrumCasVyrobyNg => (Ng != 0) ? UbehlyCasSmenySec / (float)Ng : float.NaN;
         public string PrumCasVyrobyNgStr => (Ng != 0) ? (UbehlyCasSmenySec / (float)Ng).ToString(CultureInfo.InvariantCulture) : "null";
 
-        public DateTime CasOkTime { get; set; }
-        public bool IsCasOk { get; set; }
+        public DateTime CasOkNgTime { get; set; }
+        public bool IsCasOkNg { get; set; }
+        /// <summary>
+        /// čas posledního NG kusu, Sekundy na desetiny
+        /// </summary>
         public float CasNg { get; set; }
         public string CasNgStr => CasNg.ToString(CultureInfo.InvariantCulture);
-        public DateTime CasNgTime { get; set; }
-        public bool IsCasNg { get; set; }
+        //public DateTime CasNgTime { get; set; }
+        //public bool IsCasNg { get; set; }
         public int RozdilKusu { get; set; }
         public DateTime RozdilKusuTime { get; set; }
         public bool IsRozdilKusu { get; set; }
@@ -122,7 +138,6 @@ namespace Slevyr.DataAccess.Model
         /// </summary>
         public void RecalcTabule(UnitConfig unitConfig)
         {
-
             try
             {
                 //zatim jen pro typ A

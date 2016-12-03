@@ -37,11 +37,62 @@ namespace Slevyr.WebAppHost
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        static void Main()
+        static void Main(string[] args)
         {
             bool useLocalHost = Settings.Default.UseLocalHost;
             int port = Settings.Default.WebAppPort;
             string baseAddress = $"http://localhost:{port}/";
+
+            if (System.Diagnostics.Debugger.IsAttached || args.Length > 0)
+            {
+                if (System.Diagnostics.Debugger.IsAttached)
+                {
+                    
+                }
+                else if (args[0].Equals("-start"))
+                {
+                    Console.WriteLine("start");
+                }
+                else if (args[0].Equals("-service"))
+                {
+                    Console.WriteLine("spuštění služby - not implemented yet");
+                }
+                else if (args[0].Equals("-help"))
+                {
+                    Console.WriteLine("\nKonfigurace HTTP serveru\n");
+                    Console.WriteLine("Rezervace url:");
+                    Console.WriteLine($" netsh http add urlacl url=http://+:{port}/ user=Everyone");
+                    Console.WriteLine("Zrušeni rezervace url:");
+                    Console.WriteLine($" netsh http delete urlacl url=http://+:{port}/ user=Everyone");
+                    Console.WriteLine("\n\nRegistrace do systému jako služba");
+                    Console.WriteLine("todo\n");
+                    return;
+                }
+                else 
+                {
+                    Console.WriteLine("\nNeznámý parametr");
+                    return;
+                }
+
+            }
+            else
+            {
+                Console.WriteLine("\nPlatné parametry jsou:\n-start\n-service\n-help");
+                return;
+                /*
+                ServiceBase[] ServicesToRun;
+                ServicesToRun = new ServiceBase[]
+                {
+                new Service()
+                };
+                ServiceBase.Run(ServicesToRun);
+                */
+            }
+
+
+            //bool useLocalHost = Settings.Default.UseLocalHost;
+            //int port = Settings.Default.WebAppPort;
+            //string baseAddress = $"http://localhost:{port}/";
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
@@ -99,7 +150,7 @@ namespace Slevyr.WebAppHost
 
             SlevyrService.ClosePort();
 
-            SlevyrService.StopChunkWorker();
+            SlevyrService.StopPacketWorker();
 
             SlevyrService.StopSendWorker();
         }

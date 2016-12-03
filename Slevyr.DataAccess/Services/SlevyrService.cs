@@ -17,7 +17,6 @@ namespace Slevyr.DataAccess.Services
         #region Fields
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        //private static readonly Logger UnitsLogger = LogManager.GetLogger("Units2");
         private static readonly Logger DataSendReceivedLogger = LogManager.GetLogger("DataReceived");
         private static readonly Logger ErrorsLogger = LogManager.GetLogger("Errors");
         private static readonly Logger TplLogger = LogManager.GetLogger("Tpl");
@@ -28,17 +27,20 @@ namespace Slevyr.DataAccess.Services
 
         private static RunConfig _runConfig = new RunConfig();
 
-        private static readonly ByteQueue _receivedByteQueue = new ByteQueue();
-        private static readonly BlockingCollection<byte[]> _packedCollection = new BlockingCollection<byte[]>();
+        private static readonly ByteQueue ReceivedByteQueue = new ByteQueue();
+
+        private static readonly BlockingCollection<byte[]> PackedCollection = new BlockingCollection<byte[]>();
+
+        private static readonly ConcurrentQueue<UnitCommand> UnitCommandsQueue = new ConcurrentQueue<UnitCommand>();
 
         private static BackgroundWorker _sendBw;
+
         private static BackgroundWorker _packetBw;
+
         private static bool _isSendWorkerStarted;
-        private static bool _isChunkWorkerStarted;
+        private static bool _isPacketWorkerStarted;
         private static int _sendWorkerCycleCnt;
 
-        private static readonly ConcurrentQueue<UnitCommand> _unitCommandsQueue = new ConcurrentQueue<UnitCommand>();
-        
         #endregion
 
         #region Properties
@@ -116,12 +118,12 @@ namespace Slevyr.DataAccess.Services
 
             DataSendReceivedLogger.Debug($" <- {len}; {BitConverter.ToString(buf)}");
 
-            _receivedByteQueue.Enqueue(buf,0,len);
+            ReceivedByteQueue.Enqueue(buf,0,len);
 
-            if (_receivedByteQueue.Length >= 11)
+            if (ReceivedByteQueue.Length >= 11)
             {
                 Byte[] packet = new Byte[11];
-                _receivedByteQueue.Dequeue(packet, 0, 11);
+                ReceivedByteQueue.Dequeue(packet, 0, 11);
 
                 //signatura potvrzeni odeslani
                 //  _outBuff[0] == 4 && _outBuff[1] == 0 && _outBuff[2] == _address
@@ -160,7 +162,7 @@ namespace Slevyr.DataAccess.Services
                         _unitDictionary[adr].WaitEvent98.Set();
                         TplLogger.Debug($"WaitEvent98.set - adr:{adr}");
                     }
-                    _packedCollection.Add(packet);                    //zaradim ke zpracovani ktere probiha v PacketBw
+                    PackedCollection.Add(packet);                    //zaradim ke zpracovani ktere probiha v PacketBw
                 }
             }           
         }
@@ -333,7 +335,7 @@ namespace Slevyr.DataAccess.Services
             Logger.Debug("");
 
             var uc = new UnitCommand(() => _unitDictionary[addr].SetCas(DateTime.Now), "NastavAktualniCas", addr);
-            _unitCommandsQueue.Enqueue(uc);           
+            UnitCommandsQueue.Enqueue(uc);           
         }
 
 
@@ -384,17 +386,16 @@ namespace Slevyr.DataAccess.Services
 
             if (_runConfig.IsMockupMode)
             {
-                Mock.MockUnitStatus().CasOkTime = DateTime.Now;
-                Mock.MockUnitStatus().CasNgTime = DateTime.Now;
+                Mock.MockUnitStatus().CasOkNgTime = DateTime.Now;
                 return true;
             }
           
-            return _unitDictionary[addr].SendReadCasOK() && _unitDictionary[addr].SendReadCasNG();
+            return _unitDictionary[addr].SendReadCasOkNg() ;
         }
 
         #endregion
 
-        #region save/load
+        #region save/load/get unitConfig
 
         public static void SaveUnitConfig(UnitConfig unitCfg)
         {
@@ -404,8 +405,6 @@ namespace Slevyr.DataAccess.Services
             unitCfg.SaveToFile(_runConfig.DataFilePath);                        
         }
 
-        #endregion
-
         public static UnitConfig GetUnitConfig(byte addr)
         {
             Logger.Debug($"addr:{addr}");
@@ -414,6 +413,10 @@ namespace Slevyr.DataAccess.Services
             //_unitDictionary[addr].LoadUnitConfigFromFile(addr, _runConfig.DataFilePath);
             return _unitDictionary[addr].UnitConfig;          
         }
+
+        #endregion
+
+        #region send a packet worker
 
         public static void StartSendWorker()
         {
@@ -427,15 +430,15 @@ namespace Slevyr.DataAccess.Services
             }
         }
 
-        public static void StartChunkWorker()
+        public static void StartPacketWorker()
         {
-            if (!_isChunkWorkerStarted)
+            if (!_isPacketWorkerStarted)
             {
-                _isChunkWorkerStarted = true;
+                _isPacketWorkerStarted = true;
                 _packetBw = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
                 _packetBw.DoWork += PacketBwDoWork;
                 _packetBw.RunWorkerAsync();
-                Logger.Info("*** chunk worker started ***");
+                Logger.Info("*** packet worker started ***");
             }
         }
 
@@ -444,7 +447,7 @@ namespace Slevyr.DataAccess.Services
             _sendBw.CancelAsync();
         }
 
-        public static void StopChunkWorker()
+        public static void StopPacketWorker()
         {
             _packetBw.CancelAsync();
         }
@@ -462,7 +465,7 @@ namespace Slevyr.DataAccess.Services
                     UnitCommand unitCommand;
 
                     //pokud jsou prikazy cekajici na zpracovani tak se provedou prednostne
-                    while (_unitCommandsQueue.TryDequeue(out unitCommand))
+                    while (UnitCommandsQueue.TryDequeue(out unitCommand))
                     {
                         Logger.Debug($"command {unitCommand.Description} dequeue");
                         unitCommand.Run();
@@ -489,7 +492,7 @@ namespace Slevyr.DataAccess.Services
                             {
                                 TplLogger.Error($"ObtainStatus timeout for [{addr}] - try cancel");
                                 _unitDictionary[addr].UpdateStatusTokenSource.Cancel();
-                                _unitDictionary[addr].IsUpdateStatusPending = false;
+                                _unitDictionary[addr].SetUpdateIsPending(false);
                             }
                         }
                         else
@@ -524,12 +527,12 @@ namespace Slevyr.DataAccess.Services
                         return;
                     }
 
-                    var packet =_packedCollection.Take();
+                    var packet =PackedCollection.Take();
 
                     byte addr = packet[2];
                     byte cmd = packet[3];
 
-                    Logger.Debug($"Received addr:{addr} cmd:{cmd}");
+                    Logger.Debug($"addr:{addr} cmd:{cmd}");
 
                     switch (cmd)
                     {
@@ -539,23 +542,22 @@ namespace Slevyr.DataAccess.Services
                             SqlliteDao.AddUnitState(addr, _unitDictionary[addr].UnitStatus);
                             if (!_runConfig.IsReadOkNgTime)
                             {
-                                _unitDictionary[addr].IsUpdateStatusPending = false;
+                                _unitDictionary[addr].SetUpdateIsPending(false);  
                             }
                             break;
-                        case UnitMonitor.CmdReadHodnotuPoslCykluOk:
-                            _unitDictionary[addr].DoReadCasOk(packet);
+                        case UnitMonitor.CmdReadCasPosledniOkNg:
+                            _unitDictionary[addr].DoReadCasOkNg(packet);
                             //SqlliteDao.UpdateUnitStateCasOk(addr, _unitDictionary[addr].UnitStatus);
-                            break;
-                        case UnitMonitor.CmdReadHodnotuPoslCykluNg:
-                            _unitDictionary[addr].DoReadCasNg(packet);
-                            _unitDictionary[addr].IsUpdateStatusPending = false;
-                            //SqlliteDao.UpdateUnitStateCasNg(addr, _unitDictionary[addr].UnitStatus);
+                            _unitDictionary[addr].SetUpdateIsPending(false);
                             break;
                         case UnitMonitor.CmdReadRozdilKusu:
                             _unitDictionary[addr].DoReadRozdilKusu(packet);
                             break;
                         case UnitMonitor.CmdReadDefektivita:
                             _unitDictionary[addr].DoReadDefectivita(packet);
+                            break;
+                        case UnitMonitor.CmdReadHodnotuPrumCykluOkNg:
+                            //_unitDictionary[addr].DoReadDefectivita(packet);
                             break;
                     }                    
 
@@ -565,9 +567,9 @@ namespace Slevyr.DataAccess.Services
                     Logger.Error(ex);
                 }
             }
-
-
         }
+
+        #endregion
 
     }
 }

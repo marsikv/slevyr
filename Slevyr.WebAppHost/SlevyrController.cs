@@ -62,7 +62,7 @@ namespace Slevyr.WebAppHost
 
             if (Globals.RunConfig.IsRefreshTimerOn) SlevyrService.StartSendWorker();
 
-            SlevyrService.StartChunkWorker();
+            SlevyrService.StartPacketWorker();
 
         }
 
@@ -103,7 +103,7 @@ namespace Slevyr.WebAppHost
             else
                 SlevyrService.StopSendWorker();
 
-            SlevyrService.StartChunkWorker();
+            SlevyrService.StartPacketWorker();
 
             return true;
         }
@@ -396,8 +396,7 @@ namespace Slevyr.WebAppHost
 
             if (Globals.RunConfig.IsMockupMode)
             {
-                Mock.MockUnitStatus().CasOkTime = DateTime.Now;
-                Mock.MockUnitStatus().CasNgTime = DateTime.Now;
+                Mock.MockUnitStatus().CasOkNgTime = DateTime.Now;
                 return true;
             }
 

@@ -39,6 +39,7 @@ namespace Slevyr.DataAccess.Model
         public AutoResetEvent WaitEvent98 = new AutoResetEvent(false);
         public AutoResetEvent WaitEventSendConfirm = new AutoResetEvent(false);
 
+        private volatile object _lock = new object();
 
         #endregion
 
@@ -69,10 +70,10 @@ namespace Slevyr.DataAccess.Model
         //const byte Get = 27	; //Vrati hodnoty citace 4 5 6
         //const byte Get = 28	; //Vrati hodnoty citace 7 8
         public const byte CmdReadStavCitacu = 96; //Vrati stav citacu
-        public const byte CmdReadHodnotuPoslCykluOk = 97; //vrati hodnotu posledniho cyklu OK
-        public const byte CmdReadHodnotuPoslCykluNg = 98; //vrati hodnotu posledniho cyklu NG
-        public const byte CmdReadHodnotuPrumCykluOk = 99; //vrati hodnotu prumerneho cyklu OK
-        public const byte CmdReadHodnotuPrumCykluNg = 100; //vrati hodnotu prumerneho cyklu NG
+        public const byte CmdReadCasPosledniOkNg = 97; //vrati hodnotu posledniho cyklu OK
+        public const byte CmdReadHodnotuPrumCykluOkNg = 98; //vrati hodnotu prumerneho cyklu OK
+        //public const byte CmdReadHodnotuPoslCykluNg = 98; //vrati hodnotu posledniho cyklu NG
+        //public const byte CmdReadHodnotuPrumCykluNg = 100; //vrati hodnotu prumerneho cyklu NG
         public const byte CmdReadTeplotu1Cidla = 101; //vrati teplotu z prvniho cidla DS18B20
         public const byte CmdReadTeplotu2Cidla = 102; //vrati teplotu z druheho cidla DS18B20
         public const byte CmdReadTeplotu3Cidla = 103; //vrati teplotu z tretiho cidla DS18B20
@@ -400,15 +401,13 @@ namespace Slevyr.DataAccess.Model
         public bool ObtainStatus()
         {
             TplLogger.Debug($"ObtainStatus [{_address}] - start");
-            IsUpdateStatusPending = true;
+            SetUpdateIsPending(true);
             UpdateStatusStartTime = DateTime.Now;
-            //UpdateStatusTokenSource = new CancellationTokenSource(_runConfig.ReadResultTimeOut * 3);
             UpdateStatusTokenSource?.Cancel();
             UpdateStatusTokenSource = new CancellationTokenSource();
+            //UpdateStatusTokenSource = new CancellationTokenSource(_runConfig.ReadResultTimeOut * 3);
 
             CancellationToken token = UpdateStatusTokenSource.Token;
-
-            Task<bool> readHodnotuCykluNgTask = null;
 
             try
             {
@@ -442,9 +441,9 @@ namespace Slevyr.DataAccess.Model
               
                 if (_runConfig.IsReadOkNgTime)
                 {
-                    Task<bool> readHodnotuCykluOkTask = readStavCitacuTask.ContinueWith<bool>((ant) =>
+                    Task<bool> readCasPoslednihoKusuTask = readStavCitacuTask.ContinueWith<bool>((ant) =>
                     {
-                        TplLogger.Debug($"readHodnotuCykluOkTask [{_address}] - start");
+                        TplLogger.Debug($"readCasPoslednihoKusuTask [{_address}] - start");
                         if (ant.Status == TaskStatus.Faulted)
                             throw ant.Exception.InnerException;
 
@@ -452,76 +451,32 @@ namespace Slevyr.DataAccess.Model
                         if (ant.Result)
                         {
                             Thread.Sleep(_runConfig.RelaxTime);
-                            var sendOk = SendCommand(CmdReadHodnotuPoslCykluOk,true) || SendCommand(CmdReadHodnotuPoslCykluOk, true) || SendCommand(CmdReadHodnotuPoslCykluOk, true);
+                            var sendOk = SendCommand(CmdReadCasPosledniOkNg,true) || SendCommand(CmdReadCasPosledniOkNg, true) || SendCommand(CmdReadCasPosledniOkNg, true);
 
                             token.ThrowIfCancellationRequested();
 
                             if (sendOk)
                             {
-                                TplLogger.Debug($"readHodnotuCykluOkTask [{_address}] - wait for 97");
+                                TplLogger.Debug($"readCasPoslednihoKusuTask [{_address}] - wait for 97");
                                 var respReceived = WaitEvent97.WaitOne(_runConfig.ReadResultTimeOut);
                                 token.ThrowIfCancellationRequested();
-                                if (!respReceived) TplLogger.Debug($"readHodnotuCykluOk [{_address}] - timeout");
+                                if (!respReceived) TplLogger.Debug($"readCasPoslednihoKusuTask [{_address}] - timeout");
                                 res = respReceived;
                             }
                             else
                             {
-                                TplLogger.Debug($"readHodnotuCykluOkTask [{_address}] - send failed");
+                                TplLogger.Debug($"readCasPoslednihoKusuTask [{_address}] - send failed");
                             }
                                                
                         }
-                        TplLogger.Debug($"readHodnotuCykluOkTask [{_address}] - res: {res}");
+                        TplLogger.Debug($"readCasPoslednihoKusuTask [{_address}] - res: {res}");
                         return res;
                     }, token, TaskContinuationOptions.OnlyOnRanToCompletion,TaskScheduler.Current );
 
-                    readHodnotuCykluNgTask = readHodnotuCykluOkTask.ContinueWith<bool>((ant) =>
-                    {
-                        TplLogger.Debug($"readHodnotuCykluNgTask [{_address}] - start");
-                        if (ant.Status == TaskStatus.Faulted)
-                            throw ant.Exception.InnerException;
-
-                        bool res = false;
-                        if (ant.Result)
-                        {
-                            Thread.Sleep(_runConfig.RelaxTime);
-                            var sendOk = SendCommand(CmdReadHodnotuPoslCykluNg, true) || SendCommand(CmdReadHodnotuPoslCykluNg, true) || SendCommand(CmdReadHodnotuPoslCykluNg, true);
-
-                            token.ThrowIfCancellationRequested();
-                            if (sendOk)
-                            {
-                                TplLogger.Debug($"readHodnotuCykluNg [{_address}] - wait for 97");
-                                var respReceived = WaitEvent98.WaitOne(_runConfig.ReadResultTimeOut);
-                                token.ThrowIfCancellationRequested();
-                                if (!respReceived) TplLogger.Debug($"readHodnotuCykluNg [{_address}] - timeout");
-                                res = respReceived;
-                            }
-                            else
-                            {
-                                TplLogger.Debug($"readHodnotuCykluNg [{_address}] - send failed");
-                            }                      
-                        }
-                        TplLogger.Debug($"readHodnotuCykluNgTask [{_address}] - res: {res}");
-                        return res;
-                    }, token, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Current);
-
-
-                    //Task<bool> recalcTabuleTask = readHodnotuCykluNgTask.ContinueWith<bool>((ant) =>
-                    //{
-                    //    TplLogger.Debug("recalcTabuleTask - start");
-                    //    if (ant.Status == TaskStatus.Faulted)
-                    //        throw ant.Exception.InnerException;
-
-                    //    if (ant.Result)
-                    //    {
-                    //        RecalcTabule();
-                    //        SqlliteDao.AddUnitState(_address, UnitStatus);
-                    //    }
-
-                    //    IsUpdateStatusPending = false;
-                    //    TplLogger.Debug($"recalcTabuleTask - res: {ant.Result}");
-                    //    return ant.Result;
-                    //}, TaskContinuationOptions.OnlyOnRanToCompletion);
                 }
+
+                //Continuation obsahujici vypocet tabule tu neni, protoze vypocet probiha v packet background threadu 
+
                 //else
                 //{
                 //    Task<bool> recalcTabuleTask = readStavCitacuTask.ContinueWith<bool>((ant) =>
@@ -551,7 +506,7 @@ namespace Slevyr.DataAccess.Model
                 foreach (Exception ex in aggEx.InnerExceptions)
                 {
                     Logger.Error("Caught exception '{0}'", ex.Message);
-                    IsUpdateStatusPending = false;
+                    SetUpdateIsPending(false);
                 }
             }
             catch (Exception)
@@ -599,15 +554,23 @@ namespace Slevyr.DataAccess.Model
 
         public void DoReadStavCitacu(byte[] buff)
         {
+            /*
+             * Pro příkaz 0x60 je odpověď = 0x00 0x00 ADR 0x60 LSB MSB LSB MSB LSB MSB 0xXX
+
+                Počet vyrobených OK kusů = LSB+(256*MSB) , Kusy
+                Počet vyrobených NG kusů = LSB+(256*MSB) , Kusy
+                Stop time = LSB+(256*MSB) , Sekundy
+                Stav stroje = XX
+             */
             var okVal = Helper.ToShort(buff[4], buff[5]);
             var ngVal = Helper.ToShort(buff[6], buff[7]);
-            short machineStatus = buff[8];
-            short shutdownTime = Helper.ToShort(buff[9], buff[10]);
+            var stopTime = Helper.ToShort(buff[8], buff[9]);
+            short machineStatus = buff[10];
 
             UnitStatus.Ok = okVal;
             UnitStatus.Ng = ngVal;
             UnitStatus.MachineStatus = (MachineStateEnum)machineStatus;
-            UnitStatus.MachineShutdownTime = shutdownTime;
+            UnitStatus.MachineStopTime = stopTime;
 
             UnitStatus.OkNgTime = DateTime.Now;
             UnitStatus.IsOkNg = true;
@@ -616,7 +579,7 @@ namespace Slevyr.DataAccess.Model
         }
 
 
-        public bool SendReadCasOK()
+        public bool SendReadCasOkNg()
         {
             Logger.Info($"+ unit {_address}");
 
@@ -626,53 +589,55 @@ namespace Slevyr.DataAccess.Model
             //{
             //    value = (Single)DateTime.Now.Hour * 2;  //hod. poslouzi jako hodnota casu ok
             //    UnitStatus.CasOk = value;
-            //    UnitStatus.CasOkTime = DateTime.Now;
+            //    UnitStatus.CasOkNgTime = DateTime.Now;
             //    return true;
             //}
 
-            var res = SendCommand(CmdReadHodnotuPoslCykluOk);
+            var res = SendCommand(CmdReadCasPosledniOkNg);
 
           
 
             return res;
         }
 
-        public void DoReadCasOk(byte[] buff)
+        
+        public void DoReadCasOkNg(byte[] buff)
         {
-            var value = Helper.ToSingle(buff, 7);
-            UnitStatus.CasOk = value;
-            UnitStatus.CasOkTime = DateTime.Now;
-            UnitStatus.IsCasOk = true;
+            /*
+             * 
+             * Pro příkaz 0x61 je odpověď = 0x00 0x00 ADR 0x61 LSB MSB LSB MSB 0x00 0x00 0xXX
+                čas posledního OK kusu =(LSB+(256*MSB))/10 , Sekundy na desetiny
+                čas posledního NG kusu =(LSB+(256*MSB))/10 , Sekundy na desetiny
+                Metoda měření cyklu = XX  , 0 = čas posledního cyklu (výchozí); >0 čas od posledního cyklu
+             */
+            var casOk10 = Helper.ToShort(buff[4], buff[5]); 
+            var casNg10 = Helper.ToShort(buff[6], buff[7]); 
+
+            UnitStatus.CasOk = (float) ( casOk10 / 10.0);
+            UnitStatus.CasNg = (float)(casNg10 / 10.0);
+
+            UnitStatus.CasOkNgTime = DateTime.Now;
+            UnitStatus.IsCasOkNg = true;
             Logger.Debug($"unit {_address}");
         }
 
-        public bool SendReadCasNG()
+        public void DoReadCasPoslednihoCyklu(byte[] buff)
         {
-            Logger.Info($"+ unit {_address}");
+            /*
+            Pro příkaz 0x62 je odpověď = 0x00 0x00 ADR 0x62 LSB MSB LSB MSB 0x00 0x00 0xXX
 
-            
+                Průměrný čas OK kusu =(LSB+(256*MSB))/10 , Sekundy na desetiny
+                Průměrný čas NG kusu =(LSB+(256*MSB))/10 , Sekundy na desetiny
+                Metoda výpočtu průměru = XX  , 0 = výpočet vzhledem k délce směny (výchozí); >0 výpočet z uběhlého času směny
+             */
+            var casOk10 = Helper.ToShort(buff[4], buff[5]);
+            var casNg10 = Helper.ToShort(buff[6], buff[7]);
 
+            UnitStatus.AvgCasOk = (float)(casOk10 / 10.0);
+            UnitStatus.AvgCasNg = (float)(casNg10 / 10.0);
 
-            //if (_isMockupMode)
-            //{
-            //    value = (Single)(DateTime.Now.Hour * 1.5);  //hod. poslouzi jako hodnota casu ng
-            //    UnitStatus.CasNg = value;
-            //    UnitStatus.CasNgTime = DateTime.Now;
-            //    return true;
-            //}
-
-            var res = SendCommand(CmdReadHodnotuPoslCykluNg);
-
-
-            return res;
-        }
-
-        public void DoReadCasNg(byte[] buff)
-        {
-            var value = Helper.ToSingle(buff, 7);
-            UnitStatus.CasNg = value;
-            UnitStatus.CasNgTime = DateTime.Now;
-            UnitStatus.IsCasNg = true;
+            UnitStatus.CasOkNgTime = DateTime.Now;
+            UnitStatus.IsCasOkNg = true;
             Logger.Debug($"unit {_address}");
         }
 
@@ -721,6 +686,14 @@ namespace Slevyr.DataAccess.Model
         public void RecalcTabule()
         {
             UnitStatus.RecalcTabule(UnitConfig);
+        }
+
+        public void SetUpdateIsPending(bool val)
+        {
+            lock (_lock)
+            {
+                IsUpdateStatusPending = val;
+            }
         }
     }
 }
