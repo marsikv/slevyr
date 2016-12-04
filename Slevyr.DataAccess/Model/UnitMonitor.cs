@@ -23,7 +23,6 @@ namespace Slevyr.DataAccess.Model
 
         private readonly byte _address;
         private readonly byte[] _inBuff;
-        private byte _cmd;
         private SerialPortWraper _sp;
 
         private bool _isMockupMode;
@@ -34,9 +33,9 @@ namespace Slevyr.DataAccess.Model
 
         public UnitConfig UnitConfig { get; set; }
 
-        public AutoResetEvent WaitEvent96 = new AutoResetEvent(false);
-        public AutoResetEvent WaitEvent97 = new AutoResetEvent(false);
-        public AutoResetEvent WaitEvent98 = new AutoResetEvent(false);
+        //public AutoResetEvent WaitEvent96 = new AutoResetEvent(false);
+        //public AutoResetEvent WaitEvent97 = new AutoResetEvent(false);
+        //public AutoResetEvent WaitEvent98 = new AutoResetEvent(false);
         public AutoResetEvent WaitEventSendConfirm = new AutoResetEvent(false);
 
         private volatile object _lock = new object();
@@ -82,6 +81,9 @@ namespace Slevyr.DataAccess.Model
         public const byte CmdReadRozdilKusu = 106; //vraci rozdil kusu
         public const byte CmdReadDefektivita = 107; //vraci defektivitu
 
+        readonly byte[] _obtainStatusSequence;
+        int _obtainStatusIndex = 0;
+
         #endregion
 
         #region ctor
@@ -91,21 +93,37 @@ namespace Slevyr.DataAccess.Model
             _address = address;
             _inBuff = new byte[BuffLength];
             _inBuff[2] = address;
-            UnitStatus = new UnitStatus { SendError = false};
+            UnitStatus = new UnitStatus { SendError = false };
+
+
+            if (_runConfig.IsReadOkNgTime)
+            {
+                _obtainStatusSequence = new byte[] {
+                     CmdReadStavCitacu,
+                     CmdReadCasPosledniOkNg,
+                };
+            }
+            else
+            {
+                _obtainStatusSequence = new byte[] {
+                    CmdReadStavCitacu
+                };
+            }
+
+
         }
-        
+
         public UnitMonitor(byte address, SerialPortWraper serialPort, RunConfig runConfig) : this(address)
         {
             SerialPort = serialPort;
             _runConfig = runConfig;
         }
 
-
         #endregion
 
         #region properties
 
-        public SerialPortWraper SerialPort
+        private SerialPortWraper SerialPort
         {
             get { return _sp; }
             set { _sp = value; }
@@ -116,9 +134,20 @@ namespace Slevyr.DataAccess.Model
             get { return _address; }
         }
 
-        public DateTime UpdateStatusStartTime { get; private set; }
+        /// <summary>
+        /// cas kdy byl prikaz odeslan (send)
+        /// </summary>
+        public DateTime CurrentCmdStartTime { get; private set; }
 
-        public bool IsUpdateStatusPending { get; set; }
+        /// <summary>
+        /// Probiha zracovani prikazu, tzn. ceka se na receive data parovane na tento cmd
+        /// </summary>
+        public bool IsCommandPending { get; set; }
+
+        /// <summary>
+        /// Kod odeslaneho prikazu
+        /// </summary>
+        public byte CurrentCmd { get; set; }
 
         public CancellationTokenSource UpdateStatusTokenSource { get; private set; }
 
@@ -132,7 +161,6 @@ namespace Slevyr.DataAccess.Model
         {
             Array.Clear(_inBuff, 0, _inBuff.Length);
             _inBuff[2] = _address;
-            _cmd = cmd;
             _inBuff[3] = cmd;
         }
 
@@ -398,140 +426,15 @@ namespace Slevyr.DataAccess.Model
             UnitStatus.VerzeSw3 = buff[9];
         }
 
-        public bool ObtainStatus()
+        public bool SendStatusCommand()
         {
-            TplLogger.Debug($"ObtainStatus [{_address}] - start");
-            SetUpdateIsPending(true);
-            UpdateStatusStartTime = DateTime.Now;
-            UpdateStatusTokenSource?.Cancel();
-            UpdateStatusTokenSource = new CancellationTokenSource();
-            //UpdateStatusTokenSource = new CancellationTokenSource(_runConfig.ReadResultTimeOut * 3);
-
-            CancellationToken token = UpdateStatusTokenSource.Token;
-
-            try
-            {
-                Task<bool> readStavCitacuTask = Task.Factory.StartNew(() =>
-                   {
-                       TplLogger.Debug($"readStavCitacuTask [{_address}] - start");
-                       bool res = false;
-
-                       var sendOk = SendCommand(CmdReadStavCitacu, true) || SendCommand(CmdReadStavCitacu, true) || SendCommand(CmdReadStavCitacu, true);
-                       
-                       token.ThrowIfCancellationRequested();
-
-                       if (sendOk)
-                       {
-                           TplLogger.Debug($"readStavCitacuTask [{_address}] - wait for 96");
-                           var respReceived = WaitEvent96.WaitOne(_runConfig.ReadResultTimeOut);
-                           token.ThrowIfCancellationRequested();
-                           if (!respReceived) TplLogger.Debug($"readStavCitacuTask [{_address}] - timeout");
-                           res = respReceived;
-                       }
-                       else
-                       {
-                           TplLogger.Debug($"readStavCitacuTask [{_address}] - send failed");
-                       }
-
-                       TplLogger.Debug($"readStavCitacuTask [{_address}] - res:{res}");
-                       //var res = sendOk && respReceived && UnitStatus.MachineStatus == MachineStateEnum.Vyroba; //kdyz zjistim ze stroj nebezi nebo ma poruchu tak cteni casu neprovadet, 
-                       //TplLogger.Debug($"readStavCitacuTask - res:{res} machine:{(respReceived ? UnitStatus.MachineStatus.ToString() : "-")}");
-                       return res;
-                   }, token);
-              
-                if (_runConfig.IsReadOkNgTime)
-                {
-                    Task<bool> readCasPoslednihoKusuTask = readStavCitacuTask.ContinueWith<bool>((ant) =>
-                    {
-                        TplLogger.Debug($"readCasPoslednihoKusuTask [{_address}] - start");
-                        if (ant.Status == TaskStatus.Faulted)
-                            throw ant.Exception.InnerException;
-
-                        bool res = false;
-                        if (ant.Result)
-                        {
-                            Thread.Sleep(_runConfig.RelaxTime);
-                            var sendOk = SendCommand(CmdReadCasPosledniOkNg,true) || SendCommand(CmdReadCasPosledniOkNg, true) || SendCommand(CmdReadCasPosledniOkNg, true);
-
-                            token.ThrowIfCancellationRequested();
-
-                            if (sendOk)
-                            {
-                                TplLogger.Debug($"readCasPoslednihoKusuTask [{_address}] - wait for 97");
-                                var respReceived = WaitEvent97.WaitOne(_runConfig.ReadResultTimeOut);
-                                token.ThrowIfCancellationRequested();
-                                if (!respReceived) TplLogger.Debug($"readCasPoslednihoKusuTask [{_address}] - timeout");
-                                res = respReceived;
-                            }
-                            else
-                            {
-                                TplLogger.Debug($"readCasPoslednihoKusuTask [{_address}] - send failed");
-                            }
-                                               
-                        }
-                        TplLogger.Debug($"readCasPoslednihoKusuTask [{_address}] - res: {res}");
-                        return res;
-                    }, token, TaskContinuationOptions.OnlyOnRanToCompletion,TaskScheduler.Current );
-
-                }
-
-                //Continuation obsahujici vypocet tabule tu neni, protoze vypocet probiha v packet background threadu 
-
-                //else
-                //{
-                //    Task<bool> recalcTabuleTask = readStavCitacuTask.ContinueWith<bool>((ant) =>
-                //    {
-                //        bool res = true;
-
-                //        TplLogger.Debug("recalcTabuleTask - start");
-
-                //        if (ant.Status == TaskStatus.Faulted)
-                //            throw ant.Exception.InnerException;
-
-                //        RecalcTabule();
-
-                //        SqlliteDao.AddUnitState(_address, UnitStatus);
-
-                //        IsUpdateStatusPending = false;
-
-                //        TplLogger.Debug($"recalcTabuleTask - res: {res}");
-
-                //        return res;
-                //    }, TaskContinuationOptions.OnlyOnRanToCompletion);
-                //}
-
-            }
-            catch (AggregateException aggEx)
-            {
-                foreach (Exception ex in aggEx.InnerExceptions)
-                {
-                    Logger.Error("Caught exception '{0}'", ex.Message);
-                    SetUpdateIsPending(false);
-                }
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-
-            //try
-            //{                
-            //    readHodnotuCykluNgTask?.Wait();
-            //}
-            //catch (AggregateException e)
-            //{
-            //    foreach (Exception ie in e.InnerExceptions)
-            //        Console.WriteLine("{0}: {1}", ie.GetType().Name,
-            //                          ie.Message);
-            //}
-            //finally
-            //{
-            //    UpdateStatusTokenSource.Dispose();
-            //}
-
-            return true;
+            SetCommandIsPending(true); //na false se nastavuje z jineho vlakna
+            CurrentCmdStartTime = DateTime.Now;
+            CurrentCmd = _obtainStatusSequence[_obtainStatusIndex++];
+            TplLogger.Debug($"command {CurrentCmd} on [{_address}] - start");
+            if (_obtainStatusIndex >= _obtainStatusSequence.Length) _obtainStatusIndex = 0;
+            return SendCommand(CurrentCmd, true) || SendCommand(CurrentCmd, true) || SendCommand(CurrentCmd, true);
         }
-
 
         public bool SendReadStavCitacu()
         {
@@ -688,11 +591,22 @@ namespace Slevyr.DataAccess.Model
             UnitStatus.RecalcTabule(UnitConfig);
         }
 
-        public void SetUpdateIsPending(bool val)
+        public void SetCommandIsPending(bool val)
         {
             lock (_lock)
             {
-                IsUpdateStatusPending = val;
+                IsCommandPending = val;
+            }
+        }
+
+        public void ResponseReceived(byte cmd)
+        {
+            lock (_lock)
+            {
+                if (cmd == CurrentCmd)
+                {
+                    IsCommandPending = false;
+                }
             }
         }
     }
