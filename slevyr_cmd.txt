@@ -1,0 +1,145 @@
+
+Nové pøíkazy v jednotkách pøíklad pro cílovou adresu ADR = 0xAA
+
+
+   CMD		  -------------------------------------PAKET-------------------------------------
+                 |                                                                               |
+                 +--MCMD--      ADR       -----------------------Payload-------------------------+
+                 |       |       |       |                                                       |
+                 |       |       |      CMD       ---------------------Data----------------------+
+                 |       |       |       |       |                                               |
+		1.b	2.b 	3.b	4.b	5.b	6.b	7.b	8.b	9.b	10.b	11.b
+
+>pøíkaz pro nastavení èasovaèù, které spouštìjí stav linky pøerušení výroby a zastavení výroby
+-> 0x02		0x00	0x00	0xAA	0x02	0xRR	0xSS	0xTT	0xUU	0xVV	0xXX	0xYY
+                                                  |       |       |       |       |       |       |
+                                                  |       |       |       |       |       |       +---- rezerva
+                                                  |       |       |       |       |       +------------ rezerva
+                                                  |       |       |       |       +-------------------- rezerva
+                                                  |       |      LSB-----MSB--------------------------- èas v sekundách pro stav linky zastavení výroby = LSB+(256*MSB)
+	                                         LSB-----MSB------------------------------------------- èas v sekundách pro stav linky pøerušení výroby = LSB+(256*MSB)
+<o provedení pøíkazu informuje posláním zpìt na mastera kopii celého vstupního pøíkazu a na LCD zobrazí krátce nastavené èasy (LCD musí byt pøedtím aktivní)
+
+
+>pøíkaz pro nastavení hodnot do èítaèù dobrých a špatných kusù.
+-> 0x04		0x00	0x00	0xAA	0x04	0xRR	0xSS	0xTT	0xUU	0xVV	0xXX	0xYY
+                                                  |       |       |       |       |       |       |
+                                                  |       |       |       |       |       |       +---- rezerva
+                                                  |       |       |       |       |       +------------ rezerva
+                                                  |       |       |       |       +-------------------- rezerva
+                                                  |       |      LSB-----MSB--------------------------- poèet špatných kusù = LSB+(256*MSB)
+	                                         LSB-----MSB------------------------------------------- poèet dobrých kusù = LSB+(256*MSB)
+<o provedení pøíkazu informuje posláním zpìt na mastera kopii celého vstupního pøíkazu.
+
+
+>pøíkaz pro nastavení funkcí
+-> 0x06		0x00	0x00	0xAA	0x06	0xRR	0xSS	0xTT	0xUU	0xVV	0xXX	0xYY
+                                                  |       |       |       |       |       |       |
+                                                  |       |       |       |       |       |       +---- rezerva
+                                                  |       |       |       |       |       +------------ automaticky synchronizovat èas mezi slave a LED panelem, 0 = NE ; <>0 = ANO (default = 0)
+                                                  |       |       |       |       +-------------------- nastavení prodlevy mezi prijmutím a odesláním dat v slave jednotce, 0-255ms (default = 180ms)
+                                                  |       |       |       +---------------------------- nastavení komunikace s LED panelem, 0 = vypnutá ; <>0 = zapnutá (default = 0)
+	                                          |       |       +------------------------------------ nastavení inicializace èítaèù, 0 = nenaèítat poslední stav z LED panelu ; <>0 = naèítat (default = 0)
+                                                  |       +-------------------------------------------- nastavení zpùsobu výpoètu prùmìrného èasu na 1 kus, 0 = vzhledem k ubìhlé èásti smìny ; <>0 = vzhledem k celé smìnì
+                                                  +---------------------------------------------------- nastavení funkce Handshake - vypnout Handshake, 0 = NE ; <>0 = ANO
+<o provedení pøíkazu informuje posláním zpìt na mastera kopii celého vstupního pøíkazu a na LCD zobrazí krátce první 4 nastavené hodnoty (LCD musí byt pøedtím aktivní)
+
+
+>pøíkaz pro nastavení defaultních systemových hodnot, staèí poslat pouze pøíkaz, data nejsou potøeba
+-> 0x37		0x00	0x00	0xAA	0x37	0xRR	0xSS	0xTT	0xUU	0xVV	0xXX	0xYY
+                                                  |       |       |       |       |       |       |
+                                                  |       |       |       |       |       |       +---- rezerva     natavují se tyto parametry: Použití externí eeprom = 0; poèet OK kusù pro zápis = 5; poèet NG kusù pro zápis = 5;
+                                                  |       |       |       |       |       +------------ rezerva                                 Zapnout bootloader = 0; párovaný LED p. = 0; rozlišení tepl.èidel = 12;
+                                                  |       |       |       |       +-------------------- rezerva                                 Provozní jas LED p. = 30; Handshake = 170; Metoda prùmìru = 170; 
+                                                  |       |       |       +---------------------------- rezerva                                 vypnout inicializaci èítaèù z Led p. = 0; vypnout RF LED p. = 0;  
+	                                          |       |       +------------------------------------ rezerva                                 prodleva rx/tx = 200; autosynchro èasu s LED p. = 0
+                                                  |       +-------------------------------------------- rezerva
+                                                  +---------------------------------------------------- rezerva
+<o provedení pøíkazu informuje posláním zpìt na mastera kopii celého vstupního pøíkazu a na LCD zobrazí krátce prùbìh nastavování (LCD musí byt pøedtím aktivní)
+
+
+>pøíkaz pro nastavení defaultních èasových hodnot, staèí poslat pouze pøíkaz, data nejsou potøeba
+-> 0x38		0x00	0x00	0xAA	0x38	0xRR	0xSS	0xTT	0xUU	0xVV	0xXX	0xYY
+                                                  |       |       |       |       |       |       |
+                                                  |       |       |       |       |       |       +---- rezerva     natavují se tyto parametry: èas pro stav stroje pøerušení výroby = 60; èas pro stav zastavení výroby = 180;
+                                                  |       |       |       |       |       +------------ rezerva
+                                                  |       |       |       |       +-------------------- rezerva
+                                                  |       |       |       +---------------------------- rezerva
+	                                          |       |       +------------------------------------ rezerva
+                                                  |       +-------------------------------------------- rezerva
+                                                  +---------------------------------------------------- rezerva
+<o provedení pøíkazu informuje posláním zpìt na mastera kopii celého vstupního pøíkazu a na LCD zobrazí krátce prùbìh nastavování (LCD musí byt pøedtím aktivní)
+
+
+>pøíkaz pro nastavení defaultních zobrazovaných hodnot, staèí poslat pouze pøíkaz, data nejsou potøeba
+-> 0x39		0x00	0x00	0xAA	0x38	0xRR	0xSS	0xTT	0xUU	0xVV	0xXX	0xYY
+                                                  |       |       |       |       |       |       |
+                                                  |       |       |       |       |       |       +---- rezerva     natavují se tyto parametry: zobrazení informaèních hodnot na LCD po 10 sekundách
+                                                  |       |       |       |       |       +------------ rezerva
+                                                  |       |       |       |       +-------------------- rezerva
+                                                  |       |       |       +---------------------------- rezerva
+	                                          |       |       +------------------------------------ rezerva
+                                                  |       +-------------------------------------------- rezerva
+                                                  +---------------------------------------------------- rezerva
+<o provedení pøíkazu informuje posláním zpìt na mastera kopii celého vstupního pøíkazu a na LCD zobrazí krátce prùbìh nastavování (LCD musí byt pøedtím aktivní)
+
+
+>pøíkaz pro vrácení aktuálních výrobních hodnot, staèí poslat pouze pøíkaz, data nejsou potøeba
+-> 0x60		0x00	0x00	0xAA	0x60	0xRR	0xSS	0xTT	0xUU	0xVV	0xXX	0xYY
+                                                  |       |       |       |       |       |       |
+                                                  |       |       |       |       |       |       +---- vrací stav linky
+                                                  |       |       |       |      LSB-----MSB----------- vrací stop time linky = LSB+(256*MSB) v sekundách
+                                                  |       |      LSB-----MSB--------------------------- vrací poèet vyrobených NG kusù = LSB+(256*MSB) v kusech
+                                                 LSB-----MSB------------------------------------------- vrací poèet vyrobených OK kusù = LSB+(256*MSB) v kusech
+<o provedení pøíkazu informuje posláním zpìt na mastera kopii prvních 4 bytù a zbytek požadovaná data
+
+
+>pøíkaz pro vrácení aktuálních výrobních hodnot, staèí poslat pouze pøíkaz, data nejsou potøeba
+-> 0x61		0x00	0x00	0xAA	0x61	0xRR	0xSS	0xTT	0xUU	0xVV	0xXX	0xYY
+                                                  |       |       |       |       |       |       |
+                                                  |       |       |       |       |       |       +---- rezerva
+                                                  |       |       |       |       |       +------------ rezerva
+                                                  |       |       |       |       +-------------------- rezerva
+                                                  |       |      LSB-----MSB--------------------------- vrací èas cyklu výroby NG kusù = LSB+(256*MSB)/10 v sekundách
+                                                 LSB-----MSB------------------------------------------- vrací èas cyklu výroby OK kusù = LSB+(256*MSB)/10 v sekundách
+<o provedení pøíkazu informuje posláním zpìt na mastera kopii prvních 4 bytù a zbytek požadovaná data
+
+
+>pøíkaz pro vrácení aktuálních výrobních hodnot, staèí poslat pouze pøíkaz, data nejsou potøeba
+-> 0x62		0x00	0x00	0xAA	0x62	0xRR	0xSS	0xTT	0xUU	0xVV	0xXX	0xYY
+                                                  |       |       |       |       |       |       |
+                                                  |       |       |       |       |       |       +---- rezerva
+                                                  |       |       |       |       |       +------------ rezerva
+                                                  |       |       |       |       +-------------------- rezerva
+                                                  |       |      LSB-----MSB--------------------------- vrací zvolený prùmìrný èas cyklu výroby NG kusù = LSB+(256*MSB)/10 v sekundách
+                                                 LSB-----MSB------------------------------------------- vrací zvolený prùmìrný èas cyklu výroby OK kusù = LSB+(256*MSB)/10 v sekundách
+<o provedení pøíkazu informuje posláním zpìt na mastera kopii prvních 4 bytù a zbytek požadovaná data
+
+
+pøíkazy 0x63 a 0x64 jsou zrušeny.
+
+
+Ještì jednou zpùsob komunikace vypadá takhle:
+
+1. pošleš pøíkaz
+2. èekáš na vrácenou 0x04 v timeoutu 200ms, pokud nepøijde v timeoutu opakuješ poslání pøíkazu, takto opakovat maximálnì 4x pak zapsat chybu do logu a jít dál.
+3. teï mùžeš øešit další odeslání dalšího pøíkazu. a zároveò oèekávaš vrácené data ze slave jednotky.
+
+
+* Nyní odpovídají jednotky v èase okolo 1 sekundy, ve vzácných pøípadech by mohl být problém a jednotka odpoví v delším èase cca 3 sekund, záleží kolik bude mít nasbíraných žádostí v øadì. 
+  Každá má buffer na 10 paketù, ale nìkteré jednotky ještì obsluhují LED panel. Pøíkazy na jednu adresu jednotky by nemyly jít èastìji jak jednou za cca 600ms, poté dochází k zahlcení bufferu u 
+  jednotek s Led panelem, tento delay by bylo dobré mít pod kontrolou.
+
+* data která obsahují desetiny (napø, defektivita nebo èasy) jsou kvùli úspory místa pøenášena ve wordu. 
+  Tzn, že každý word je pøed RF pøenosem vynásoben 10x a na druhé stranì se musí zase 10x vydìlit.
+
+* Pøi nastavování parametrù jako je èas a cíle smìn, odpovídá na pøíkaz Led panel prostøednictvím své adresy svého RF modulu až poté co provedl poslaný pøíkaz.
+  komunikace pak vypadá takhle, master pošle pøíkaz na slave, že má nìco zmìnit v LED panelu, slave po pøijetí pøíkazu vrátí 4 na master a modifikuje pøíkaz pro Led panel, potom ho pøepošle na led panel a 
+  led panel èeká na vhodnou chvíli, aby mohl provést pøíkaz, až ho provede, tak posílá na master jednotku kopii pøíkazu, který šel na slave jednotku jako potvrzení o tom, že zmìna probìhla úspìšnì.
+
+* po instalaci "mezistupnì" bude vypadat vše stejnì jen budou data dostupná rychleji a nebude docházet ke ztrácení paketù, protože už budou uložena v tom "mezistupni". Je to kvùli tomu aby se dal systém provozovat 
+  i bez mezistupnì v ménì komfortní variantì systému.
+
+* mezistupeò je proto, protože musím integrovat rozhlas a hlášení pøestávek do našeho systému a protože RF moduly, které øeší RF komunikaci, nejsou schopny v zatížení non stop provozu a je tøeba nadøízený systém pro jejich kontrolu.
+
+* Bylo by dobré zakombinovat vyètení pøíkazù, které vrátí výsledek z konce pøíslušné smìny. 0x6C = ranní, 0x6D = odpolední, 0x6E = noèní. Aktuální hodnoty lze èíst až po první sekundì zaèátku následující smìny.
