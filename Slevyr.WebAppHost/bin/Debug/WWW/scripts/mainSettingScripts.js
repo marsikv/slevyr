@@ -1,4 +1,5 @@
-var uri = 'api/slevyr';
+var uri = 'api/slevyr',
+    $notification = $('#notification');
 
     $(document).ready(function () {
         readRunConfig();
@@ -17,10 +18,13 @@ var uri = 'api/slevyr';
                 $('#timerPeriod').val(data.RefreshTimerPeriod);
                 $('#relaxTime').val(data.RelaxTime);
                 $('#portReadTimeout').val(data.PortReadTimeout);
+
+                window.slVyr.addNotification('success', 'Successufully Load Configuration.');
             })
             .fail(function (jqXHR, textStatus, err) {
-                $('#error').text('Error: ' + err);
-                alert("getConfig - error");
+                window.slVyr.addNotification('error', 'Load Configuration Error: ' + err);
+                //$('#error').text('Error: ' + err);
+                //alert("getConfig - error");
             });
     }
 
@@ -38,24 +42,26 @@ var uri = 'api/slevyr';
                 //PortReadTimeout: $('#portReadTimeout').val(),
             })
             .done(function (data) {
-                $('#error').text('');
+                window.slVyr.addNotification('success', 'Set Configuration Successufully Done.');
             })
             .fail(function (jqXHR, textStatus, err) {
-                $('#error').text('Error: ' + err);
-                alert("setConfig - error");
-            }); 
+                window.slVyr.addNotification('error', 'Set Configuration Error: ' + err);
+                // $('#error').text('Error: ' + err);
+                // alert("setConfig - error");
+            });
     }
 
     function nastavAktualniCas() {
-        alert('nastavAktualniCas pro vsechny jednotky');
+        //alert('nastavAktualniCas pro vsechny jednotky');
         $.getJSON(uri + '/NastavAktualniCasAllUnits',
             {
             })
             .done(function (data) {
-                $('#stav').text('');
+                window.slVyr.addNotification('success', 'Successufully Synchronized.');
             })
             .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                alert("'); - error");
+                window.slVyr.addNotification('error', 'Synchronization Error: ' + err);
+                // $('#stav').text('Error: ' + err);
+                // alert("'); - error");
             });
     }

@@ -3,11 +3,11 @@ var isTimerEnabled = false;
 var refreshTimer;
 var addr = null;
 
+var $notification = $('#notification');
+
     $(document).ready(function () {
         readRunConfig();
 
-        //readUnitConfig();
-       
         $("#RefreshStatus").click(refreshStatus);
 
         $("#GetStatus").click(getStatus);
@@ -19,7 +19,6 @@ var addr = null;
     });
 
     function readRunConfig() {
-        //alert('readConfig')
         $.getJSON(uri + '/getConfig?')
             .done(function (data) {
                 isTimerEnabled = data.IsRefreshTimerOn;
@@ -27,7 +26,7 @@ var addr = null;
 
                 if (isTimerEnabled && (timerRefreshPeriod > 0)) {
                     //alert('set timer to ' + timerRefreshPeriod);
-                    if (refreshTimer) window.clearInterval(refreshTimer);                    
+                    if (refreshTimer) window.clearInterval(refreshTimer);
                     refreshTimer = window.setInterval(getStatus, timerRefreshPeriod);
                 }
                 else {
@@ -48,7 +47,7 @@ var addr = null;
 
                 if (data.IsReadOkNgTime) {
                     $('#casOkValue').show();
-                    $('#casOkLabel').show();                    
+                    $('#casOkLabel').show();
                     $('#casNgValue').show();
                     $('#casNgLabel').show();
                 } else {
@@ -68,12 +67,12 @@ var addr = null;
 
                 onAddrIdChange();
 
-                $('#stav').text('');
+                $notification.prepend('<div class="notification notification-success">Sucessfully read config.</div>');
+                //$('#stav').text('');
 
             })
             .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                alert("getConfig - error");
+                $notification.prepend('<div class="notification notification-error">ReadRunConfig - error: ' + err + '</div>');
             });
     }
 
@@ -83,13 +82,12 @@ var addr = null;
         $.getJSON(uri + '/GetUnitConfig?', {addr: addr})
             .done(function (data) {
                 $('#LinkaName').text(data.UnitName);
-                $('#stav').text('');
+                $notification.prepend('<div class="notification notification-success">Sucessfully read unit config.</div>');
             })
             .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                alert("loadParams - error");
+                $notification.prepend('<div class="notification notification-error">LoadParams - error: ' + err + '</div>');
             });
-    }   
+    }
 
     function onAddrIdChange() {
         addr = $("#AddrIdDropDown option:selected").val();
@@ -98,33 +96,27 @@ var addr = null;
     }
 
     function clearStatus() {
-        $('#stav').text('pracuji..');
+        $('#stav').text('...');
     }
 
     function refreshStatus() {
         clearStatus();
-        //alert('status, Addr=' + addr);
         $.getJSON(uri + '/refreshStatus?Addr=' + addr)
             .done(function (data) {
                 updateTableElements(data);
             })
             .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                //alert("refreshStatus - error");
+                $notification.prepend('<div class="notification notification-error">RefreshStatus - error: ' + err + '</div>');
             });
     }
 
     function getStatus() {
-        //clearStatus();
-        //alert('status, Addr=' + addr);
         $.getJSON(uri + '/getStatus?Addr=' + addr)
             .done(function (data) {
-                //alert('status,okNumValue =' + data.Ok);
                 updateTableElements(data);
             })
             .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                //alert("getStatus - error");
+                $notification.prepend('<div class="notification notification-error">GetStatus - error: ' + err + '</div>');
             });
     }
 
@@ -133,15 +125,14 @@ var addr = null;
             $('#okNumValue').text(data.Ok);
             $('#ngNumValue').text(data.Ng);
             $('#okNgRefreshTime').text(data.OkNgTimeTxt);
-            $('#chybaJednotky').text('');
         } else {
-            $('#chybaJednotky').text('Chyba jednotky - ' + data.ErrorTimeTxt);
+            $notification.prepend('<div class="notification notification-error">Chyba jednotky - ' + data.ErrorTimeTxt + '</div>');
         }
 
         if (data.IsPrestavkaTabule) {
-            $('#isPrestavkaTabule').show();
+            $('#isPrestavkaTabule').addClass('linka--prestavka-visible');
         } else {
-            $('#isPrestavkaTabule').hide();
+            $('#isPrestavkaTabule').removeClass('linka--prestavka-visible');
         }
 
         $('#casOkValue').text(Number((data.CasOk).toFixed(1)) + 's');
@@ -150,12 +141,12 @@ var addr = null;
 
         $('#cilTabule').text(data.CilKusuTabule);
         $('#rozdilTabule').text(data.RozdilTabuleTxt);
-        $('#cilDefTabule').text(data.CilDefectTabule + "%");
-        $('#aktualniDefTabule').text(data.AktualDefectTabuleTxt + "%");
+        $('#cilDefTabule').text(data.CilDefectTabule);
+        $('#aktualniDefTabule').text(data.AktualDefectTabuleTxt);
 
         //$('#stav').text('');
         if (data.MachineStatus == 0)
-            $('#stav').text('');
+            $('#stav').text('ok');
         else
             $('#stav').text(data.MachineStatusTxt);
     }

@@ -40,6 +40,10 @@ namespace SledovaniVyroby.SerialPortWraper
             RtsEnable = false;
             Handshake = Handshake.None;
             ReceivedBytesThreshold = cfg.ReceivedBytesThreshold;
+            PortName = cfg.Port;
+            BaudRate = cfg.BaudRate;
+            DataBits = cfg.DataBits;
+            StopBits = cfg.StopBits;
         }
 
 

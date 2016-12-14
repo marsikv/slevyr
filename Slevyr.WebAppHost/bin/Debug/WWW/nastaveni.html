@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nastavení sledování výroby</title>
+
+    <link rel="stylesheet" href="styles/main.css">
+  </head>
+<body>
+
+
+    <div id="menuOpener" class="menuSwitcher menuSwitcher-open"></div>
+
+    <nav id="menu" class="menu">
+        <div class="menu--header">
+            <h4>Sledování výroby</h4>
+        </div>
+        <ul class="menu--list">
+            <a href="linka-tabule.html"><li class="menu--item menu--item-tabule">Tabule</li></a>
+            <a href="linka-params.html"><li class="menu--item menu--item-params">Parametry</li></a>
+            <a href="nastaveni.html"><li class="menu--item menu--item-settings menu--item-active">Nastavení</li></a>
+        </ul>
+        <div id="menuCloser" class="menuSwitcher menuSwitcher-close"></div>
+    </nav>
+
+    <main class="main">
+        <h1>Nastavení</h1>
+
+        <section class="params">
+            <!-- <h3>Nastavení</h3> -->
+            <div class="params--section">
+                <div class="params--item params--item-1">
+                    <!-- <div class="label"></div> -->
+                    <input id="isTimerOn" type="checkbox">
+                    <label for="isTimerOn" class="checkbox">Refresh timer</label>
+                </div>
+
+                <div class="params--item params--item-1">
+                    <div class="label">Refresh timer period [ms]</div>
+                    <input id="timerPeriod" class="input" type="number" step="500" value="1000" />
+                </div>
+
+                <div class="params--item params--item-1">
+                    <!-- <div class="label"></div> -->
+                    <input id="isReadOkNgTime" type="checkbox">
+                    <label for="isReadOkNgTime" class="checkbox">Načítat poslední čas OK a NG</label>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <aside id="notification">
+        <!-- <div id="stav" class="notification notification-error">Error: Xhr</div> -->
+    </aside>
+
+    <div class="action">
+        <button class="btn btn-fill" type="button" id="Apply">Uložit</button>
+        <button class="btn btn-text" type="button" id="SyncTime">Synchronizovat čas</button>
+    </div>
+
+    <script src="scripts\jquery.min.js"></script>
+    <script src="scripts\main.js"></script>
+    <script src="scripts\mainSettingScripts.js"></script>
+
+</body>
+</html>
+

@@ -1,0 +1,119 @@
+﻿<!doctype html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sledování výroby</title>
+
+    <link rel="stylesheet" href="styles/main.css">
+  </head>
+<body>
+
+    <div id="menuOpener" class="menuSwitcher menuSwitcher-open"></div>
+
+    <nav id="menu" class="menu">
+            <div class="menu--header">
+                <h4>Sledování výroby</h4>
+            </div>
+            <ul class="menu--list">
+                <a href="linka-tabule.html"><li class="menu--item menu--item-tabule menu--item-active">Tabule</li></a>
+                <a href="linka-params.html"><li class="menu--item menu--item-params">Parametry</li></a>
+                <a href="nastaveni.html"><li class="menu--item menu--item-settings">Nastavení</li></a>
+            </ul>
+        <div id="menuCloser" class="menuSwitcher menuSwitcher-close"></div>
+    </nav>
+
+    <main class="main">
+        <section class="linka">
+            <div class="linka--info">
+                <div class="label">Linka</div>
+                <h1>
+                    <span id="LinkaName">Linka montáž ventilů - EBS</span>
+                    <select id="AddrIdDropDown" class="">
+                    </select>
+                </h1>
+            </div>
+
+            <div class="linka--status">
+                <div class="label">Stav</div>
+                <h1>
+                    <span id="stav">OK</span>
+                </h1>
+            </div>
+
+            <div id="isPrestavkaTabule" class="linka--prestavka">přestávka</div>
+
+            <div class="linka--nums">
+                <div class="linka--num">
+                    <div class="label">Cíl kusů</div>
+                    <div class="num">
+                        <span id="cilTabule">0</span>
+                    </div>
+                </div>
+                <div class="linka--num">
+                    <div class="label">Rozdíl</div>
+                    <div class="num">
+                        <span id="rozdilTabule">0</span>
+                    </div>
+                </div>
+                <div class="linka--num">
+                    <div class="label">Cíl defektvita</div>
+                    <div class="num">
+                        <span id="cilDefTabule">0</span> %
+                    </div>
+                </div>
+                <div class="linka--num">
+                    <div class="label">Aktuální defektvita</div>
+                    <div class="num">
+                        <span id="aktualniDefTabule" >0</span> %
+                    </div>
+                </div>
+            </div>
+
+            <div class="linka--data">
+                <table cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td>Aktuální počet dobrých kusů</td>
+                        <td id="okNumValue">0</td>
+                    </tr>
+                    <tr >
+                        <td>Aktuální počet špatných kusů</td>
+                        <td id="ngNumValue">0</td>
+                    </tr>
+                    <tr>
+                        <td id="casOkLabel">Čas cyklu posledního OK kusu</td>
+                        <td id="casOkValue">0 s</td>
+                    </tr>
+                    <tr>
+                        <td id="casNgLabel">Čas cyklu posledního NG kusu</td>
+                        <td id="casNgValue">0 s</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td id="okNgRefreshTime">??? s</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- <div class="linka--action">
+                <button class="btn btn-fill" type="button" id="RefreshStatus" />Refresh</button>
+                <button class="btn btn-fill" type="button" id="GetStatus"/>Get</button>
+                <span id="isTimerOn">[timer on]</span>
+                <span id="isMockupMode"></span>
+                <span id="checkTime">12:00 AM</span>
+            </div> -->
+        </section>
+
+    </main>
+
+    <aside id="notification" class="aside-bottom"></aside>
+
+    <script src="scripts\jquery.min.js"></script>
+    <script src="scripts\main.js"></script>
+    <script src="scripts\linkaTabuleScripts.js"></script>
+
+</body>
+</html>
+

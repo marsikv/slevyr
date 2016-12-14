@@ -88,8 +88,12 @@ namespace Slevyr.DataAccess.Model
 
         #region ctor
 
-        public UnitMonitor(byte address)
+      
+        public UnitMonitor(byte address, SerialPortWraper serialPort, RunConfig runConfig) 
         {
+            SerialPort = serialPort;
+            _runConfig = runConfig;
+
             _address = address;
             _inBuff = new byte[BuffLength];
             _inBuff[2] = address;
@@ -109,14 +113,6 @@ namespace Slevyr.DataAccess.Model
                     CmdReadStavCitacu
                 };
             }
-
-
-        }
-
-        public UnitMonitor(byte address, SerialPortWraper serialPort, RunConfig runConfig) : this(address)
-        {
-            SerialPort = serialPort;
-            _runConfig = runConfig;
         }
 
         #endregion
@@ -156,10 +152,14 @@ namespace Slevyr.DataAccess.Model
 
         #region private methods
 
-        //pripravime in buffer na predani příkazu
-        private void PrepareCommand(byte cmd)
+        private void ClearSendBuffer()
         {
             Array.Clear(_inBuff, 0, _inBuff.Length);
+        }
+
+        //pripravime in buffer na predani příkazu
+        private void PrepareCommand(byte cmd)
+        {            
             _inBuff[2] = _address;
             _inBuff[3] = cmd;
         }
@@ -257,6 +257,8 @@ namespace Slevyr.DataAccess.Model
         {
             Logger.Info($"+ unit {_address}");
 
+            ClearSendBuffer();
+
             _inBuff[4] = (byte)varianta;
 
             UnitConfig.TypSmennosti = varianta.ToString();
@@ -273,6 +275,7 @@ namespace Slevyr.DataAccess.Model
         {
             Logger.Info($"+ unit {_address}");
 
+            ClearSendBuffer();
             _inBuff[4] = (byte)varianta;
 
             UnitConfig.Cil1Smeny = cil1;
@@ -291,7 +294,7 @@ namespace Slevyr.DataAccess.Model
         public bool SetDefektivita(char varianta, short def1, short def2, short def3)
         {
             Logger.Info($"+ unit {_address}");
-
+            ClearSendBuffer();
             _inBuff[4] = (byte)varianta;
 
             UnitConfig.Def1Smeny = def1;
@@ -310,7 +313,7 @@ namespace Slevyr.DataAccess.Model
         public bool SetPrestavky(char varianta, TimeSpan prest1, TimeSpan prest2, TimeSpan prest3)
         {
             Logger.Info($"+ unit {_address}");
-
+            ClearSendBuffer();
             _inBuff[4] = (byte)varianta;
 
             UnitConfig.Prestavka1Smeny = prest1.ToString();  //TODO ukladat TimeSpan, ne string
@@ -332,7 +335,7 @@ namespace Slevyr.DataAccess.Model
         public bool SetCas(DateTime dt)
         {
             Logger.Info($"+ unit {_address}");
-
+            ClearSendBuffer();
             _inBuff[4] = (byte)dt.Hour;
             _inBuff[5] = (byte)dt.Minute;
             _inBuff[6] = (byte)dt.Second;
@@ -349,7 +352,7 @@ namespace Slevyr.DataAccess.Model
         public bool SetJasLcd(byte jas)
         {
             Logger.Info($"+ unit {_address}");
-
+            ClearSendBuffer();
             _inBuff[4] = jas;
 
             return SendCommand(CmdSetJasLed);
@@ -358,7 +361,7 @@ namespace Slevyr.DataAccess.Model
         public bool SetCitace(short ok, short ng)
         {
             Logger.Info($"+ unit {_address}");
-
+            ClearSendBuffer();
             Helper.FromShort(ok, out _inBuff[4], out _inBuff[5]);
             Helper.FromShort(ng, out _inBuff[6], out _inBuff[7]);
 
@@ -368,14 +371,14 @@ namespace Slevyr.DataAccess.Model
         public bool Reset()
         {
             Logger.Info($"+ unit {_address}");
-
+            ClearSendBuffer();
             return SendCommand(CmdResetJednotky);
         }
 
         public bool Set6f()
         {
             Logger.Info($"+ unit {_address}");
-
+            ClearSendBuffer();
             return SendCommand(0x6f);
       
         }
@@ -383,7 +386,7 @@ namespace Slevyr.DataAccess.Model
         public bool SetHandshake(byte handshake, byte prumTyp)
         {
             Logger.Info($"+ unit {_address}");
-
+            ClearSendBuffer();
             _inBuff[4] = handshake;
             _inBuff[5] = prumTyp;
 
@@ -395,7 +398,7 @@ namespace Slevyr.DataAccess.Model
         public bool SetStatus(byte writeProtectEEprom, byte minOK, byte minNG, byte bootloaderOn, byte parovanyLED, byte rozliseniCidel, byte pracovniJasLed)
         {
             Logger.Info($"+ unit {_address}");
-
+            ClearSendBuffer();
             _inBuff[4] = writeProtectEEprom;
             _inBuff[5] = minOK;
             _inBuff[6] = minNG;
@@ -410,7 +413,7 @@ namespace Slevyr.DataAccess.Model
         public bool SendReadZaklNastaveni()
         {
             Logger.Info($"+ unit {_address}");
-
+            ClearSendBuffer();
             var res = SendCommand(CmdReadZakSysNast);
 
             return res;
@@ -429,11 +432,19 @@ namespace Slevyr.DataAccess.Model
         public bool SendStatusCommand()
         {
             SetCommandIsPending(true); //na false se nastavuje z jineho vlakna
+            ClearSendBuffer();
             CurrentCmdStartTime = DateTime.Now;
             CurrentCmd = _obtainStatusSequence[_obtainStatusIndex++];
-            TplLogger.Debug($"command {CurrentCmd} on [{_address}] - start");
+            TplLogger.Debug($"send command {CurrentCmd} on [{_address}] - start");
             if (_obtainStatusIndex >= _obtainStatusSequence.Length) _obtainStatusIndex = 0;
-            return SendCommand(CurrentCmd, true) || SendCommand(CurrentCmd, true) || SendCommand(CurrentCmd, true);
+            var res = SendCommand(CurrentCmd, true) || SendCommand(CurrentCmd, true) || SendCommand(CurrentCmd, true);
+            TplLogger.Debug($"send command {CurrentCmd} on [{_address}] - {res}");
+            if (!res)
+            {
+                ErrorsLogger.Error($"send command { CurrentCmd} on[{ _address}] - failed 3 times");
+                SetCommandIsPending(false);
+            }
+            return res;
         }
 
         public bool SendReadStavCitacu()
@@ -449,7 +460,7 @@ namespace Slevyr.DataAccess.Model
             //    UnitStatus.OkNgTime = DateTime.Now;
             //    return true;
             //}
-
+            ClearSendBuffer();
             var res = SendCommand(CmdReadStavCitacu);
 
             return res;
@@ -486,7 +497,7 @@ namespace Slevyr.DataAccess.Model
         {
             Logger.Info($"+ unit {_address}");
 
-          
+            ClearSendBuffer();
 
             //if (_isMockupMode)
             //{
@@ -497,8 +508,6 @@ namespace Slevyr.DataAccess.Model
             //}
 
             var res = SendCommand(CmdReadCasPosledniOkNg);
-
-          
 
             return res;
         }
@@ -547,7 +556,7 @@ namespace Slevyr.DataAccess.Model
         public bool SendReadRozdilKusu()
         {
             Logger.Info($"+ unit {_address}");
-
+            ClearSendBuffer();
             var res = SendCommand(CmdReadRozdilKusu);
 
             return res;
@@ -564,7 +573,7 @@ namespace Slevyr.DataAccess.Model
         public bool ReadDefektivita()
         {
             Logger.Info($"+ unit {_address}");
-
+            ClearSendBuffer();
             var res = SendCommand(CmdReadDefektivita);
 
             return res;

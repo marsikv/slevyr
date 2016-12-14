@@ -15,6 +15,9 @@ namespace Slevyr.DataAccess.Model
         //public int PortReadTimeout;
         public string DataFilePath;
         public IEnumerable<int> UnitAddrs;
-        public bool IsWriteEmptyToLog;         //pokud je true zapisuje do logu jednotek radek s prazdnymi hodnotami pokud dojde k chybe pri vycitani jednotky
+        public bool IsWriteEmptyToLog;       //pokud je true zapisuje do logu jednotek radek s prazdnymi hodnotami pokud dojde k chybe pri vycitani jednotky
+
+        public int MinCmdDelay = 600;     //příkazy na jednu adresu jednotky by nemyly jít častěji jak jednou za cca 600ms, poté dochází k zahlcení bufferu u 
+                                             //jednotek s Led panelem, tento delay by bylo dobré mít pod kontrolou.
     }
 }

@@ -1,0 +1,84 @@
+body
+{
+   background: #eee;
+   color: #3d3d3d;
+   margin: 0px;
+   font-family: 'Open Sans';
+}
+
+
+p {
+   background: #ed1c24;
+   border: 2px solid #7f0011;
+   padding: 5px 5px;
+   margin: 2px;
+   display: table;
+   color: #ededed;
+}
+
+div
+{
+   background: #0080C0;
+   border: 2px solid #004080;
+   padding: 5px 5px;
+   margin: 5px;
+   display: table;
+   color: #ededed;
+}
+
+h2 {
+       font-size: 24px;
+       margin: 4px;
+       padding: 0px 0px;
+       text-align: center;
+       text-shadow: 3px 3px 7px #666666;
+}
+
+input[type=button] {
+    padding:2px; 
+    border:2px solid lightgray; 
+    margin-top: 0px;
+    margin-right: 5px;
+    margin-bottom: 0px;
+    margin-left: 5px;
+    border-radius: 5px;
+}
+
+input[type=button]:focus {
+    border-color:#333;
+}
+
+.highColor
+{
+   color     : yellow;
+}
+
+.tabule {
+   background: black;
+   border: 0px none;
+   padding: 5px 5px;
+   margin: 5px;
+   color: #ededed;
+   font-size: 24px;
+}
+
+.stavOkNg {
+   background: tomato;
+   border: 2px solid;
+   padding: 5px 5px;
+   margin: 5px;
+   color: #ededed;
+}
+
+.isPrestavka {
+   color     : yellow;
+   text-align: center;
+   font-size: 12px;
+}
+
+#obsah       { position: absolute; width: 500px; top: 120px; left: 150px; }
+/*#patka       { width: 400px;  background: #ed1c24; border: 2px solid #7f0011;}*/
+#levyDolni   { position: absolute; width: 400px; left: 0px; }
+#pravyDolni  { position: absolute; width: 400px; left: 220px; }
+#patka       { width: 400px; }
+

@@ -47,7 +47,7 @@ namespace Slevyr.WebAppHost
             {
                 if (System.Diagnostics.Debugger.IsAttached)
                 {
-                    
+                    Console.WriteLine("start");
                 }
                 else if (args[0].Equals("-start"))
                 {
@@ -77,8 +77,9 @@ namespace Slevyr.WebAppHost
             }
             else
             {
-                Console.WriteLine("\nPlatné parametry jsou:\n-start\n-service\n-help");
-                return;
+                Console.WriteLine("start");
+                //Console.WriteLine("\nPlatné parametry jsou:\n-start\n-service\n-help");
+                //return;
                 /*
                 ServiceBase[] ServicesToRun;
                 ServicesToRun = new ServiceBase[]
@@ -144,7 +145,7 @@ namespace Slevyr.WebAppHost
 
             Console.WriteLine("Stiskem klávesy se služba ukončí !\n");
 
-            Process.Start(baseAddress + "menu.html");
+            Process.Start(baseAddress + "linka-tabule.html");
 
             Console.ReadLine();
 

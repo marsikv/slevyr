@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO.Ports;
 using System.Threading;
 using NLog;
@@ -461,6 +462,7 @@ namespace Slevyr.DataAccess.Services
         private static void SendBwDoWork(object sender, DoWorkEventArgs e)
         {
             OpenPort();
+            Stopwatch stopwatch = null;
 
             while (true)
             {
@@ -478,6 +480,23 @@ namespace Slevyr.DataAccess.Services
                         Thread.Sleep(_runConfig.RelaxTime);
                         Logger.Debug($"command invoke res:{unitCommand.Result}");
                     }
+
+                    if (stopwatch == null)
+                    {
+                        stopwatch = new Stopwatch();
+                    }
+                    else
+                    {
+                        long remainingDelay = _runConfig.MinCmdDelay - stopwatch.ElapsedMilliseconds;
+                        if (remainingDelay > 0)
+                        {
+                            Logger.Debug($"+remaining min. delay: {remainingDelay}");
+                            Thread.Sleep((int)remainingDelay);  //zbyva do min. pauzy pred odeslanim prikazu jednotku
+                        }
+                        stopwatch.Reset();
+                    }
+
+                    stopwatch.Start(); //merim cas za ktery se provede odeslani pozadavku na vsechny jednotky
 
                     //provedu odeslani pozadavku na vsechny jednotky v cyklu
                     foreach (var addr in UnitAddresses)
@@ -497,21 +516,24 @@ namespace Slevyr.DataAccess.Services
                             if ((DateTime.Now - _unitDictionary[addr].CurrentCmdStartTime).TotalMilliseconds > _runConfig.ReadResultTimeOut) 
                             {
                                 TplLogger.Error($"Command timeout for [{addr}] - try cancel");
-                                _unitDictionary[addr].UpdateStatusTokenSource.Cancel();
+                                _unitDictionary[addr].UpdateStatusTokenSource?.Cancel();
                                 _unitDictionary[addr].SetCommandIsPending(false);
+                                _unitDictionary[addr].UnitStatus.MachineStatus = MachineStateEnum.Neznamy;
                             }
                         }
                         else
                         {
                             //posila požadavek na další příkaz který je součástí zjištění stavu jednotky
                             //čeká se na dokončení třech možných pokusů
-                            //nastaví IsCommandPending a čeká na doručení výsleku pro currentCmd 
+                            //Nastaví pro jednotku IsCommandPending  
                             res = _unitDictionary[addr].SendStatusCommand();
                         }
 
                         Logger.Debug($"+send worker sleep: {_runConfig.WorkerSleepPeriod}, res:{res}");
                         Thread.Sleep(_runConfig.WorkerSleepPeriod);  //pauza pred odeslanim prikazu na dalsi jednotku - parametr
                     }
+
+                    stopwatch.Stop();
                 }
                 catch (Exception ex)
                 {

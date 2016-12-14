@@ -38,6 +38,7 @@ namespace Slevyr.WebAppHost
                 RunConfig.RelaxTime = int.Parse(ConfigurationManager.AppSettings["RelaxTime"]);
                 RunConfig.ReadResultTimeOut = int.Parse(ConfigurationManager.AppSettings["ReadResultTimeOut"]);
                 RunConfig.SendCommandTimeOut = int.Parse(ConfigurationManager.AppSettings["SendCommandTimeOut"]);
+                RunConfig.MinCmdDelay = int.Parse(ConfigurationManager.AppSettings["MinCmdDelay"]);
 
                 RunConfig.UnitAddrs = ConfigurationManager.AppSettings["UnitAddrs"].Split(';').Select(int.Parse);
 

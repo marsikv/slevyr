@@ -7,7 +7,7 @@ $(document).ready(function () {
         readRunConfig();
 
         $("#AddrIdDropDown").change(onAddrIdChange);
-       
+
         $("#SaveParams").click(saveUnitConfig);
         $("#LoadParams").click(readUnitConfig);
 
@@ -43,13 +43,13 @@ $(document).ready(function () {
                 });
 
                 onAddrIdChange();
-
             })
             .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                alert("refreshStatus - error");
+                window.slVyr.addNotification('error', 'RefreshStatus - error: ' + err);
+                // $('#stav').text('Error: ' + err);
+                // alert("refreshStatus - error");
             });
-    }    
+    }
 
     function onAddrIdChange() {
         addr = $("#AddrIdDropDown option:selected").val();
@@ -67,7 +67,7 @@ $(document).ready(function () {
 
                 $('#TypSmennosti').val(data.TypSmennosti);
                 $('#LinkaName').text(data.UnitName);
-                $('#LinkaNameEdit').val(data.UnitName);                
+                $('#LinkaNameEdit').val(data.UnitName);
                 $('#Cil1Smeny').val(data.Cil1Smeny);
                 $('#Cil2Smeny').val(data.Cil2Smeny);
                 $('#Cil3Smeny').val(data.Cil3Smeny);
@@ -94,10 +94,12 @@ $(document).ready(function () {
                 $('#PracovniJasLed').val(data.PracovniJasLed);
                 $('#AddrParovanyLed').val(data.ParovanyLED);
 
+                window.slVyr.addNotification('success', 'ReadUnitConfig Successufully done.');
             })
             .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                alert("readUnitConfig - error");
+                window.slVyr.addNotification('error', 'ReadUnitConfig - error: ' + err);
+                // $('#stav').text('Error: ' + err);
+                // alert("readUnitConfig - error");
             });
     }
 
@@ -140,9 +142,10 @@ $(document).ready(function () {
             console.log('res', res);
             // Do something with the result :)
         }).fail(function (jqXHR, textStatus, err) {
-            $('#stav').text('Error: ' + err);
-            alert("saveUnitConfig - error");
-        });       
+            window.slVyr.addNotification('error', 'SaveUnitConfig - error: ' + err);
+            // $('#stav').text('Error: ' + err);
+            // alert("saveUnitConfig - error");
+        });
     }
 
     function nastavCileSmen() {
@@ -160,11 +163,13 @@ $(document).ready(function () {
                 cil3: cil3Smeny
             })
             .done(function (data) {
-                $('#stav').text('');
+                window.slVyr.addNotification('success', 'Sucessfully set.');
+                // $('#stav').text('');
             })
             .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                alert("nastavCileSmen - error");
+                window.slVyr.addNotification('error', 'NastavCileSmen - error: ' + err);
+                // $('#stav').text('Error: ' + err);
+                // alert("nastavCileSmen - error");
             });
     }
 
@@ -183,11 +188,13 @@ $(document).ready(function () {
                 prest3: p3Smeny
             })
             .done(function (data) {
-                $('#stav').text('');
+                window.slVyr.addNotification('success', 'Sucessfully set.');
+                // $('#stav').text('');
             })
             .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                alert("nastavPrestavkySmen - error");
+                window.slVyr.addNotification('error', 'NastavCileSmen - error: ' + err);
+                // $('#stav').text('Error: ' + err);
+                // alert("nastavPrestavkySmen - error");
             });
     }
 
@@ -202,11 +209,13 @@ $(document).ready(function () {
                 ng: ng
             })
             .done(function (data) {
-                $('#stav').text('');
+                window.slVyr.addNotification('success', 'Sucessfully set.');
+                // $('#stav').text('');
             })
             .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                alert("nastavCitaceOkNg - error");
+                window.slVyr.addNotification('error', 'NastavCitaceOkNg - error: ' + err);
+                // $('#stav').text('Error: ' + err);
+                // alert("nastavCitaceOkNg - error");
             });
     }
 
@@ -225,11 +234,13 @@ $(document).ready(function () {
                 def3: def3Smeny
             })
             .done(function (data) {
-                $('#stav').text('');
+                window.slVyr.addNotification('success', 'Sucessfully set.');
+                // $('#stav').text('');
             })
             .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                alert("nastavDefektivitu - error");
+                window.slVyr.addNotification('error', 'NastavDefektivitu - error: ' + err);
+                // $('#stav').text('Error: ' + err);
+                // alert("nastavDefektivitu - error");
             });
     }
 
@@ -253,11 +264,13 @@ $(document).ready(function () {
                 pracovniJasLed: pracovniJasLed
             })
             .done(function (data) {
-                $('#stav').text('');
+                window.slVyr.addNotification('success', 'Sucessfully set.');
+                // $('#stav').text('');
             })
             .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                alert("nastavJednotku - error");
+                window.slVyr.addNotification('error', 'NastavJednotku - error: ' + err);
+                // $('#stav').text('Error: ' + err);
+                // alert("nastavJednotku - error");
             });
     }
 
@@ -268,44 +281,18 @@ $(document).ready(function () {
                 addr: addr
             })
             .done(function (data) {
-                $('#stav').text('');
+                window.slVyr.addNotification('success', 'Sucessfully set.');
+                // $('#stav').text('');
             })
             .fail(function (jqXHR, textStatus, err) {
-                $('#stav').text('Error: ' + err);
-                alert("'); - error");
+                window.slVyr.addNotification('error', 'NastavAktualniCas - error: ' + err);
+                // $('#stav').text('Error: ' + err);
+                // alert("'); - error");
             });
     }
 
-    //function openPort() {
-    //    //alert("openPort");
+    
 
-    //    $.getJSON(uri + '/openPort',
-    //        {                
-    //        })
-    //        .done(function (data) {
-    //            $('#stav').text('serial port open');
-    //        })
-    //        .fail(function (jqXHR, textStatus, err) {
-    //            $('#stav').text('Error: ' + err);
-    //            alert("'); - error");
-    //        });
-    //}
 
-    //function closePort() {
-    //    //alert("closePort");
 
-    //    $.getJSON(uri + '/closePort',
-    //        {
-    //        })
-    //        .done(function (data) {
-    //            $('#stav').text('serial port closed');
-    //        })
-    //        .fail(function (jqXHR, textStatus, err) {
-    //            $('#stav').text('Error: ' + err);
-    //            alert("'); - error");
-    //        });
-    //}
-
-   
- 
 
