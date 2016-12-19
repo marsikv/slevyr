@@ -26,6 +26,8 @@ namespace Slevyr.DataAccess.Model
         Porucha = 4,
         [Description("Servis")]
         Servis =5,
+        [Description("-")]
+        NotAvailable = 90,  //nedari se zjistit stav (komunikační problémy...)
         [Description("Neznámý stav")]
         Neznamy =99
     }

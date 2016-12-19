@@ -12,6 +12,7 @@ $(document).ready(function () {
         $("#LoadParams").click(readUnitConfig);
 
         $("#NastavCileSmen").click(nastavCileSmen);
+        $("#NastavPocOkNg").click(nastavPocOkNg);
         $("#NastavPrestavky").click(nastavPrestavkySmen);
         $("#NastavDefektivitu").click(nastavDefektivitu);
         $("#NastavJednotku").click(nastavJednotku);
@@ -146,6 +147,26 @@ $(document).ready(function () {
             // $('#stav').text('Error: ' + err);
             // alert("saveUnitConfig - error");
         });
+    }
+
+    function nastavPocOkNg() {
+        var pocOk = $('#PocetOk').val();
+        var pocNg = $('#PocetNg').val();
+        $.getJSON(uri + '/nastavOkNg',
+            {
+                addr: addr,
+                ok: pocOk,
+                ng: pocNg,
+            })
+            .done(function (data) {
+                window.slVyr.addNotification('success', 'Sucessfully set PocetOkNg');
+                 $('#stav').text('');
+            })
+            .fail(function (jqXHR, textStatus, err) {
+                window.slVyr.addNotification('error', 'nastavPocOkNg - error: ' + err);
+                $('#stav').text('Error: ' + err);
+                alert("nastavPocOkNg - error");
+            });
     }
 
     function nastavCileSmen() {

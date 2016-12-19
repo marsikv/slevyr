@@ -42,6 +42,9 @@ namespace Slevyr.DataAccess.DAO
         const string SqlInsertIntoObservations = @"insert into observations 
 (cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
 
+        const string SqlUpdateObservations =
+            @"update observations set casPoslednihoOk=@casOk, casPoslednihoNg=@casNg where id=@id";
+
         const string SqlCreateStavLinkyTable = @"CREATE TABLE `ProductionLineStatus` 
 (`id`	INTEGER,	`name`	TEXT);";
 
@@ -113,7 +116,7 @@ namespace Slevyr.DataAccess.DAO
             _dbConnection.Close();
         }
 
-        public static void AddUnitState(int addr, UnitStatus u)
+        public static long AddUnitState(int addr, UnitStatus u)
         {
             //(cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
             string sql = SqlInsertIntoObservations +
@@ -126,6 +129,27 @@ namespace Slevyr.DataAccess.DAO
             Logger.Info(sql);
 
             SQLiteCommand command = new SQLiteCommand(sql, _dbConnection);
+            command.ExecuteNonQuery();
+
+            sql = @"select last_insert_rowid()";
+            command = new SQLiteCommand(sql, _dbConnection);
+            return (long) command.ExecuteScalar();
+        }
+
+
+        public static void UpdateUnitStateCasOk(byte addr, long lastId, UnitStatus u)
+        {
+            SQLiteCommand command = new SQLiteCommand(SqlUpdateObservations, _dbConnection)
+            {
+                CommandType = CommandType.Text
+            };
+
+            command.Parameters.Add(new SQLiteParameter("@casOk", u.CasOk));
+            command.Parameters.Add(new SQLiteParameter("@casNg", u.CasNg));
+            command.Parameters.Add(new SQLiteParameter("@id", lastId));
+
+            //Logger.Info(sql);
+
             command.ExecuteNonQuery();
         }
 
@@ -202,6 +226,6 @@ namespace Slevyr.DataAccess.DAO
 
             return cnt;
         }
-        
+
     }
 }

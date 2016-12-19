@@ -117,7 +117,7 @@ namespace Slevyr.DataAccess.Services
 
             sp.Read(buf, 0, len);
 
-            DataSendReceivedLogger.Debug($" <- {len}; {BitConverter.ToString(buf)}");
+            DataSendReceivedLogger.Debug($" <- {len:00}; {BitConverter.ToString(buf)}");
 
             ReceivedByteQueue.Enqueue(buf,0,len);
 
@@ -126,15 +126,25 @@ namespace Slevyr.DataAccess.Services
                 Byte[] packet = new Byte[11];
                 ReceivedByteQueue.Dequeue(packet, 0, 11);
 
+                DataSendReceivedLogger.Debug($"        {BitConverter.ToString(packet)}");
+
                 //signatura potvrzeni odeslani
                 //  _outBuff[0] == 4 && _outBuff[1] == 0 && _outBuff[2] == _address
                 //signatura prichozich dat - response
                 //  _outBuff[0] == 0 && _outBuff[1] == 0 && _outBuff[2] == _address &&  && _outBuff[2] == cmd
 
+                var adr = packet[2];
+
+                if (!_unitDictionary.ContainsKey(adr))
+                {
+                    Logger.Error($"unit [{adr}] not found");
+                    ErrorsLogger.Error($"unit [{adr}] not found");
+                    return;
+                }
+
                 var isSendConfirmation = packet[0] == 4 && packet[1] == 0 && packet[2] > 0;
                 if (isSendConfirmation)
-                {
-                    var adr = packet[2];
+                {                   
                     _unitDictionary[adr].WaitEventSendConfirm.Set();
                     TplLogger.Debug($"WaitEventSendConfirm.set - adr:[{adr}]");
                     return;
@@ -143,33 +153,25 @@ namespace Slevyr.DataAccess.Services
                 var isResult = packet[0] == 0 && packet[1] == 0 && packet[2] > 0 && packet[3] > 0;
                 if (isResult)
                 {
-                    var adr = packet[2];
                     var cmd = packet[3];
 
                     //oznamim jednotce ze byla prijata response na prikaz cmd
                     _unitDictionary[adr].ResponseReceived(cmd);
                     TplLogger.Debug($"Response received for cmd:{cmd} on adr:[{adr}]");
 
-                    /*
-                    if (cmd == 96)
-                    {
-                        _unitDictionary[adr].WaitEvent96.Set();
-                        TplLogger.Debug($"WaitEvent96.set - adr:{adr}");
-                    }
-                    else if (cmd == 97)
-                    {
-                        _unitDictionary[adr].WaitEvent97.Set();
-                        TplLogger.Debug($"WaitEvent97.set - adr:{adr}");
-                    }
-                    else if (cmd == 98)
-                    {
-                        _unitDictionary[adr].WaitEvent98.Set();
-                        TplLogger.Debug($"WaitEvent98.set - adr:{adr}");
-                    }
-                    */
 
-                    //zaradim ke zpracovani ktere probiha v PacketBw
-                    PackedCollection.Add(packet);                    
+                    switch (cmd)
+                    {
+                        case UnitMonitor.CmdReadStavCitacu:
+                        case UnitMonitor.CmdReadCasPosledniOkNg:
+                        case UnitMonitor.CmdReadRozdilKusu:
+                        case UnitMonitor.CmdReadDefektivita:
+                        case UnitMonitor.CmdReadHodnotuPrumCykluOkNg:
+                            //zaradim ke zpracovani ktere probiha v PacketBw
+                            PackedCollection.Add(packet);
+                            break;
+                    }
+                                  
                 }
             }           
         }
@@ -235,10 +237,6 @@ namespace Slevyr.DataAccess.Services
         /// <returns></returns>
         public static UnitStatus UpdateUnitStatus(byte addr)
         {
-            //var ok = _unitDictionary[addr].UnitStatus.Ok;
-            //var ng = _unitDictionary[addr].UnitStatus.Ng;
-            //var casOk = _unitDictionary[addr].UnitStatus.CasOk;
-            //var casNg = _unitDictionary[addr].UnitStatus.CasNg;
 
             try
             {
@@ -322,7 +320,11 @@ namespace Slevyr.DataAccess.Services
 
             if (_runConfig.IsMockupMode) return true;
 
-            return _unitDictionary[addr].SetCitace(ok, ng);
+            //return _unitDictionary[addr].SetCitace(ok, ng);
+            var uc = new UnitCommand(() => _unitDictionary[addr].SetCitace(ok, ng), "SetCitace", addr);
+            UnitCommandsQueue.Enqueue(uc);
+
+            return true;
         }
 
 
@@ -371,7 +373,7 @@ namespace Slevyr.DataAccess.Services
         }
 
 
-        public static bool CtiStavCitacu(byte addr)
+        public static bool SendCtiStavCitacu(byte addr)
         {
             Logger.Debug("+");
 
@@ -383,7 +385,6 @@ namespace Slevyr.DataAccess.Services
             }
 
             return _unitDictionary[addr].SendReadStavCitacu();
-
         }
 
 
@@ -518,7 +519,7 @@ namespace Slevyr.DataAccess.Services
                                 TplLogger.Error($"Command timeout for [{addr}] - try cancel");
                                 _unitDictionary[addr].UpdateStatusTokenSource?.Cancel();
                                 _unitDictionary[addr].SetCommandIsPending(false);
-                                _unitDictionary[addr].UnitStatus.MachineStatus = MachineStateEnum.Neznamy;
+                                _unitDictionary[addr].UnitStatus.MachineStatus = MachineStateEnum.NotAvailable;
                             }
                         }
                         else
@@ -527,6 +528,10 @@ namespace Slevyr.DataAccess.Services
                             //čeká se na dokončení třech možných pokusů
                             //Nastaví pro jednotku IsCommandPending  
                             res = _unitDictionary[addr].SendStatusCommand();
+                            if (!res)
+                            {
+                                _unitDictionary[addr].UnitStatus.MachineStatus = MachineStateEnum.NotAvailable;
+                            }
                         }
 
                         Logger.Debug($"+send worker sleep: {_runConfig.WorkerSleepPeriod}, res:{res}");
@@ -576,11 +581,11 @@ namespace Slevyr.DataAccess.Services
                        case UnitMonitor.CmdReadStavCitacu:
                             _unitDictionary[addr].DoReadStavCitacu(packet);
                             _unitDictionary[addr].RecalcTabule();
-                            SqlliteDao.AddUnitState(addr, _unitDictionary[addr].UnitStatus);
+                            _unitDictionary[addr].LastId = SqlliteDao.AddUnitState(addr, _unitDictionary[addr].UnitStatus);
                             break;
                         case UnitMonitor.CmdReadCasPosledniOkNg:
                             _unitDictionary[addr].DoReadCasOkNg(packet);
-                            //SqlliteDao.UpdateUnitStateCasOk(addr, _unitDictionary[addr].UnitStatus);
+                            SqlliteDao.UpdateUnitStateCasOk(addr, _unitDictionary[addr].LastId, _unitDictionary[addr].UnitStatus);
                             //_unitDictionary[addr].SetCommandIsPending(false);
                             break;
                         case UnitMonitor.CmdReadRozdilKusu:

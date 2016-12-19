@@ -84,6 +84,7 @@
     <Compile Include="Model\UnitCommand.cs" />
     <Compile Include="Model\UnitConfig.cs" />
     <Compile Include="Model\UnitMonitor.cs" />
+    <Compile Include="Model\UnitMonitorBasic.cs" />
     <Compile Include="Model\UnitStatus.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\Helper.cs" />

@@ -14,13 +14,14 @@ namespace SledovaniVyroby.SerialPortWraper
             StopBits = System.IO.Ports.StopBits.One;
         }
 
-        /// <summary>
-        /// Copy constructor
-        /// </summary>
-        /// <param name="parent"></param>
-        public SerialPortConfig(SerialPortConfig parent)
+        public SerialPortConfig(SerialPortConfig cfg)
         {
-            Update(parent);
+            Port = cfg.Port;
+            BaudRate = cfg.BaudRate;
+            Parity = cfg.Parity;
+            DataBits = cfg.DataBits;
+            StopBits = cfg.StopBits;
+            ReceivedBytesThreshold = cfg.ReceivedBytesThreshold;
         }
 
         /// <summary>
@@ -61,18 +62,5 @@ namespace SledovaniVyroby.SerialPortWraper
             return $"Port={Port},Baudrate={BaudRate},Parity={Parity},StopBits={StopBits},DataBits={DataBits}";
         }
 
-        /// <summary>
-        /// Update own attributes by configuration passed as methods parameter.
-        /// </summary>
-        /// <param name="spc">Original configuration to update by.</param>
-        public virtual void Update(SerialPortConfig parent)
-        {
-            Port = parent.Port;
-            BaudRate = parent.BaudRate;
-            Parity = parent.Parity;
-            DataBits = parent.DataBits;
-            StopBits = parent.StopBits;
-            ReceivedBytesThreshold = parent.ReceivedBytesThreshold;
-        }
     }
 }

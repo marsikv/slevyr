@@ -26,23 +26,21 @@ namespace Slevyr.WebAppHost
         {
             try
             {
-                RunConfig = new RunConfig();
-
-                RunConfig.IsMockupMode = bool.Parse(ConfigurationManager.AppSettings["MockupMode"]);
-                RunConfig.IsRefreshTimerOn = bool.Parse(ConfigurationManager.AppSettings["IsRefreshTimerOn"]);
-                RunConfig.IsReadOkNgTime = bool.Parse(ConfigurationManager.AppSettings["IsReadOkNgTime"]);
-                RunConfig.IsWriteEmptyToLog = bool.Parse(ConfigurationManager.AppSettings["IsWriteEmptyToLog"]);
-
-                RunConfig.RefreshTimerPeriod = int.Parse(ConfigurationManager.AppSettings["RefreshTimerPeriod"]);
-                RunConfig.WorkerSleepPeriod = int.Parse(ConfigurationManager.AppSettings["WorkerSleepPeriod"]);
-                RunConfig.RelaxTime = int.Parse(ConfigurationManager.AppSettings["RelaxTime"]);
-                RunConfig.ReadResultTimeOut = int.Parse(ConfigurationManager.AppSettings["ReadResultTimeOut"]);
-                RunConfig.SendCommandTimeOut = int.Parse(ConfigurationManager.AppSettings["SendCommandTimeOut"]);
-                RunConfig.MinCmdDelay = int.Parse(ConfigurationManager.AppSettings["MinCmdDelay"]);
-
-                RunConfig.UnitAddrs = ConfigurationManager.AppSettings["UnitAddrs"].Split(';').Select(int.Parse);
-
-                RunConfig.DataFilePath = ConfigurationManager.AppSettings["JsonFilePath"];
+                RunConfig = new RunConfig
+                {
+                    IsMockupMode = bool.Parse(ConfigurationManager.AppSettings["MockupMode"]),
+                    IsRefreshTimerOn = bool.Parse(ConfigurationManager.AppSettings["IsRefreshTimerOn"]),
+                    IsReadOkNgTime = bool.Parse(ConfigurationManager.AppSettings["IsReadOkNgTime"]),
+                    IsWriteEmptyToLog = bool.Parse(ConfigurationManager.AppSettings["IsWriteEmptyToLog"]),
+                    RefreshTimerPeriod = int.Parse(ConfigurationManager.AppSettings["RefreshTimerPeriod"]),
+                    WorkerSleepPeriod = int.Parse(ConfigurationManager.AppSettings["WorkerSleepPeriod"]),
+                    RelaxTime = int.Parse(ConfigurationManager.AppSettings["RelaxTime"]),
+                    ReadResultTimeOut = int.Parse(ConfigurationManager.AppSettings["ReadResultTimeOut"]),
+                    SendCommandTimeOut = int.Parse(ConfigurationManager.AppSettings["SendCommandTimeOut"]),
+                    MinCmdDelay = int.Parse(ConfigurationManager.AppSettings["MinCmdDelay"]),
+                    UnitAddrs = ConfigurationManager.AppSettings["UnitAddrs"].Split(';').Select(int.Parse),
+                    DataFilePath = ConfigurationManager.AppSettings["JsonFilePath"],
+                };
 
                 Port = ConfigurationManager.AppSettings["Port"];
                 BaudRate = int.Parse(ConfigurationManager.AppSettings["BaudRate"]);

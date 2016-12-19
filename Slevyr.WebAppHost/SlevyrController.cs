@@ -380,7 +380,7 @@ namespace Slevyr.WebAppHost
 
             try
             {
-                return SlevyrService.CtiStavCitacu(addr);
+                return SlevyrService.SendCtiStavCitacu(addr);
             }
             catch (KeyNotFoundException)
             {
