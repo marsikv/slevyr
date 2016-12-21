@@ -152,8 +152,8 @@ namespace Slevyr.DataAccess.Model
             UnitConfig.Def2Smeny = def2;
             UnitConfig.Def3Smeny = def3;
 
-            return SendCommand(CmdSetDefSmen, (byte)varianta, (short)(def1 * 10.0), (short)(def2 * 10.0), (short)(def3 * 10.0));
-
+            //return SendCommand(CmdSetDefSmen, (byte)varianta, (short)(def1 * 10.0), (short)(def2 * 10.0), (short)(def3 * 10.0));
+            return SendCommand(CmdSetDefSmen, (byte)varianta, def1, def2, def3);
         }
 
         //TODO - v jakych jednotkach se zadavaji prestavky ?
@@ -187,17 +187,17 @@ namespace Slevyr.DataAccess.Model
         public bool SetCitace(short ok, short ng)
         {
             Logger.Info($"+ unit {Address}");
-
-            return SendCommand(CmdSetHodnotyCitacu,ok,ng,true) || SendCommand(CmdSetHodnotyCitacu, ok, ng, true) || SendCommand(CmdSetHodnotyCitacu, ok, ng, true);
+            var res = SendCommand(CmdSetHodnotyCitacu, ok, ng);
+            return res;
         }
 
-        public bool Reset()
+        public bool SendReset()
         {
             Logger.Info($"+ unit {Address}");
             return SendCommand(CmdResetJednotky);
         }
 
-        public bool Set6f()
+        public bool Send6f()
         {
             Logger.Info($"+ unit {Address}");
             return SendCommand(0x6f);
@@ -221,7 +221,7 @@ namespace Slevyr.DataAccess.Model
         public bool SendReadZaklNastaveni()
         {
             Logger.Info($"+ unit {Address}");
-            return SendCommandBasic(CmdReadZakSysNast);
+            return SendCommand(CmdReadZakSysNast);
         }
 
         public void DoReadZaklNastaveni(byte[] buff)
@@ -239,13 +239,25 @@ namespace Slevyr.DataAccess.Model
             SetCommandIsPending(true); //na false se nastavuje z jineho vlakna
             CurrentCmdStartTime = DateTime.Now;
             CurrentCmd = _obtainStatusSequence[_obtainStatusIndex++];
-            TplLogger.Debug($"send command {CurrentCmd} on [{Address}] - start");
+            TplLogger.Debug($"send command {CurrentCmd:x2} to [{Address:x2}] - start");
             if (_obtainStatusIndex >= _obtainStatusSequence.Length) _obtainStatusIndex = 0;
-            var res = SendCommand(CurrentCmd, true) || SendCommand(CurrentCmd, true) || SendCommand(CurrentCmd, true);
-            TplLogger.Debug($"send command {CurrentCmd} on [{Address}] - {res}");
-            if (!res)
+            var res = SendCommand(CurrentCmd);
+            if (res) {
+                TplLogger.Debug($"send command {CurrentCmd:x2} to [{Address:x2}] - sent");
+
+                if (RunConfig.IsWaitCommandResult)
+                {
+                    var resultReceived = WaitEventCommandResult.WaitOne(RunConfig.ReadResultTimeOut);
+                    var r = (resultReceived) ? "result received" : "expired";
+                    TplLogger.Debug($" SendCommand {CurrentCmd:x2} to [{Address:x2}] : {r}");
+                    res = resultReceived;
+                }
+            }
+            else
             {
-                ErrorsLogger.Error($"send command { CurrentCmd} on [{ Address}] - failed 3 times");
+                var s = $"send command {CurrentCmd:x2} to [{Address:x2}] - failed 3 times";
+                TplLogger.Debug(s);
+                ErrorsLogger.Error(s);
                 SetCommandIsPending(false);
             }
             return res;
@@ -366,11 +378,11 @@ namespace Slevyr.DataAccess.Model
             UnitStatus.IsRozdilKusu = true;
         }
 
-        public bool ReadDefektivita()
+        public bool SendReadDefektivita()
         {
             Logger.Info($"+ unit {Address}");
 
-            return SendCommandBasic(CmdReadDefektivita);
+            return SendCommand(CmdReadDefektivita);
         }
 
         public void DoReadDefectivita(byte[] buff)

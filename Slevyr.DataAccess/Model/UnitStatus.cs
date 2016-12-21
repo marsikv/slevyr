@@ -264,9 +264,9 @@ namespace Slevyr.DataAccess.Model
                     Logger.Debug("smena3 " + o);
                 }
 
-                if (!IsPrestavkaTabule)
+                //if (!IsPrestavkaTabule)   //issue https://github.com/marsikv/slevyr/issues/42
                 {
-                    
+
                     try
                     {
                         double casNa1Kus = (double)delkaSmenySec / (double)CilKusuTabule;

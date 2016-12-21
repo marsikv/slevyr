@@ -126,7 +126,10 @@ namespace Slevyr.DataAccess.Services
                 Byte[] packet = new Byte[11];
                 ReceivedByteQueue.Dequeue(packet, 0, 11);
 
-                DataSendReceivedLogger.Debug($"        {BitConverter.ToString(packet)}");
+                if (_serialPort.ReceivedBytesThreshold < 11)
+                {
+                    DataSendReceivedLogger.Debug($"        {BitConverter.ToString(packet)}");
+                }
 
                 //signatura potvrzeni odeslani
                 //  _outBuff[0] == 4 && _outBuff[1] == 0 && _outBuff[2] == _address
@@ -146,7 +149,7 @@ namespace Slevyr.DataAccess.Services
                 if (isSendConfirmation)
                 {                   
                     _unitDictionary[adr].WaitEventSendConfirm.Set();
-                    TplLogger.Debug($"WaitEventSendConfirm.set - adr:[{adr}]");
+                    TplLogger.Debug($"WaitEventSendConfirm.Set - adr:[{adr:x2}]");
                     return;
                 }
                 
@@ -157,8 +160,13 @@ namespace Slevyr.DataAccess.Services
 
                     //oznamim jednotce ze byla prijata response na prikaz cmd
                     _unitDictionary[adr].ResponseReceived(cmd);
-                    TplLogger.Debug($"Response received for cmd:{cmd} on adr:[{adr}]");
+                    TplLogger.Debug($"Response received from [{adr:x2}] cmd:{cmd:x2}");
 
+                    if (_runConfig.IsWaitCommandResult)
+                    {
+                        _unitDictionary[adr].WaitEventCommandResult.Set();   //nebo jeste rozlisit podle typu prikazu ?
+                        TplLogger.Debug($"WaitEventCommandResult.Set - adr:[{adr:x2}]");
+                    }
 
                     switch (cmd)
                     {
@@ -292,7 +300,11 @@ namespace Slevyr.DataAccess.Services
 
             byte writeProtectEEpromVal = (byte)(writeProtectEEprom ? 0 : 1);
             byte bootloaderOnVal = (byte)(bootloaderOn ? 0 : 1);
-            return _unitDictionary[addr].SetStatus(writeProtectEEpromVal, minOK, minNG, bootloaderOnVal, parovanyLED, rozliseniCidel, pracovniJasLed);
+            //return _unitDictionary[addr].SetStatus(writeProtectEEpromVal, minOK, minNG, bootloaderOnVal, parovanyLED, rozliseniCidel, pracovniJasLed);
+            var uc = new UnitCommand(() => _unitDictionary[addr].SetStatus(writeProtectEEpromVal, minOK, minNG, bootloaderOnVal, parovanyLED, rozliseniCidel, pracovniJasLed), "SetStatus", addr);
+            UnitCommandsQueue.Enqueue(uc);
+
+            return true;
         }
 
 
@@ -302,7 +314,11 @@ namespace Slevyr.DataAccess.Services
 
             if (_runConfig.IsMockupMode) return true;
 
-            return _unitDictionary[addr].SetCileSmen(varianta, cil1, cil2, cil3);
+            //return _unitDictionary[addr].SetCileSmen(varianta, cil1, cil2, cil3);
+            var uc = new UnitCommand(() => _unitDictionary[addr].SetCileSmen(varianta, cil1, cil2, cil3), "SetCileSmen", addr);
+            UnitCommandsQueue.Enqueue(uc);
+
+            return true;
         }
 
         public static bool NastavPrestavky(byte addr, char varianta, TimeSpan prest1, TimeSpan prest2, TimeSpan prest3)
@@ -311,7 +327,11 @@ namespace Slevyr.DataAccess.Services
 
             if (_runConfig.IsMockupMode) return true;
 
-            return _unitDictionary[addr].SetPrestavky(varianta, prest1, prest2, prest3);
+            //return _unitDictionary[addr].SetPrestavky(varianta, prest1, prest2, prest3);
+            var uc = new UnitCommand(() => _unitDictionary[addr].SetPrestavky(varianta, prest1, prest2, prest3), "SetPrestavky", addr);
+            UnitCommandsQueue.Enqueue(uc);
+
+            return true;
         }
 
         public static bool NastavOkNg(byte addr, short ok, short ng)
@@ -327,19 +347,7 @@ namespace Slevyr.DataAccess.Services
             return true;
         }
 
-
-        public static bool NastavAktualniCas(int addr)
-        {
-            Logger.Debug($"addr:{ addr}");
-
-            if (_runConfig.IsMockupMode) return true;
-
-            Func<bool> a = () => _unitDictionary[addr].SetCas(DateTime.Now);
-
-            return _unitDictionary[addr].SetCas(DateTime.Now);
-        }
-
-        public static void NastavAktualniCasQueued(int addr)
+        public static void NastavAktualniCas(int addr)
         {
             Logger.Debug("");
 
@@ -355,7 +363,11 @@ namespace Slevyr.DataAccess.Services
             if (_runConfig.IsMockupMode) return true;
             
             Logger.Debug($"cil1:{def1Val}");
-            return _unitDictionary[addr].SetDefektivita(varianta, def1Val, def2Val, def3Val );
+            //return _unitDictionary[addr].SetDefektivita(varianta, def1Val, def2Val, def3Val );
+            var uc = new UnitCommand(() => _unitDictionary[addr].SetDefektivita(varianta, def1Val, def2Val, def3Val), "SetDefektivita", addr);
+            UnitCommandsQueue.Enqueue(uc);
+
+            return true;
         }
 
 
@@ -384,7 +396,12 @@ namespace Slevyr.DataAccess.Services
                 return true;
             }
 
-            return _unitDictionary[addr].SendReadStavCitacu();
+            //return _unitDictionary[addr].SendReadStavCitacu();
+
+            var uc = new UnitCommand(() => _unitDictionary[addr].SendReadStavCitacu(), "SendReadStavCitacu", addr);
+            UnitCommandsQueue.Enqueue(uc);
+
+            return true;
         }
 
 
@@ -398,7 +415,12 @@ namespace Slevyr.DataAccess.Services
                 return true;
             }
           
-            return _unitDictionary[addr].SendReadCasOkNg() ;
+            //return _unitDictionary[addr].SendReadCasOkNg() ;
+
+            var uc = new UnitCommand(() => _unitDictionary[addr].SendReadCasOkNg(), "SendReadCasOkNg", addr);
+            UnitCommandsQueue.Enqueue(uc);
+
+            return true;
         }
 
         #endregion
@@ -513,10 +535,10 @@ namespace Slevyr.DataAccess.Services
 
                         if (_unitDictionary[addr].IsCommandPending)
                         {
-                            TplLogger.Info($"..Command {_unitDictionary[addr].CurrentCmd}  [{addr}] is pending..");
+                            TplLogger.Info($"..Command {_unitDictionary[addr].CurrentCmd:x2}  [{addr:x2}] is pending..");
                             if ((DateTime.Now - _unitDictionary[addr].CurrentCmdStartTime).TotalMilliseconds > _runConfig.ReadResultTimeOut) 
                             {
-                                TplLogger.Error($"Command timeout for [{addr}] - try cancel");
+                                TplLogger.Error($"Timeout cmd:{_unitDictionary[addr].CurrentCmd:x2} [{addr:x2}]");
                                 _unitDictionary[addr].UpdateStatusTokenSource?.Cancel();
                                 _unitDictionary[addr].SetCommandIsPending(false);
                                 _unitDictionary[addr].UnitStatus.MachineStatus = MachineStateEnum.NotAvailable;

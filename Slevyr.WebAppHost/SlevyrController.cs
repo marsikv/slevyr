@@ -288,7 +288,7 @@ namespace Slevyr.WebAppHost
             try
             {
                 //return SlevyrService.NastavAktualniCas(addr);
-                SlevyrService.NastavAktualniCasQueued(addr);
+                SlevyrService.NastavAktualniCas(addr);
                 return true;
             }
             catch (KeyNotFoundException)
@@ -308,7 +308,7 @@ namespace Slevyr.WebAppHost
             {
                 foreach (var addr in Globals.RunConfig.UnitAddrs)
                 {
-                    SlevyrService.NastavAktualniCasQueued(addr);
+                    SlevyrService.NastavAktualniCas(addr);
                 }
                 return true;
             }

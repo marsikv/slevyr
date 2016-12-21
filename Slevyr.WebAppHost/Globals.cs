@@ -40,6 +40,7 @@ namespace Slevyr.WebAppHost
                     MinCmdDelay = int.Parse(ConfigurationManager.AppSettings["MinCmdDelay"]),
                     UnitAddrs = ConfigurationManager.AppSettings["UnitAddrs"].Split(';').Select(int.Parse),
                     DataFilePath = ConfigurationManager.AppSettings["JsonFilePath"],
+                    IsWaitCommandResult = bool.Parse(ConfigurationManager.AppSettings["IsWaitCommandResult"]),
                 };
 
                 Port = ConfigurationManager.AppSettings["Port"];
