@@ -49,19 +49,24 @@ a {
     left: 0;
     z-index: 59;
     color: #e6e6e6;
-    transform: translate(-100%,0);
-    transition: transform .5s;
+    transform: translate(0,0);
 }
 
-.menu-visible {
-    transform: translate(0,0);
+@media screen and (max-width: 600.5px) {
+    .menu {
+        transform: translate(-100%,0);
+        transition: transform .5s;
+    }
 }
 
 @media screen and (min-width: 600px) {
     .menu {
         width: 200px;
-        transform: translate(0,0);
     }
+}
+
+.menu-visible {
+    transform: translate(0,0);
 }
 
 .menu--header {
@@ -157,6 +162,7 @@ a {
     width: 100%;
     padding: 2em 2em 4em 2em;
     background-color: #FAFAFA;
+    display: block;
 }
 
 @media screen and (min-width: 600px) {
