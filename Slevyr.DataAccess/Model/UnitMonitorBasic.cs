@@ -20,8 +20,6 @@ namespace Slevyr.DataAccess.Model
         private SerialPortWraper _sp;
 
         private const int BuffLength = 11;
-        private const int SendAttempts = 3;
-
 
         public byte Address => _address;
 
@@ -172,7 +170,7 @@ namespace Slevyr.DataAccess.Model
 
                 res = SendCommandBasic(cmd, checkSendConfirmation);
 
-                if (!checkSendConfirmation || i++ > SendAttempts) break;
+                if (!checkSendConfirmation || i++ > RunConfig.SendAttempts) break;
             }
             return res;
         }

@@ -31,7 +31,7 @@ namespace Slevyr.WebAppHost
                     IsMockupMode = bool.Parse(ConfigurationManager.AppSettings["MockupMode"]),
                     IsRefreshTimerOn = bool.Parse(ConfigurationManager.AppSettings["IsRefreshTimerOn"]),
                     IsReadOkNgTime = bool.Parse(ConfigurationManager.AppSettings["IsReadOkNgTime"]),
-                    IsWriteEmptyToLog = bool.Parse(ConfigurationManager.AppSettings["IsWriteEmptyToLog"]),
+                    //IsWriteEmptyToLog = bool.Parse(ConfigurationManager.AppSettings["IsWriteEmptyToLog"]),
                     RefreshTimerPeriod = int.Parse(ConfigurationManager.AppSettings["RefreshTimerPeriod"]),
                     WorkerSleepPeriod = int.Parse(ConfigurationManager.AppSettings["WorkerSleepPeriod"]),
                     RelaxTime = int.Parse(ConfigurationManager.AppSettings["RelaxTime"]),
@@ -41,6 +41,7 @@ namespace Slevyr.WebAppHost
                     UnitAddrs = ConfigurationManager.AppSettings["UnitAddrs"].Split(';').Select(int.Parse),
                     DataFilePath = ConfigurationManager.AppSettings["JsonFilePath"],
                     IsWaitCommandResult = bool.Parse(ConfigurationManager.AppSettings["IsWaitCommandResult"]),
+                    SendAttempts = int.Parse(ConfigurationManager.AppSettings["SendAttempts"]),
                 };
 
                 Port = ConfigurationManager.AppSettings["Port"];

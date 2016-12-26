@@ -25,8 +25,6 @@ namespace Slevyr.WebAppHost
 
         http://localhost:5000/api/slevyr/closePort
 
-
-
         netsh http add urlacl url=http://+:5000/ user=Everyone
         netsh http delete urlacl url=http://+:5000/ user=Everyone
 

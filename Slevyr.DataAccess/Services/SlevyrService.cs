@@ -113,8 +113,6 @@ namespace Slevyr.DataAccess.Services
 
             Byte[] buf = new Byte[len];
 
-            //if (!sp.IsOpen) return;
-
             sp.Read(buf, 0, len);
 
             DataSendReceivedLogger.Debug($" <- {len:00}; {BitConverter.ToString(buf)}");
@@ -152,19 +150,19 @@ namespace Slevyr.DataAccess.Services
                     TplLogger.Debug($"WaitEventSendConfirm.Set - adr:[{adr:x2}]");
                     return;
                 }
-                
-                var isResult = packet[0] == 0 && packet[1] == 0 && packet[2] > 0 && packet[3] > 0;
+
+                var cmd = packet[3];
+
+                var isResult = packet[0] == 0 && packet[1] == 0 && packet[2] > 0 && cmd > 0;
                 if (isResult)
                 {
-                    var cmd = packet[3];
-
                     //oznamim jednotce ze byla prijata response na prikaz cmd
                     _unitDictionary[adr].ResponseReceived(cmd);
                     TplLogger.Debug($"Response received from [{adr:x2}] cmd:{cmd:x2}");
 
                     if (_runConfig.IsWaitCommandResult)
                     {
-                        _unitDictionary[adr].WaitEventCommandResult.Set();   //nebo jeste rozlisit podle typu prikazu ?
+                        _unitDictionary[adr].WaitEventCommandResult.Set();   // rozlisit podle typu prikazu ?
                         TplLogger.Debug($"WaitEventCommandResult.Set - adr:[{adr:x2}]");
                     }
 
@@ -178,8 +176,7 @@ namespace Slevyr.DataAccess.Services
                             //zaradim ke zpracovani ktere probiha v PacketBw
                             PackedCollection.Add(packet);
                             break;
-                    }
-                                  
+                    }                                  
                 }
             }           
         }

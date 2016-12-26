@@ -20,8 +20,6 @@ namespace Slevyr.WebAppHost
             //registruji middleware odchytávající a zapisující vyjimky
             appBuilder.Use<GlobalExceptionMiddleware>();
             
-
-
             // Configure Web API for self-host.             
 
             HttpConfiguration config = new HttpConfiguration();
