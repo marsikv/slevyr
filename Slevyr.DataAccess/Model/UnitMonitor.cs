@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
@@ -62,6 +63,9 @@ namespace Slevyr.DataAccess.Model
         public const byte CmdReadTeplotu5Cidla = 105; //vrati teplotu z pateho cidla DS18B20
         public const byte CmdReadRozdilKusu = 106; //vraci rozdil kusu
         public const byte CmdReadDefektivita = 107; //vraci defektivitu
+        public const byte CmdReadStavCitacuRanniSmena = 0x6c;     //vraci konecny stav citacu, pracuje stejne jako 0x60 (96)
+        public const byte CmdReadStavCitacuOdpoledniSmena = 0x6d; //
+        public const byte CmdReadStavCitacuNocniSmena = 0x6e;     //
 
         readonly byte[] _obtainStatusSequence;
         int _obtainStatusIndex = 0;
@@ -69,12 +73,11 @@ namespace Slevyr.DataAccess.Model
         #endregion
 
         #region ctor
-
       
-        public UnitMonitor(byte address, SerialPortWraper serialPort, RunConfig runConfig) : base(address,serialPort,runConfig)
+        public UnitMonitor(byte address,  RunConfig runConfig) : base(address,runConfig)
         {
             
-            UnitStatus = new UnitStatus { SendError = false };
+            UnitStatus = new UnitStatus { Addr = address};
 
             if (this.RunConfig.IsReadOkNgTime)
             {
@@ -95,8 +98,6 @@ namespace Slevyr.DataAccess.Model
 
         #region properties
 
-       
-
         /// <summary>
         /// cas kdy byl prikaz odeslan (send)
         /// </summary>
@@ -105,21 +106,21 @@ namespace Slevyr.DataAccess.Model
         /// <summary>
         /// Probiha zracovani prikazu, tzn. ceka se na receive data parovane na tento cmd
         /// </summary>
-        public bool IsCommandPending { get; set; }
+        public bool IsCommandPending { get; private set; }
 
         /// <summary>
         /// Kod odeslaneho prikazu
         /// </summary>
-        public byte CurrentCmd { get; set; }
+        public byte CurrentCmd { get; private set; }
 
         public CancellationTokenSource UpdateStatusTokenSource { get; private set; }
         public long LastId { get; set; }
 
         #endregion
 
-        #region public methods
+        #region public methods - send command
 
-        public bool SetSmennost(char varianta)
+        public bool SendSetSmennost(char varianta)
         {
             Logger.Info($"+ unit {Address}");
 
@@ -133,7 +134,7 @@ namespace Slevyr.DataAccess.Model
             return res;
         }
        
-        public bool SetCileSmen(char varianta, short cil1, short cil2, short cil3)
+        public bool SendSetCileSmen(char varianta, short cil1, short cil2, short cil3)
         {
             Logger.Info($"+ unit {Address}");
 
@@ -144,7 +145,7 @@ namespace Slevyr.DataAccess.Model
             return SendCommand(CmdSetCilSmen, (byte)varianta, cil1, cil2, cil3); 
         }
 
-        public bool SetDefektivita(char varianta, short def1, short def2, short def3)
+        public bool SendSetDefektivita(char varianta, short def1, short def2, short def3)
         {
             Logger.Info($"+ unit {Address}");
            
@@ -157,7 +158,7 @@ namespace Slevyr.DataAccess.Model
         }
 
         //TODO - v jakych jednotkach se zadavaji prestavky ?
-        public bool SetPrestavky(char varianta, TimeSpan prest1, TimeSpan prest2, TimeSpan prest3)
+        public bool SendSetPrestavky(char varianta, TimeSpan prest1, TimeSpan prest2, TimeSpan prest3)
         {
             Logger.Info($"+ unit {Address}");
           
@@ -166,101 +167,53 @@ namespace Slevyr.DataAccess.Model
             UnitConfig.Prestavka3Smeny = prest3.ToString();
             
             return SendCommand(CmdSetZacPrestav, (byte)varianta, prest1, prest2, prest3);
-        }
+        }       
 
-       
-
-        public bool SetCas(DateTime dt)
+        public bool SendSetCas(DateTime dt)
         {
-            Logger.Info($"+ unit {Address}");
+            Logger.Info($"+ addr:{Address}");
 
             return SendCommand(CmdSetDatumDen, dt); 
         }
 
-        public bool SetJasLcd(byte jas)
+        public bool SendSetJasLcd(byte jas)
         {
-            Logger.Info($"+ unit {Address}");
+            Logger.Info($"+ addr:{Address}");
  
             return SendCommand(CmdSetJasLed,jas);
         }
 
-        public bool SetCitace(short ok, short ng)
+        public bool SendSetCitace(short ok, short ng)
         {
-            Logger.Info($"+ unit {Address}");
-            var res = SendCommand(CmdSetHodnotyCitacu, ok, ng);
-            return res;
+            Logger.Info($"+ addr:{Address}");
+            return SendCommand(CmdSetHodnotyCitacu, ok, ng);
         }
 
         public bool SendReset()
         {
-            Logger.Info($"+ unit {Address}");
+            Logger.Info($"+ addr:{Address}");
             return SendCommand(CmdResetJednotky);
         }
 
-        public bool Send6f()
-        {
-            Logger.Info($"+ unit {Address}");
-            return SendCommand(0x6f);
-      
-        }
 
-        public bool SetHandshake(byte handshake, byte prumTyp)
+        public bool SendSetHandshake(byte handshake, byte prumTyp)
         {
-            Logger.Info($"+ unit {Address}");
+            Logger.Info($"+ addr:{Address}");
 
             return SendCommand(CmdSetParamRf, handshake, prumTyp);
         }
 
-        public bool SetStatus(byte writeProtectEEprom, byte minOK, byte minNG, byte bootloaderOn, byte parovanyLED, byte rozliseniCidel, byte pracovniJasLed)
+        public bool SendSetZaklNastaveni(byte writeProtectEEprom, byte minOk, byte minNg, byte bootloaderOn, byte parovanyLed, byte rozliseniCidel, byte pracovniJasLed)
         {
-            Logger.Info($"+ unit {Address}");
+            Logger.Info($"+ addr:{Address}");
 
-            return SendCommand(CmdZaklNastaveni, writeProtectEEprom,  minOK,  minNG,  bootloaderOn,  parovanyLED,  rozliseniCidel,  pracovniJasLed);
+            return SendCommand(CmdZaklNastaveni, writeProtectEEprom,  minOk,  minNg,  bootloaderOn,  parovanyLed,  rozliseniCidel,  pracovniJasLed);
         }
 
         public bool SendReadZaklNastaveni()
         {
             Logger.Info($"+ unit {Address}");
             return SendCommand(CmdReadZakSysNast);
-        }
-
-        public void DoReadZaklNastaveni(byte[] buff)
-        {
-            UnitStatus.MinOk = buff[4];
-            UnitStatus.MinNg = buff[5];
-            //adrLocal = _outBuff[6];
-            UnitStatus.VerzeSw1 = buff[7];
-            UnitStatus.VerzeSw2 = buff[8];
-            UnitStatus.VerzeSw3 = buff[9];
-        }
-
-        public bool SendStatusCommand()
-        {
-            SetCommandIsPending(true); //na false se nastavuje z jineho vlakna
-            CurrentCmdStartTime = DateTime.Now;
-            CurrentCmd = _obtainStatusSequence[_obtainStatusIndex++];
-            TplLogger.Debug($"send command {CurrentCmd:x2} to [{Address:x2}] - start");
-            if (_obtainStatusIndex >= _obtainStatusSequence.Length) _obtainStatusIndex = 0;
-            var res = SendCommand(CurrentCmd);
-            if (res) {
-                TplLogger.Debug($"send command {CurrentCmd:x2} to [{Address:x2}] - sent");
-
-                if (RunConfig.IsWaitCommandResult)
-                {
-                    var resultReceived = WaitEventCommandResult.WaitOne(RunConfig.ReadResultTimeOut);
-                    var r = (resultReceived) ? "result received" : "expired";
-                    TplLogger.Debug($" SendCommand {CurrentCmd:x2} to [{Address:x2}] : {r}");
-                    res = resultReceived;
-                }
-            }
-            else
-            {
-                var s = $"send command {CurrentCmd:x2} to [{Address:x2}] - failed 3 times";
-                TplLogger.Debug(s);
-                ErrorsLogger.Error(s);
-                SetCommandIsPending(false);
-            }
-            return res;
         }
 
         public bool SendReadStavCitacu()
@@ -277,11 +230,45 @@ namespace Slevyr.DataAccess.Model
             //    return true;
             //}
 
-            return SendCommand(CmdReadStavCitacu); ;
+            return SendCommand(CmdReadStavCitacu); 
         }
+
+        public bool SendReadCasOkNg()
+        {
+            Logger.Info($"+ unit {Address}");
+
+            //if (_isMockupMode)
+            //{
+            //    value = (Single)DateTime.Now.Hour * 2;  //hod. poslouzi jako hodnota casu ok
+            //    UnitStatus.CasOk = value;
+            //    UnitStatus.CasOkNgTime = DateTime.Now;
+            //    return true;
+            //}
+
+            return SendCommand(CmdReadCasPosledniOkNg);
+        }
+
+        public bool SendReadRozdilKusu()
+        {
+            Logger.Info($"+ unit {Address}");
+
+            return SendCommand(CmdReadRozdilKusu);
+        }
+
+        public bool SendReadDefektivita()
+        {
+            Logger.Info($"+ unit {Address}");
+
+            return SendCommand(CmdReadDefektivita);
+        }
+
+        #endregion
+
+        #region public methods - read response handlers
 
         public void DoReadStavCitacu(byte[] buff)
         {
+            Logger.Debug("");
             /*
              * Pro příkaz 0x60 je odpověď = 0x00 0x00 ADR 0x60 LSB MSB LSB MSB LSB MSB 0xXX
 
@@ -306,23 +293,6 @@ namespace Slevyr.DataAccess.Model
             Logger.Info($"okVal:{okVal} ngVal:{ngVal} machineStatus:{machineStatus} unit: {Address}");
         }
 
-
-        public bool SendReadCasOkNg()
-        {
-            Logger.Info($"+ unit {Address}");
-
-            //if (_isMockupMode)
-            //{
-            //    value = (Single)DateTime.Now.Hour * 2;  //hod. poslouzi jako hodnota casu ok
-            //    UnitStatus.CasOk = value;
-            //    UnitStatus.CasOkNgTime = DateTime.Now;
-            //    return true;
-            //}
-
-            return SendCommand(CmdReadCasPosledniOkNg);
-        }
-
-        
         public void DoReadCasOkNg(byte[] buff)
         {
             /*
@@ -332,6 +302,8 @@ namespace Slevyr.DataAccess.Model
                 čas posledního NG kusu =(LSB+(256*MSB))/10 , Sekundy na desetiny
                 Metoda měření cyklu = XX  , 0 = čas posledního cyklu (výchozí); >0 čas od posledního cyklu
              */
+            Logger.Debug("");
+
             var casOk10 = Helper.ToShort(buff[4], buff[5]); 
             var casNg10 = Helper.ToShort(buff[6], buff[7]); 
 
@@ -352,6 +324,8 @@ namespace Slevyr.DataAccess.Model
                 Průměrný čas NG kusu =(LSB+(256*MSB))/10 , Sekundy na desetiny
                 Metoda výpočtu průměru = XX  , 0 = výpočet vzhledem k délce směny (výchozí); >0 výpočet z uběhlého času směny
              */
+            Logger.Debug("");
+
             var casOk10 = Helper.ToShort(buff[4], buff[5]);
             var casNg10 = Helper.ToShort(buff[6], buff[7]);
 
@@ -363,47 +337,183 @@ namespace Slevyr.DataAccess.Model
             Logger.Debug($"unit {Address}");
         }
 
-        public bool SendReadRozdilKusu()
+        public void DoReadZaklNastaveni(byte[] buff)
         {
-            Logger.Info($"+ unit {Address}");
-
-            return SendCommand(CmdReadRozdilKusu);
+            UnitStatus.MinOk = buff[4];
+            UnitStatus.MinNg = buff[5];
+            UnitStatus.VerzeSw1 = buff[7];
+            UnitStatus.VerzeSw2 = buff[8];
+            UnitStatus.VerzeSw3 = buff[9];
         }
 
         public void DoReadRozdilKusu(byte[] buff)
         {
+            Logger.Debug("");
+
             var value = Helper.ToShort(buff[8], buff[9]);
             UnitStatus.RozdilKusu = value;
             UnitStatus.RozdilKusuTime = DateTime.Now;
             UnitStatus.IsRozdilKusu = true;
         }
 
-        public bool SendReadDefektivita()
-        {
-            Logger.Info($"+ unit {Address}");
-
-            return SendCommand(CmdReadDefektivita);
-        }
-
         public void DoReadDefectivita(byte[] buff)
         {
+            Logger.Debug("");
+
             var value = Helper.ToSingle(buff, 7);
             UnitStatus.Defektivita = value;
             UnitStatus.DefektivitaTime = DateTime.Now;
             UnitStatus.IsDefektivita = true;
         }
 
+        public void DoReadStavCitacuKonecSmeny(byte[] buff)
+        {
+            Logger.Debug("");
+
+            byte addr = buff[2];
+            byte cmd = buff[3];
+
+            var okVal = Helper.ToShort(buff[4], buff[5]);
+            var ngVal = Helper.ToShort(buff[6], buff[7]);
+            var stopTime = Helper.ToShort(buff[8], buff[9]);
+            short machineStatus = buff[10];
+
+            UnitStatus.LastOk = okVal;
+            UnitStatus.LastNg = ngVal;
+            UnitStatus.LastMachineStatus = (MachineStateEnum)machineStatus;
+            UnitStatus.LastMachineStopTime = stopTime;
+
+
+            Logger.Info($"okVal:{okVal} ngVal:{ngVal} machineStatus:{machineStatus} unit: {Address}");
+        }
+
         #endregion
 
-        public void LoadUnitConfigFromFile(byte addr, string dataFilePath)
+        #region public methods - Obtain unit status
+
+        /// <summary>
+        /// Ziska status jednotky, provadi se postupnou sekvencí samostatně spouštěných příkazů dle _obtainStatusSequence
+        /// Na vysledek se neceka, pouze na potvrzeni odeslani prikazu
+        /// Nastaví pro jednotku IsCommandPending  
+        /// </summary>
+        /// <returns></returns>
+        public bool ObtainStatusAsync()
         {
-            UnitConfig = new UnitConfig();
-            UnitConfig.LoadFromFile(addr, dataFilePath);
+            SetCommandIsPending(true); //na false se nastavuje z jineho vlakna
+            CurrentCmdStartTime = DateTime.Now;
+
+            CurrentCmd = _obtainStatusSequence[_obtainStatusIndex++];
+
+            TplLogger.Debug($"+Obtain status [{Address:x2}]");
+            TplLogger.Debug($" Send command {CurrentCmd:x2} to [{Address:x2}]");
+            if (_obtainStatusIndex >= _obtainStatusSequence.Length) _obtainStatusIndex = 0;
+
+            var res = SendCommand(CurrentCmd);
+            if (res)
+            {
+                TimeSpan duration = DateTime.Now - CurrentCmdStartTime;
+                TplLogger.Debug($" Send command {CurrentCmd:x2} to [{Address:x2}] : OK ({duration.Milliseconds} ms)");
+            }
+            else
+            {
+                TimeSpan duration = DateTime.Now - CurrentCmdStartTime;
+                var s = $" Send command {CurrentCmd:x2} to [{Address:x2}] : Failed {RunConfig.SendAttempts} times ({duration.Milliseconds} ms)";
+                TplLogger.Debug(s);
+                ErrorsLogger.Error(s);
+                SetCommandIsPending(false);
+            }
+            TplLogger.Debug($"-Obtain status [{Address:x2}] res:{res}");
+            return res;
+        }
+
+        /// <summary>
+        /// Ziska status jednotky, provadi se postupnou sekvencí příkazů CmdReadStavCitacu, CmdReadCasPosledniOkNg
+        /// Probiha synchronne s cekanim nejen na potvrzeni odeslani prikazu ale i na vysledek prikazu
+        /// </summary>
+        /// <returns></returns>
+        public bool ObtainStatusSync()
+        {
+            CurrentCmdStartTime = DateTime.Now;
+         
+            CurrentCmd = CmdReadStavCitacu;
+
+            TplLogger.Debug($"+Obtain status [{Address:x2}]");
+
+            TplLogger.Debug($" Send command {CurrentCmd:x2} to [{Address:x2}]");
+
+            var res = SendCommand(CurrentCmd);
+            if (res)
+            {
+                TimeSpan duration = DateTime.Now - CurrentCmdStartTime;
+                TplLogger.Debug($" Send command {CurrentCmd:x2} to [{Address:x2}] : OK ({duration.Milliseconds} ms)");
+
+                if (RunConfig.IsWaitCommandResult)
+                {
+                    WaitEventCommandResult.Reset();
+                    var resultReceived = WaitEventCommandResult.WaitOne(RunConfig.ReadResultTimeOut,true);
+                    duration = DateTime.Now - CurrentCmdStartTime;
+                    var r = (resultReceived) ? "received" : "expired";
+                    TplLogger.Debug($" Command {CurrentCmd:x2} to [{Address:x2}] : result {r} ({duration.Milliseconds} ms)");
+                    res = resultReceived;
+                }
+            }
+            else
+            {
+                TimeSpan duration = DateTime.Now - CurrentCmdStartTime;
+                var s = $" Send command {CurrentCmd:x2} to [{Address:x2}] : Failed {RunConfig.SendAttempts} times ({duration.Milliseconds} ms)";
+                TplLogger.Debug(s);
+                ErrorsLogger.Error(s);
+            }
+
+            if (res)
+            {
+                CurrentCmdStartTime = DateTime.Now;
+                CurrentCmd = CmdReadCasPosledniOkNg;
+
+                TplLogger.Debug($" Send command {CurrentCmd:x2} to [{Address:x2}]");
+
+                res = SendCommand(CurrentCmd);
+                if (res)
+                {
+                    TimeSpan duration = DateTime.Now - CurrentCmdStartTime;
+                    TplLogger.Debug($" Send command {CurrentCmd:x2} to [{Address:x2}] : OK ({duration.Milliseconds} ms)");
+
+                    if (RunConfig.IsWaitCommandResult)
+                    {
+                        WaitEventCommandResult.Reset(); //protoze result mohl prijit necekane po timout-u a mohl byt tudiz ve stavu signaled
+                        var resultReceived = WaitEventCommandResult.WaitOne(RunConfig.ReadResultTimeOut);
+                        duration = DateTime.Now - CurrentCmdStartTime;
+                        var r = (resultReceived) ? "received" : "expired";
+                        TplLogger.Debug($" Command {CurrentCmd:x2} to [{Address:x2}] : result {r} ({duration.Milliseconds} ms)");
+                        res = resultReceived;
+                    }
+                }
+                else
+                {
+                    TimeSpan duration = DateTime.Now - CurrentCmdStartTime;
+                    var s = $" Send command {CurrentCmd:x2} to [{Address:x2}] : Failed {RunConfig.SendAttempts} times ({duration.Milliseconds} ms)";
+                    TplLogger.Debug(s);
+                    ErrorsLogger.Error(s);
+                }
+            }
+
+            TplLogger.Debug($"-Obtain status [{Address:x2}] res:{res}");
+            return res;
         }
 
         public void RecalcTabule()
         {
             UnitStatus.RecalcTabule(UnitConfig);
+        }
+
+        #endregion
+
+        #region public methods - other
+
+        public void LoadUnitConfigFromFile(byte addr, string dataFilePath)
+        {
+            UnitConfig = new UnitConfig();
+            UnitConfig.LoadFromFile(addr, dataFilePath);
         }
 
         public void SetCommandIsPending(bool val)
@@ -424,5 +534,8 @@ namespace Slevyr.DataAccess.Model
                 }
             }
         }
+
+        #endregion
+
     }
 }

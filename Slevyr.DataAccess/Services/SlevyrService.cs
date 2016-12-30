@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Threading;
+using System.Threading.Tasks;
 using NLog;
 using SledovaniVyroby.SerialPortWraper;
 using Slevyr.DataAccess.DAO;
@@ -21,6 +22,8 @@ namespace Slevyr.DataAccess.Services
         private static readonly Logger DataSendReceivedLogger = LogManager.GetLogger("DataReceived");
         private static readonly Logger ErrorsLogger = LogManager.GetLogger("Errors");
         private static readonly Logger TplLogger = LogManager.GetLogger("Tpl");
+
+        private static volatile object _lock = new object();
 
         private static SerialPortWraper _serialPort;
 
@@ -54,14 +57,33 @@ namespace Slevyr.DataAccess.Services
 
         public static bool SerialPortIsOpen => _serialPort.IsOpen;
 
-        public static IEnumerable<int> UnitAddresses => _runConfig.UnitAddrs;
+        private static IEnumerable<int> UnitAddresses => _runConfig.UnitAddrs;
 
         public static int UnitCount => _unitDictionary.Count;
-        //public static int SelectedUnit { get; set; }
 
         #endregion
 
         #region init method
+
+
+        public static void Stop()
+        {
+            StopPacketWorker();
+
+            StopSendWorker();
+
+            ClosePort();
+        }
+
+        public static void Start()
+        {
+            OpenPort();
+
+            StartSendWorker();
+
+            StartPacketWorker();
+        }
+
 
         public static void Init(SerialPortConfig portCfg, RunConfig runConfig)
         {
@@ -74,7 +96,9 @@ namespace Slevyr.DataAccess.Services
             _unitDictionary = new Dictionary<int, UnitMonitor>();
             foreach (var a in runConfig.UnitAddrs)
             {
-                _unitDictionary.Add(a, new UnitMonitor((byte)a, _serialPort, _runConfig));
+                var um = new UnitMonitor((byte) a, _runConfig);
+                um.UnitStatus.PrechodSmeny += UnitStatusOnPrechodSmeny;
+                _unitDictionary.Add(a, um);
             }
 
             foreach (var m in _unitDictionary.Values)
@@ -87,21 +111,38 @@ namespace Slevyr.DataAccess.Services
             _serialPort.ErrorReceived += _serialPort_ErrorReceived;
 
             Logger.Info("Unit count: " + _unitDictionary.Count);
-
-            OpenPort();
-
+        
             Logger.Info("-");
         }
+
+        /// <summary>
+        /// je vyvolan po prechodu smeny, napr. z nocni na ranni
+        /// </summary>
+        /// <param name="sender">objekt UnitStatus</param>
+        /// <param name="smena">Smena, hodnota enumu je prikaz ktery se ma pouzit pro vycteni citacu po skonceni smeny</param>
+        private static void UnitStatusOnPrechodSmeny(object sender, SmenyEnum smena)
+        {
+            UnitStatus us = sender as UnitStatus;
+
+            int cmd = (int) smena;
+
+            Logger.Info($"prechod smeny addr:{us.Addr} cmd:{cmd:x2}");
+
+            //prikaz na vycteni hodnoty se posila po zpozdeni 2sec 
+            //TODO parametr do config
+            Task.Delay(2000).ContinueWith(t =>
+            {
+                var uc = new UnitCommand(() => _unitDictionary[us.Addr].SendCommand((byte)cmd), "CmdReadStavCitacuKonecSmeny", us.Addr);
+                UnitCommandsQueue.Enqueue(uc);
+            });
+        }
+
 
         private static void _serialPort_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
         {
             Logger.Error($"--- Serial port error received: {e.EventType} ---" );
             ErrorsLogger.Error($"--- Serial port error received: {e.EventType} ---");
         }
-
-        //public delegate Task SendConfirmationEventHandler(EventArgs e);
-
-        //public static event SendConfirmationEventHandler SendConfirmationEvent;
 
         private static void SerialPortOnDataReceived(object sender, SerialDataReceivedEventArgs serialDataReceivedEventArgs)
         {
@@ -147,7 +188,7 @@ namespace Slevyr.DataAccess.Services
                 if (isSendConfirmation)
                 {                   
                     _unitDictionary[adr].WaitEventSendConfirm.Set();
-                    TplLogger.Debug($"WaitEventSendConfirm.Set - adr:[{adr:x2}]");
+                    TplLogger.Debug($"  WaitEventSendConfirm.Set - adr:[{adr:x2}]");
                     return;
                 }
 
@@ -158,12 +199,12 @@ namespace Slevyr.DataAccess.Services
                 {
                     //oznamim jednotce ze byla prijata response na prikaz cmd
                     _unitDictionary[adr].ResponseReceived(cmd);
-                    TplLogger.Debug($"Response received from [{adr:x2}] cmd:{cmd:x2}");
+                    TplLogger.Debug($"  Response received cmd:{cmd:x2} from [{adr:x2}]");
 
                     if (_runConfig.IsWaitCommandResult)
                     {
                         _unitDictionary[adr].WaitEventCommandResult.Set();   // rozlisit podle typu prikazu ?
-                        TplLogger.Debug($"WaitEventCommandResult.Set - adr:[{adr:x2}]");
+                        TplLogger.Debug($"  WaitEventCommandResult.Set - adr:[{adr:x2}]");
                     }
 
                     switch (cmd)
@@ -192,7 +233,13 @@ namespace Slevyr.DataAccess.Services
             {
                 if (_runConfig.IsMockupMode) return true;
 
-                if (!_serialPort.IsOpen) _serialPort.Open();
+                if (!CheckIsPortOpen())
+                {
+                    lock (_lock)
+                    {
+                        _serialPort.Open();
+                    }
+                }
 
                 Logger.Info($"Port open: {_serialPort.IsOpen}");
 
@@ -210,11 +257,14 @@ namespace Slevyr.DataAccess.Services
             Logger.Info("+");
 
             if (_runConfig.IsMockupMode) return true;
-            if (_serialPort.IsOpen)
+            if (CheckIsPortOpen())
             {
-                _serialPort.DiscardInBuffer();
-                _serialPort.DiscardOutBuffer();
-                _serialPort.Close();
+                lock (_lock)
+                {
+                    _serialPort.DiscardInBuffer();
+                    _serialPort.DiscardOutBuffer();
+                    _serialPort.Close();
+                }
             }
             Logger.Info("-");
             return !_serialPort.IsOpen;
@@ -297,8 +347,8 @@ namespace Slevyr.DataAccess.Services
 
             byte writeProtectEEpromVal = (byte)(writeProtectEEprom ? 0 : 1);
             byte bootloaderOnVal = (byte)(bootloaderOn ? 0 : 1);
-            //return _unitDictionary[addr].SetStatus(writeProtectEEpromVal, minOK, minNG, bootloaderOnVal, parovanyLED, rozliseniCidel, pracovniJasLed);
-            var uc = new UnitCommand(() => _unitDictionary[addr].SetStatus(writeProtectEEpromVal, minOK, minNG, bootloaderOnVal, parovanyLED, rozliseniCidel, pracovniJasLed), "SetStatus", addr);
+            //return _unitDictionary[addr].SendSetZaklNastaveni(writeProtectEEpromVal, minOK, minNG, bootloaderOnVal, parovanyLED, rozliseniCidel, pracovniJasLed);
+            var uc = new UnitCommand(() => _unitDictionary[addr].SendSetZaklNastaveni(writeProtectEEpromVal, minOK, minNG, bootloaderOnVal, parovanyLED, rozliseniCidel, pracovniJasLed), "SendSetZaklNastaveni", addr);
             UnitCommandsQueue.Enqueue(uc);
 
             return true;
@@ -311,8 +361,8 @@ namespace Slevyr.DataAccess.Services
 
             if (_runConfig.IsMockupMode) return true;
 
-            //return _unitDictionary[addr].SetCileSmen(varianta, cil1, cil2, cil3);
-            var uc = new UnitCommand(() => _unitDictionary[addr].SetCileSmen(varianta, cil1, cil2, cil3), "SetCileSmen", addr);
+            //return _unitDictionary[addr].SendSetCileSmen(varianta, cil1, cil2, cil3);
+            var uc = new UnitCommand(() => _unitDictionary[addr].SendSetCileSmen(varianta, cil1, cil2, cil3), "SendSetCileSmen", addr);
             UnitCommandsQueue.Enqueue(uc);
 
             return true;
@@ -324,8 +374,8 @@ namespace Slevyr.DataAccess.Services
 
             if (_runConfig.IsMockupMode) return true;
 
-            //return _unitDictionary[addr].SetPrestavky(varianta, prest1, prest2, prest3);
-            var uc = new UnitCommand(() => _unitDictionary[addr].SetPrestavky(varianta, prest1, prest2, prest3), "SetPrestavky", addr);
+            //return _unitDictionary[addr].SendSetPrestavky(varianta, prest1, prest2, prest3);
+            var uc = new UnitCommand(() => _unitDictionary[addr].SendSetPrestavky(varianta, prest1, prest2, prest3), "SendSetPrestavky", addr);
             UnitCommandsQueue.Enqueue(uc);
 
             return true;
@@ -337,8 +387,8 @@ namespace Slevyr.DataAccess.Services
 
             if (_runConfig.IsMockupMode) return true;
 
-            //return _unitDictionary[addr].SetCitace(ok, ng);
-            var uc = new UnitCommand(() => _unitDictionary[addr].SetCitace(ok, ng), "SetCitace", addr);
+            //return _unitDictionary[addr].SendSetCitace(ok, ng);
+            var uc = new UnitCommand(() => _unitDictionary[addr].SendSetCitace(ok, ng), "SendSetCitace", addr);
             UnitCommandsQueue.Enqueue(uc);
 
             return true;
@@ -348,7 +398,7 @@ namespace Slevyr.DataAccess.Services
         {
             Logger.Debug("");
 
-            var uc = new UnitCommand(() => _unitDictionary[addr].SetCas(DateTime.Now), "NastavAktualniCas", addr);
+            var uc = new UnitCommand(() => _unitDictionary[addr].SendSetCas(DateTime.Now), "NastavAktualniCas", addr);
             UnitCommandsQueue.Enqueue(uc);           
         }
 
@@ -360,8 +410,8 @@ namespace Slevyr.DataAccess.Services
             if (_runConfig.IsMockupMode) return true;
             
             Logger.Debug($"cil1:{def1Val}");
-            //return _unitDictionary[addr].SetDefektivita(varianta, def1Val, def2Val, def3Val );
-            var uc = new UnitCommand(() => _unitDictionary[addr].SetDefektivita(varianta, def1Val, def2Val, def3Val), "SetDefektivita", addr);
+            //return _unitDictionary[addr].SendSetDefektivita(varianta, def1Val, def2Val, def3Val );
+            var uc = new UnitCommand(() => _unitDictionary[addr].SendSetDefektivita(varianta, def1Val, def2Val, def3Val), "SendSetDefektivita", addr);
             UnitCommandsQueue.Enqueue(uc);
 
             return true;
@@ -376,7 +426,7 @@ namespace Slevyr.DataAccess.Services
 
             var um = _unitDictionary[addr];
 
-            var res = um.SetHandshake(value ? (byte)1 : (byte)255, 0);
+            var res = um.SendSetHandshake(value ? (byte)1 : (byte)255, 0);
 
             return res;
         }
@@ -511,14 +561,14 @@ namespace Slevyr.DataAccess.Services
                         if (remainingDelay > 0)
                         {
                             Logger.Debug($"+remaining min. delay: {remainingDelay}");
-                            Thread.Sleep((int)remainingDelay);  //zbyva do min. pauzy pred odeslanim prikazu jednotku
+                            Thread.Sleep((int)remainingDelay);  //zbyva do min. pauzy pred odeslanim prikazu na jednotku
                         }
                         stopwatch.Reset();
                     }
 
                     stopwatch.Start(); //merim cas za ktery se provede odeslani pozadavku na vsechny jednotky
 
-                    //provedu odeslani pozadavku na vsechny jednotky v cyklu
+                    //provedu odeslani pozadavku na vsechny jednotky
                     foreach (var addr in UnitAddresses)
                     {
                         if (_sendBw.CancellationPending)
@@ -530,30 +580,35 @@ namespace Slevyr.DataAccess.Services
 
                         bool res = false;
 
-                        if (_unitDictionary[addr].IsCommandPending)
+                        if (_runConfig.IsWaitCommandResult)
                         {
-                            TplLogger.Info($"..Command {_unitDictionary[addr].CurrentCmd:x2}  [{addr:x2}] is pending..");
-                            if ((DateTime.Now - _unitDictionary[addr].CurrentCmdStartTime).TotalMilliseconds > _runConfig.ReadResultTimeOut) 
-                            {
-                                TplLogger.Error($"Timeout cmd:{_unitDictionary[addr].CurrentCmd:x2} [{addr:x2}]");
-                                _unitDictionary[addr].UpdateStatusTokenSource?.Cancel();
-                                _unitDictionary[addr].SetCommandIsPending(false);
-                                _unitDictionary[addr].UnitStatus.MachineStatus = MachineStateEnum.NotAvailable;
-                            }
+                            res = _unitDictionary[addr].ObtainStatusSync();
                         }
                         else
                         {
-                            //posila požadavek na další příkaz který je součástí zjištění stavu jednotky
-                            //čeká se na dokončení třech možných pokusů
-                            //Nastaví pro jednotku IsCommandPending  
-                            res = _unitDictionary[addr].SendStatusCommand();
-                            if (!res)
+                            if (_unitDictionary[addr].IsCommandPending) 
                             {
-                                _unitDictionary[addr].UnitStatus.MachineStatus = MachineStateEnum.NotAvailable;
+                                TplLogger.Info($"..Command {_unitDictionary[addr].CurrentCmd:x2}  [{addr:x2}] is pending..");
+                                if ((DateTime.Now - _unitDictionary[addr].CurrentCmdStartTime).TotalMilliseconds > _runConfig.ReadResultTimeOut)
+                                {
+                                    TplLogger.Error($"Timeout cmd:{_unitDictionary[addr].CurrentCmd:x2} [{addr:x2}]");
+                                    _unitDictionary[addr].UpdateStatusTokenSource?.Cancel();
+                                    _unitDictionary[addr].SetCommandIsPending(false);
+                                    _unitDictionary[addr].UnitStatus.MachineStatus = MachineStateEnum.NotAvailable;
+                                }
+                            }
+                            else
+                            {
+                                res = _unitDictionary[addr].ObtainStatusAsync();
                             }
                         }
 
-                        Logger.Debug($"+send worker sleep: {_runConfig.WorkerSleepPeriod}, res:{res}");
+                        if (!res)
+                        {
+                            _unitDictionary[addr].UnitStatus.MachineStatus = MachineStateEnum.NotAvailable;
+                        }
+
+                        Logger.Debug($"+send worker sleep: {_runConfig.WorkerSleepPeriod}");
                         Thread.Sleep(_runConfig.WorkerSleepPeriod);  //pauza pred odeslanim prikazu na dalsi jednotku - parametr
                     }
 
@@ -616,6 +671,12 @@ namespace Slevyr.DataAccess.Services
                         case UnitMonitor.CmdReadHodnotuPrumCykluOkNg:
                             //_unitDictionary[addr].DoReadDefectivita(packet);
                             break;
+                        case UnitMonitor.CmdReadStavCitacuNocniSmena:
+                        case UnitMonitor.CmdReadStavCitacuOdpoledniSmena:
+                        case UnitMonitor.CmdReadStavCitacuRanniSmena:
+                            _unitDictionary[addr].DoReadStavCitacuKonecSmeny(packet);
+                            SqlliteDao.AddUnitKonecSmenyState(addr, cmd, _unitDictionary[addr].UnitStatus);
+                            break;
                     }                    
 
                 }
@@ -628,5 +689,33 @@ namespace Slevyr.DataAccess.Services
 
         #endregion
 
+        public static void DiscardOutBuffer()
+        {
+            lock (_lock)
+            {
+                if (_serialPort.IsOpen)
+                  _serialPort.DiscardOutBuffer(); //zkusime - asi to neni potreba ale kdovi. Ale muze to degradovat vykon.
+            }
+        }
+
+        public static bool CheckIsPortOpen()
+        {
+            bool res ;
+            lock (_lock)
+            {
+                res = _serialPort.IsOpen;
+            }
+            return res;
+        }
+
+        public static void WriteToPort(byte[] inBuff, int buffLength)
+        {
+            lock (_lock)
+            {
+                _serialPort.Write(inBuff, 0, buffLength);
+            }
+            DataSendReceivedLogger.Debug($"->  {buffLength}; {BitConverter.ToString(inBuff)}");
+        }
+      
     }
 }

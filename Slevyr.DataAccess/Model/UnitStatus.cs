@@ -32,16 +32,35 @@ namespace Slevyr.DataAccess.Model
         Neznamy =99
     }
 
+    /// <summary>
+    /// směny, hodnota je příkaz pro zjištění posledních hondot ok, ng
+    /// </summary>
+    public enum SmenyEnum
+    {
+        [Description("Smena 1 - ranni")]
+        Smena1 = UnitMonitor.CmdReadStavCitacuRanniSmena,
+        [Description("Smena 2 - odpoledni")]
+        Smena2 = UnitMonitor.CmdReadStavCitacuOdpoledniSmena,
+        [Description("Smena 3 - nocni")]
+        Smena3 = UnitMonitor.CmdReadStavCitacuNocniSmena,
+        Nedef = 0,
+    }
+
     public class UnitStatus
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         #region properties
 
-        public bool SendError { get; set; }
-        public string LastSendErrorDescription { get; set; }
+        //public bool SendError { get; set; }
+        //public string LastSendErrorDescription { get; set; }
+
+        public int Addr { get; set; }
+
+        public SmenyEnum CurrentSmena { get; private set; }
 
         public int Ok { get; set; }
+
         public int Ng { get; set; }
 
         /// <summary>
@@ -84,12 +103,15 @@ namespace Slevyr.DataAccess.Model
         public string CasOkStr => CasOk.ToString(CultureInfo.InvariantCulture);
 
         public float PrumCasVyrobyOk => (Ok != 0) ? UbehlyCasSmenySec /(float) Ok:float.NaN;
+
         public string PrumCasVyrobyOkStr => (Ok != 0) ? (UbehlyCasSmenySec / (float)Ok).ToString(CultureInfo.InvariantCulture) : "null";
 
         public float PrumCasVyrobyNg => (Ng != 0) ? UbehlyCasSmenySec / (float)Ng : float.NaN;
+
         public string PrumCasVyrobyNgStr => (Ng != 0) ? (UbehlyCasSmenySec / (float)Ng).ToString(CultureInfo.InvariantCulture) : "null";
 
         public DateTime CasOkNgTime { get; set; }
+
         public bool IsCasOkNg { get; set; }
         /// <summary>
         /// čas posledního NG kusu, Sekundy na desetiny
@@ -127,10 +149,30 @@ namespace Slevyr.DataAccess.Model
         public byte VerzeSw2 { get; set; }
         public byte VerzeSw3 { get; set; }
 
+        /// <summary>
+        /// Pocet OK ktery se zaznamena po konci smeny
+        /// </summary>
+        public short LastOk { get; set; }
+        /// <summary>
+        /// Pocet NG ktery se zaznamena po konci smeny
+        /// </summary>
+        public short LastNg { get; set; }
+        public MachineStateEnum LastMachineStatus { get; set; }
+        public short LastMachineStopTime { get; set; }
+
+        #endregion
+
+        #region events
+        /// <summary>
+        /// event se vyhazuje po prechodu z jedne smeny na druhy (napr. z ranni na odpoledni)
+        /// </summary>
+        public event EventHandler<SmenyEnum> PrechodSmeny;
+
         #endregion
 
         public UnitStatus()
         {
+            CurrentSmena = SmenyEnum.Nedef;
         }
 
         #region methods
@@ -182,6 +224,8 @@ namespace Slevyr.DataAccess.Model
 
                 Logger.Debug($"actual time is {dateTimeNow}");
 
+                SmenyEnum smena = SmenyEnum.Nedef;
+
                 if (secondsFromMidn > zacatekSmeny1Sec && secondsFromMidn < zacatekSmeny2Sec)  //smena1
                 {
                     string o;
@@ -205,7 +249,8 @@ namespace Slevyr.DataAccess.Model
                     }
                     CilKusuTabule = unitConfig.Cil1Smeny;
                     CilDefectTabule = unitConfig.Def1Smeny;
-                    Logger.Debug("smena1 "+o);
+                    smena = SmenyEnum.Smena1;
+
                 }                
                 else if (secondsFromMidn > zacatekSmeny2Sec && secondsFromMidn < zacatekSmeny3Sec) //smena 2
                 {
@@ -230,7 +275,8 @@ namespace Slevyr.DataAccess.Model
                     }
                     CilKusuTabule = unitConfig.Cil2Smeny;
                     CilDefectTabule = unitConfig.Def2Smeny;
-                    Logger.Debug("smena2 " + o);
+                    smena = SmenyEnum.Smena2;
+
                 }
                 else if (secondsFromMidn > zacatekSmeny3Sec || secondsFromMidn < zacatekSmeny1Sec) //smena 3
                 {
@@ -261,8 +307,21 @@ namespace Slevyr.DataAccess.Model
                     }
                     CilKusuTabule = unitConfig.Cil3Smeny;
                     CilDefectTabule = unitConfig.Def3Smeny;
-                    Logger.Debug("smena3 " + o);
+                    smena = SmenyEnum.Smena3;
+
                 }
+
+                Logger.Debug(smena);
+
+                if (smena != SmenyEnum.Nedef && smena != CurrentSmena)
+                {
+                    if (CurrentSmena != SmenyEnum.Nedef)  //aby bylo zajisteno ze se opravdu jedna o prechod z jedne smeny do druhe 
+                    {
+                        PrechodSmeny?.Invoke(this, CurrentSmena);  //po odchyceni se po definovanem zpozdeni zaradi prikaz k nacteni stavu do fronty adhoc prikazu
+                    }
+                    CurrentSmena = smena;
+                }
+
 
                 //if (!IsPrestavkaTabule)   //issue https://github.com/marsikv/slevyr/issues/42
                 {

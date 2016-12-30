@@ -39,10 +39,13 @@ namespace Slevyr.DataAccess.DAO
 	`stavLinky`	INTEGER
 );";
 
-        const string SqlInsertIntoObservations = @"insert into observations 
+        const string SqlInsertStatusIntoObservation = @"insert into observations 
 (cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
 
-        const string SqlUpdateObservations =
+        const string SqlInsertLastStatusIntoObservations = @"insert into observations 
+(cmd,unitId,pocetOk,casPoslednihoOk,pocetNg,casPoslednihoNg,stavLinky) values ";
+
+        const string SqlUpdateStatusIntoObservations =
             @"update observations set casPoslednihoOk=@casOk, casPoslednihoNg=@casNg where id=@id";
 
         const string SqlCreateStavLinkyTable = @"CREATE TABLE `ProductionLineStatus` 
@@ -119,7 +122,7 @@ namespace Slevyr.DataAccess.DAO
         public static long AddUnitState(int addr, UnitStatus u)
         {
             //(cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
-            string sql = SqlInsertIntoObservations +
+            string sql = SqlInsertStatusIntoObservation +
                          $"(4,{addr},{(u.IsPrestavkaTabule ? 1 : 0)},{u.CilKusuTabule},{u.Ok},{u.CasOkStr}," +
                          $"{u.PrumCasVyrobyOkStr},{u.CilDefectTabuleStr}," +
                          $"{u.Ng},{u.CasNgStr},{u.PrumCasVyrobyNgStr}," +
@@ -136,10 +139,25 @@ namespace Slevyr.DataAccess.DAO
             return (long) command.ExecuteScalar();
         }
 
+        public static void AddUnitKonecSmenyState(byte addr, byte cmd, UnitStatus u)
+        {            
+            string sql = SqlInsertLastStatusIntoObservations +
+                       $"({cmd},{addr}," +
+                       $"{u.LastOk},null," +  //posledni cas ok neznam
+                       $"{u.LastNg},null," +  //posledni cas ng neznam
+                       $"{(int)u.MachineStatus})";
+
+            Logger.Info(sql);
+
+            SQLiteCommand command = new SQLiteCommand(sql, _dbConnection);
+            command.ExecuteNonQuery();
+
+        }
+
 
         public static void UpdateUnitStateCasOk(byte addr, long lastId, UnitStatus u)
         {
-            SQLiteCommand command = new SQLiteCommand(SqlUpdateObservations, _dbConnection)
+            SQLiteCommand command = new SQLiteCommand(SqlUpdateStatusIntoObservations, _dbConnection)
             {
                 CommandType = CommandType.Text
             };

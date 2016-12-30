@@ -41,8 +41,8 @@ namespace Slevyr.WebAppHost
             //var physicalFileSystem = new PhysicalFileSystem(@"./WWW1");
 
             //B. nacitam z adresare ktery je mimo solution, dle nastaveni www.rootDir v  app.config
-            var contentDir = ConfigurationManager.AppSettings["www.rootDir"];
-            var physicalFileSystem = new PhysicalFileSystem(contentDir);
+            //var contentDir = ConfigurationManager.AppSettings["www.rootDir"];
+            var physicalFileSystem = new PhysicalFileSystem(Globals.WwwRootDir);
 
             var options = new FileServerOptions
             {

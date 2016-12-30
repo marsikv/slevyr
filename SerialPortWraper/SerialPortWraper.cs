@@ -28,14 +28,7 @@ namespace SledovaniVyroby.SerialPortWraper
 
         public SerialPortWraper(SerialPortConfig cfg) 
             : base(cfg.Port, cfg.BaudRate, cfg.Parity, cfg.DataBits, cfg.StopBits)
-        {
-            //ReadTimeout = (int)TimeSpan.FromSeconds(3).TotalMilliseconds;
-            //WriteTimeout = (int)TimeSpan.FromSeconds(3).TotalMilliseconds;
-            //NewLine = "\r\n";
-            //WriteBufferSize = OptimalBufferSize;
-            //ReadBufferSize = OptimalBufferSize;
-            //ReceivedBytesThreshold = 65535;  // We don't need this event, so max out the threshold
-            //Encoding = Encoding.Default;
+        {          
             DtrEnable = false;
             RtsEnable = false;
             Handshake = Handshake.None;
@@ -76,18 +69,17 @@ namespace SledovaniVyroby.SerialPortWraper
             return datos;
         }
 
-        public new void Open()
-        {
-            base.Open();
+        //public new void Open()
+        //{
 
-            /* The .Net SerialStream class has a bug that causes its finalizer to crash when working 
-             * with virtual COM ports (e.g. FTDI, Prolific, etc.) See the following page for details:
-             * http://social.msdn.microsoft.com/Forums/en-US/netfxbcl/thread/8a1825d2-c84b-4620-91e7-3934a4d47330
-             * To work around this bug, we suppress the finalizer for the BaseStream and close it ourselves instead.
-             * See the Dispose method for the other half of this workaround.
-             */
-            GC.SuppressFinalize(BaseStream);
-        }
+        //    /* The .Net SerialStream class has a bug that causes its finalizer to crash when working 
+        //     * with virtual COM ports (e.g. FTDI, Prolific, etc.) See the following page for details:
+        //     * http://social.msdn.microsoft.com/Forums/en-US/netfxbcl/thread/8a1825d2-c84b-4620-91e7-3934a4d47330
+        //     * To work around this bug, we suppress the finalizer for the BaseStream and close it ourselves instead.
+        //     * See the Dispose method for the other half of this workaround.
+        //     */
+        //    GC.SuppressFinalize(BaseStream);
+        //}
 
 
         //public new string ReadLine()
@@ -109,31 +101,31 @@ namespace SledovaniVyroby.SerialPortWraper
         #region Implementation of IDisposable
 
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                try
-                {
-                    /* The .Net SerialStream class has a bug that causes its finalizer to crash when working 
-                     * with virtual COM ports (e.g. FTDI, Prolific, etc.) See the following page for details:
-                     * http://social.msdn.microsoft.com/Forums/en-US/netfxbcl/thread/8a1825d2-c84b-4620-91e7-3934a4d47330
-                     * To work around this bug, we suppress the finalizer for the BaseStream and close it ourselves instead.
-                     * See the Open method for the other half of this workaround.
-                     */
-                    if (IsOpen)
-                    {
-                        BaseStream.Close();
-                    }
-                }
-                catch
-                {
-                    // The BaseStream is already closed, disposed, or in an invalid state. Ignore and continue disposing.
-                }
-            }
+        //protected override void Dispose(bool disposing)
+        //{
+        //    if (disposing)
+        //    {
+        //        try
+        //        {
+        //            /* The .Net SerialStream class has a bug that causes its finalizer to crash when working 
+        //             * with virtual COM ports (e.g. FTDI, Prolific, etc.) See the following page for details:
+        //             * http://social.msdn.microsoft.com/Forums/en-US/netfxbcl/thread/8a1825d2-c84b-4620-91e7-3934a4d47330
+        //             * To work around this bug, we suppress the finalizer for the BaseStream and close it ourselves instead.
+        //             * See the Open method for the other half of this workaround.
+        //             */
+        //            if (IsOpen)
+        //            {
+        //                BaseStream.Close();
+        //            }
+        //        }
+        //        catch
+        //        {
+        //            // The BaseStream is already closed, disposed, or in an invalid state. Ignore and continue disposing.
+        //        }
+        //    }
 
-            base.Dispose(disposing);
-        }
+        //    base.Dispose(disposing);
+        //}
 
         #endregion
     }

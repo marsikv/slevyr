@@ -17,7 +17,7 @@ namespace Slevyr.WebAppHost
                 Ng = 11,
                 CasOk = (float)5.603,
                 CasNg = (float)1.54,
-                SendError = false
+                //SendError = false
             };
         }
 

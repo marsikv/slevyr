@@ -41,29 +41,7 @@ namespace Slevyr.WebAppHost
 
         static SlevyrController()
         {
-            Logger.Info("+");
-
-            Globals.LoadSettings();
-
-            PortConfig = new SerialPortConfig
-            {
-                Port = Globals.Port,
-                BaudRate = Globals.BaudRate,
-                ReceivedBytesThreshold = Globals.ReceivedBytesThreshold,
-                Parity = System.IO.Ports.Parity.None,
-                DataBits = 8,
-                StopBits = System.IO.Ports.StopBits.One,
-                ReceiveLength = 11
-            };
-
-            SlevyrService.Init(PortConfig, Globals.RunConfig); 
-
-            Logger.Info("unit count: " + SlevyrService.UnitCount);
-
-            if (Globals.RunConfig.IsRefreshTimerOn) SlevyrService.StartSendWorker();
-
-            SlevyrService.StartPacketWorker();
-
+            Logger.Info("+");     
         }
 
         #endregion
