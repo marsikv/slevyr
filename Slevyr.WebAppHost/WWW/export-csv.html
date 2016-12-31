@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sledování výroby</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&amp;subset=latin-ext" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+  </head>
+<body>
+
+    <div id="menuOpener" class="menuSwitcher menuSwitcher-open"></div>
+
+    <nav id="menu" class="menu">
+        <div class="menu--header">
+            <h4>Sledování výroby</h4>
+        </div>
+        <ul class="menu--list">
+            <a href="linka-tabule.html"><li class="menu--item menu--item-tabule">Tabule</li></a>
+            <a href="linka-params.html"><li class="menu--item menu--item-params">Parametry</li></a>
+            <a href="nastaveni.html"><li class="menu--item menu--item-settings">Nastavení</li></a>
+            <a href="export-csv.html"><li class="menu--item menu--item-export menu--item-active">Export</li></a>
+        </ul>
+        <div id="menuCloser" class="menuSwitcher menuSwitcher-close"></div>
+    </nav>
+
+    <main class="main">
+        <h1>Export do CSV</h1>
+
+        <section class="params">
+            <form id="exportInterval">
+                <div class="params--section">
+                    <div class="params--item params--item-1">
+                        <div class="label">Výstupní soubor</div>
+                        <input id="exportFilename"
+                               class="input"
+                               name="fileName"
+                               type="text"
+                               value="c:\temp\export.csv"
+                               placeholder="c:\temp\export.csv" />
+                    </div>
+                    <div class="params--item params--item-2">
+                        <div class="label">Datum a čas od</div>
+                        <input id="exportTimeFrom" class="input" name="timeFrom" type="datetime-local" />
+                    </div>
+                    <div class="params--item params--item-2 params--item-2-last">
+                        <div class="label">Datum a čas do</div>
+                        <input id="exportTimeTo" class="input" name="timeTo" type="datetime-local" />
+                    </div>
+                    <div class="params--item params--item-1">
+                        <div class="label">Identifikátor linky</div>
+                        <input id="linkaId" class="input" name="linkaId" type="number" value="100" />
+                    </div>
+                    <div class="params--item params--item-2">
+                        <input id="exportAll" type="checkbox" checked="checked">
+                        <label for="exportAll" class="checkbox">Exportovat za všechny linky</label>
+                    </div>
+                    <div class="params--item params--item-2 params--item-2-last">
+                        <input id="exportAllSeparated" type="checkbox">
+                        <label for="exportAllSeparated" class="checkbox">Po linkách do samostatných souborů</label>
+                    </div>
+
+                    <div class="params--action">
+                        <button class="btn btn-fill" type="button">Exportovat</button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+    </main>
+
+    <script src="scripts\jquery.min.js"></script>
+    <script src="scripts\main.js"></script>
+    <script src="scripts\exportScripts.js"></script>
+
+</body>
+</html>
+

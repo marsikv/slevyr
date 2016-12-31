@@ -115,6 +115,10 @@ a {
     background-image: url(../images/menu-settings.svg);
 }
 
+.menu--item-export:before {
+    background-image: url(../images/menu-export.svg);
+}
+
 .menu--item:hover {
     background-color: rgba(0,0,0,.25);
     cursor: pointer;
@@ -336,6 +340,10 @@ a {
 }
 
 /* FORMS */
+
+form {
+    width: 100%;
+}
 
 .input {
     width: 100%;
