@@ -19,7 +19,8 @@
             txt += ntf;
             txt += '<span class="notification--close"></span></div>';
 
-            this.jQ.notification.prepend(txt);
+            // this.jQ.notification.prepend(txt);
+            this.jQ.notification.html(txt);
         },
 
         toggleMenu: function (boolean) {
