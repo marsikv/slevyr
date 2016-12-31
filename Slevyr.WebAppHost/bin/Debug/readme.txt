@@ -29,7 +29,8 @@ start/stop:
 
 Krome registrace aplikace jako nativni sluby OS je mozne aplikaci spustit z prikazove radky s jakymkoli parametrem (napriklad: -start) a tim se spusti jako konzolova aplikace.
 Z Visual Studia se projekt automaticky spousti jako konzolova aplikace.
-K ukonceni aplikace v konzolovem rezimu dojde tak, ze se z klavesnice zada slovo "exit" bez uvozovek a potvrdi se klavesou Enter.
+
+K ukonceni aplikace v konzolovem rezimu dojde stisknutim libovolne klavesy.
 
 -----------
 
