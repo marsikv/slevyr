@@ -1,17 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 
 namespace Slevyr.DataAccess.Model
 {
     public class UnitTabule
     {
-        public int RozdilKusu { get; set; }
+        public string LinkaName { get; set; }
+
+        public int CilKusuTabule { get; set; }
+
+        public float CilDefectTabule { get; set; }
+
+        public string CilDefectTabuleStr => CilDefectTabule.ToString(CultureInfo.InvariantCulture);
 
         public float AktualDefectTabule { get; set; }
 
+        public string AktualDefectTabuleTxt { get; set; }
+
         public int RozdilTabule { get; set; }
+
+        public string RozdilTabuleTxt => (RozdilTabule == int.MinValue) ? "-" : RozdilTabule.ToString();
+
     }
 }

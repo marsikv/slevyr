@@ -52,6 +52,8 @@ namespace Slevyr.DataAccess.Model
 
         #region properties
 
+        public UnitTabule Tabule { get; private set; }
+
         public int Addr { get; set; }
 
         private SmenyEnum CurrentSmena { get; set; }
@@ -125,16 +127,7 @@ namespace Slevyr.DataAccess.Model
         public DateTime DefektivitaTime { get; set; }
         public bool IsDefektivita { get; set; }
         public bool IsPrestavkaTabule { get; set; }
-        public int CilKusuTabule { get; set; }
-        public float CilDefectTabule { get; set; }
-        public string CilDefectTabuleStr => CilDefectTabule.ToString(CultureInfo.InvariantCulture);
-        public float AktualDefectTabule { get; set; }
-        public string AktualDefectTabuleTxt => (float.IsNaN(AktualDefectTabule) || Ok == 0)  ? "-" : Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.CurrentCulture);
-        public string AktualDefectTabuleStr => (float.IsNaN(AktualDefectTabule) || Ok == 0) ? "null" : Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.InvariantCulture);
-
-        public int RozdilTabule { get; set; }
-        public string RozdilTabuleTxt => (RozdilTabule == int.MinValue) ? "-" : RozdilTabule.ToString();
-
+       
         /// <summary>
         /// cas v sec. ktery uz aktualni smene ubehl
         /// </summary>
@@ -171,6 +164,7 @@ namespace Slevyr.DataAccess.Model
         public UnitStatus()
         {
             CurrentSmena = SmenyEnum.Nedef;
+            Tabule = new UnitTabule();
         }
 
         #region methods
@@ -245,8 +239,8 @@ namespace Slevyr.DataAccess.Model
                         UbehlyCasSmenySec = zacatekPrestavkySmeny1Sec - zacatekSmeny1Sec + secondsFromMidn - konecPrestavkySmeny1Sec;
                         o = "c2";
                     }
-                    CilKusuTabule = unitConfig.Cil1Smeny;
-                    CilDefectTabule = unitConfig.Def1Smeny;
+                    Tabule.CilKusuTabule = unitConfig.Cil1Smeny;
+                    Tabule.CilDefectTabule = unitConfig.Def1Smeny;
                     smena = SmenyEnum.Smena1;
 
                 }                
@@ -271,8 +265,8 @@ namespace Slevyr.DataAccess.Model
                         UbehlyCasSmenySec = zacatekPrestavkySmeny2Sec - zacatekSmeny2Sec + secondsFromMidn - konecPrestavkySmeny2Sec;
                         o = "c2";
                     }
-                    CilKusuTabule = unitConfig.Cil2Smeny;
-                    CilDefectTabule = unitConfig.Def2Smeny;
+                    Tabule.CilKusuTabule = unitConfig.Cil2Smeny;
+                    Tabule.CilDefectTabule = unitConfig.Def2Smeny;
                     smena = SmenyEnum.Smena2;
 
                 }
@@ -303,10 +297,9 @@ namespace Slevyr.DataAccess.Model
                         UbehlyCasSmenySec = 86400 - zacatekSmeny3Sec + zacatekPrestavkySmeny3Sec + secondsFromMidn - konecPrestavkySmeny3Sec;
                         o = "c3";
                     }
-                    CilKusuTabule = unitConfig.Cil3Smeny;
-                    CilDefectTabule = unitConfig.Def3Smeny;
+                    Tabule.CilKusuTabule = unitConfig.Cil3Smeny;
+                    Tabule.CilDefectTabule = unitConfig.Def3Smeny;
                     smena = SmenyEnum.Smena3;
-
                 }
 
                 Logger.Debug(smena);
@@ -326,25 +319,27 @@ namespace Slevyr.DataAccess.Model
 
                     try
                     {
-                        double casNa1Kus = (double)delkaSmenySec / (double)CilKusuTabule;
+                        double casNa1Kus = (double)delkaSmenySec / (double)Tabule.CilKusuTabule;
                         var aktualniCil = UbehlyCasSmenySec / casNa1Kus;
-                        RozdilTabule = (int)Math.Round(Ok - aktualniCil);
+                        Tabule.RozdilTabule = (int)Math.Round(Ok - aktualniCil);
                     }
                     catch (Exception ex)
                     {
-                        RozdilTabule = int.MinValue;
+                        Tabule.RozdilTabule = int.MinValue;
                         Logger.Error(ex);
                     }
-                    
+
                     try
                     {
-                        AktualDefectTabule = (float)Ng / (float)Ok;
+                        Tabule.AktualDefectTabule = (float)Ng / (float)Ok;
                     }
                     catch (Exception)
                     {
-                        AktualDefectTabule = float.NaN;
-                        //Logger.Error(ex);
+                        Tabule.AktualDefectTabule = float.NaN;
                     }
+
+                    Tabule.AktualDefectTabuleTxt = (float.IsNaN(Tabule.AktualDefectTabule) || Ok == 0) ? "-" : Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.CurrentCulture);
+
                 }
 
                 Logger.Debug($"- unit {unitConfig.Addr}");

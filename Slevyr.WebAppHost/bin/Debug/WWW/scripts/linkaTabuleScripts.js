@@ -139,10 +139,10 @@ var $notification = $('#notification');
         $('#casNgValue').text(Number((data.CasNg).toFixed(1)) + 's');
         $('#checkTime').text(data.LastCheckTimeTxt);
 
-        $('#cilTabule').text(data.CilKusuTabule);
-        $('#rozdilTabule').text(data.RozdilTabuleTxt);
-        $('#cilDefTabule').text(data.CilDefectTabule);
-        $('#aktualniDefTabule').text(data.AktualDefectTabuleTxt);
+        $('#cilTabule').text(data.Tabule.CilKusuTabule);
+        $('#rozdilTabule').text(data.Tabule.RozdilTabuleTxt);
+        $('#cilDefTabule').text(data.Tabule.CilDefectTabule);
+        $('#aktualniDefTabule').text(data.Tabule.AktualDefectTabuleTxt);
 
         //$('#stav').text('');
         if (data.MachineStatus == 0)

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
@@ -10,7 +9,6 @@ using SledovaniVyroby.SerialPortWraper;
 using Slevyr.DataAccess.DAO;
 using Slevyr.DataAccess.Model;
 using Slevyr.DataAccess.Services;
-using Slevyr.WebAppHost.Properties;
 
 namespace Slevyr.WebAppHost
 {
@@ -123,20 +121,30 @@ namespace Slevyr.WebAppHost
 
         #region UnitStatus operations
 
+        //[HttpGet]
+        //public UnitStatus Status([FromUri] byte addr)
+        //{
+        //    Logger.Info("+");
+        //    if (Globals.RunConfig.IsMockupMode) return Mock.MockUnitStatus();
+
+        //    try
+        //    {
+        //        return SlevyrService.GetUnitStatus(addr);
+        //    }
+        //    catch (KeyNotFoundException)
+        //    {
+        //        throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+        //    }
+        //}
+
         [HttpGet]
-        public UnitStatus Status([FromUri] byte addr)
+        public IEnumerable<UnitTabule> GetAllTabule()
         {
             Logger.Info("+");
-            if (Globals.RunConfig.IsMockupMode) return Mock.MockUnitStatus();
+            //if (Globals.RunConfig.IsMockupMode) return Mock.MockUnitStatus();
 
-            try
-            {
-                return SlevyrService.GetUnitStatus(addr);
-            }
-            catch (KeyNotFoundException)
-            {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
-            }
+            return SlevyrService.GetAllTabule();
+
         }
 
         /// <summary>

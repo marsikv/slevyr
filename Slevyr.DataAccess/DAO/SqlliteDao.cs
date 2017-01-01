@@ -121,12 +121,13 @@ namespace Slevyr.DataAccess.DAO
 
         public static long AddUnitState(int addr, UnitStatus u)
         {
+            var adt = (float.IsNaN(u.Tabule.AktualDefectTabule)) ? "null" : u.Tabule.AktualDefectTabuleTxt;
             //(cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
             string sql = SqlInsertStatusIntoObservation +
-                         $"(4,{addr},{(u.IsPrestavkaTabule ? 1 : 0)},{u.CilKusuTabule},{u.Ok},{u.CasOkStr}," +
-                         $"{u.PrumCasVyrobyOkStr},{u.CilDefectTabuleStr}," +
+                         $"(4,{addr},{(u.IsPrestavkaTabule ? 1 : 0)},{u.Tabule.CilKusuTabule},{u.Ok},{u.CasOkStr}," +
+                         $"{u.PrumCasVyrobyOkStr},{u.Tabule.CilDefectTabuleStr}," +
                          $"{u.Ng},{u.CasNgStr},{u.PrumCasVyrobyNgStr}," +
-                         $"{u.RozdilTabule},{u.AktualDefectTabuleStr},{(int)u.MachineStatus})";
+                         $"{u.Tabule.RozdilTabule},{adt},{(int)u.MachineStatus})";
 
 
             Logger.Info(sql);

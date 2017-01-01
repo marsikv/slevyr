@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.Ports;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
@@ -281,16 +282,13 @@ namespace Slevyr.DataAccess.Services
             return _unitDictionary[addr].UnitStatus;
         }
 
-        //public static List<Tabule> GetAllTabule()
-        //{
-        //    Logger.Debug("+");
+        public static IEnumerable<UnitTabule> GetAllTabule()
+        {
+            Logger.Debug("+");
 
-        //    //return _unitDictionary[addr].UnitStatus;
-        //}
+            return _unitDictionary.Values.Select(um => um.UnitStatus.Tabule).ToList();
+        }
 
-        //static TaskCompletionSource<bool> _tsc100_96 = null;
-        //static TaskCompletionSource<bool> _tsc100_97 = null;
-        //static TaskCompletionSource<bool> _tsc100_98 = null;
 
         /// <summary>
         /// prepocitat pro zobrazeni tabule
