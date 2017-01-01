@@ -449,8 +449,7 @@ namespace Slevyr.DataAccess.Model
 
                 if (RunConfig.IsWaitCommandResult)
                 {
-                    WaitEventCommandResult.Reset();
-                    var resultReceived = WaitEventCommandResult.WaitOne(RunConfig.ReadResultTimeOut,true);
+                    var resultReceived = WaitEventCommandResult.WaitOne(RunConfig.ReadResultTimeOut);
                     duration = DateTime.Now - CurrentCmdStartTime;
                     var r = (resultReceived) ? "received" : "expired";
                     TplLogger.Debug($" Command {CurrentCmd:x2} to [{Address:x2}] : result {r} ({duration.Milliseconds} ms)");
@@ -473,6 +472,7 @@ namespace Slevyr.DataAccess.Model
                 TplLogger.Debug($" Send command {CurrentCmd:x2} to [{Address:x2}]");
 
                 res = SendCommand(CurrentCmd);
+
                 if (res)
                 {
                     TimeSpan duration = DateTime.Now - CurrentCmdStartTime;
@@ -480,7 +480,6 @@ namespace Slevyr.DataAccess.Model
 
                     if (RunConfig.IsWaitCommandResult)
                     {
-                        WaitEventCommandResult.Reset(); //protoze result mohl prijit necekane po timout-u a mohl byt tudiz ve stavu signaled
                         var resultReceived = WaitEventCommandResult.WaitOne(RunConfig.ReadResultTimeOut);
                         duration = DateTime.Now - CurrentCmdStartTime;
                         var r = (resultReceived) ? "received" : "expired";

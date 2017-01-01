@@ -16,16 +16,13 @@ namespace Slevyr.WebAppHost
 
         public static SerialPortConfig PortConfig { get; private set; }
 
-        public static string Port { get; private set; }
-        public static int BaudRate { get; private set; }
-
-        public static int ReceivedBytesThreshold { get; private set; }
-
         public static int WebAppPort;
 
         public static bool UseLocalHost;
 
-        public static bool StartWebApi;            //startuje web API
+        public static bool StartWebApi;            
+
+        public static bool StartSwagger;           
 
         public static string WwwRootDir;
 
@@ -54,24 +51,22 @@ namespace Slevyr.WebAppHost
                 SendAttempts = int.Parse(ConfigurationManager.AppSettings["SendAttempts"]),
             };
 
-            Port = ConfigurationManager.AppSettings["Port"];
-            BaudRate = int.Parse(ConfigurationManager.AppSettings["BaudRate"]);
-            ReceivedBytesThreshold = int.Parse(ConfigurationManager.AppSettings["ReceivedBytesThreshold"]);
-            StartWebApi = bool.Parse(ConfigurationManager.AppSettings["StartWebApi"]);
-            UseLocalHost = bool.Parse(ConfigurationManager.AppSettings["UseLocalHost"]);
-            WebAppPort = int.Parse(ConfigurationManager.AppSettings["WebAppPort"]);
-            WwwRootDir = ConfigurationManager.AppSettings["www.rootDir"];
-
             PortConfig = new SerialPortConfig
             {
-                Port = Port,
-                BaudRate = BaudRate,
-                ReceivedBytesThreshold = ReceivedBytesThreshold,
+                Port = ConfigurationManager.AppSettings["Port"],
+                BaudRate = int.Parse(ConfigurationManager.AppSettings["BaudRate"]),
+                ReceivedBytesThreshold = int.Parse(ConfigurationManager.AppSettings["ReceivedBytesThreshold"]),
                 Parity = System.IO.Ports.Parity.None,
                 DataBits = 8,
                 StopBits = System.IO.Ports.StopBits.One,
                 ReceiveLength = 11
             };
+
+            bool.TryParse(ConfigurationManager.AppSettings["StartWebApi"], out StartWebApi);
+            bool.TryParse(ConfigurationManager.AppSettings["StartSwagger"], out StartSwagger);
+            bool.TryParse(ConfigurationManager.AppSettings["UseLocalHost"], out UseLocalHost);
+            int.TryParse(ConfigurationManager.AppSettings["WebAppPort"], out WebAppPort);
+            WwwRootDir = ConfigurationManager.AppSettings["www.rootDir"];
 
         }
     }

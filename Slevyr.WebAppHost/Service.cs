@@ -21,13 +21,17 @@ namespace Slevyr.WebAppHost
             string baseAddress = $"http://localhost:{port}/";
 
             SlevyrService.Start();
-            if (Globals.UseLocalHost)
+
+            if (Globals.StartWebApi)
             {
-                WebApp.Start<Startup>(url: baseAddress);
-            }
-            else
-            {
-                WebApp.Start($"http://+:{port}/");
+                if (Globals.UseLocalHost)
+                {
+                    WebApp.Start<Startup>(url: baseAddress);
+                }
+                else
+                {
+                    WebApp.Start($"http://+:{port}/");
+                }
             }
         }
 

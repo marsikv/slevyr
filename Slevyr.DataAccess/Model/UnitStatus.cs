@@ -52,12 +52,9 @@ namespace Slevyr.DataAccess.Model
 
         #region properties
 
-        //public bool SendError { get; set; }
-        //public string LastSendErrorDescription { get; set; }
-
         public int Addr { get; set; }
 
-        public SmenyEnum CurrentSmena { get; private set; }
+        private SmenyEnum CurrentSmena { get; set; }
 
         public int Ok { get; set; }
 
@@ -80,7 +77,8 @@ namespace Slevyr.DataAccess.Model
         public DateTime ErrorTime { get; set; }
         public string ErrorTimeTxt => ErrorTime.ToString(CultureInfo.CurrentCulture);
 
-        public bool Handshake { get; set; }
+        //public bool Handshake { get; set; }
+
         public DateTime OkNgTime { get; set; }
         public string OkNgTimeTxt => OkNgTime.ToShortTimeString();
 
@@ -120,7 +118,7 @@ namespace Slevyr.DataAccess.Model
         public string CasNgStr => CasNg.ToString(CultureInfo.InvariantCulture);
         //public DateTime CasNgTime { get; set; }
         //public bool IsCasNg { get; set; }
-        public int RozdilKusu { get; set; }
+        public int RozdilKusu { get; set; }  
         public DateTime RozdilKusuTime { get; set; }
         public bool IsRozdilKusu { get; set; }
         public float Defektivita { get; set; }

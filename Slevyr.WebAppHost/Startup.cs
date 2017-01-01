@@ -8,11 +8,20 @@ using System.Web.Http;
 using Microsoft.Owin.FileSystems;
 using Microsoft.Owin.StaticFiles;
 using Owin;
+using Swashbuckle.Application;
 
 namespace Slevyr.WebAppHost
 {
     public class Startup
     {
+
+        private static void ConfigureSwagger(HttpConfiguration httpConfiguration)
+        {
+            httpConfiguration
+                .EnableSwagger(SwaggerConfig.ConfigureSwagger)
+                .EnableSwaggerUi(SwaggerConfig.ConfigureSwaggerUi);
+        }
+
         // This code configures Web API. The Startup class is specified as a type
         // parameter in the WebApp.Start method.
         public void Configuration(IAppBuilder appBuilder)
@@ -29,13 +38,14 @@ namespace Slevyr.WebAppHost
                 defaults: new { id = RouteParameter.Optional }
             );
 
+
             var appXmlType = config.Formatters.XmlFormatter.SupportedMediaTypes.FirstOrDefault(t => t.MediaType == "application/xml");
             config.Formatters.XmlFormatter.SupportedMediaTypes.Remove(appXmlType);
             //config.Formatters.JsonFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/html"))
 
             appBuilder.Use<GlobalExceptionMiddleware>().UseWebApi(config);
-            //appBuilder.UseWebApi(config);
 
+            if (Globals.StartSwagger) ConfigureSwagger(config);
 
             //A. nacitam z adresare www, ktery je soucasti solution
             //var physicalFileSystem = new PhysicalFileSystem(@"./WWW1");

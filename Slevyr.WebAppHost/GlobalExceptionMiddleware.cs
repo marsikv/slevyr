@@ -21,7 +21,7 @@ namespace Slevyr.WebAppHost
             catch (Exception ex)
             {
                 Logger.Error(ex);
-                throw;
+                //throw;
             }
         }
     }

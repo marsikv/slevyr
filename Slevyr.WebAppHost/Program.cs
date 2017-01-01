@@ -35,8 +35,7 @@ namespace Slevyr.WebAppHost
             if (Debugger.IsAttached || args.Length > 0)
             {
                 Console.WriteLine("start");
-                SlevyrService.Start();
-
+                
                 if (Globals.StartWebApi)
                 {
                     if (Globals.UseLocalHost)
@@ -44,27 +43,27 @@ namespace Slevyr.WebAppHost
                         using (WebApp.Start<Startup>(url: baseAddress))
                         {
                             DoStartInConsole(baseAddress);
-                            Console.ReadLine();
                         }
                     }
                     else
                     {
                         using (WebApp.Start($"http://+:{port}/"))
                         {
-                            DoStartInConsole(baseAddress);
-                            Console.ReadLine();
+                            DoStartInConsole(baseAddress);                           
                         }
                     }
                 }
+                else
+                {
+                    SlevyrService.Start();
+                    Console.ReadLine();
+                }
 
                 //Console.WriteLine("Napiš: exit pro ukončení!\n");
-
                 //while (!"exit".Equals(Console.ReadLine()))
                 //{
                 //    System.Threading.Thread.Sleep(1000);
                 //}
-
-                Console.ReadLine();
 
                 SlevyrService.Stop();
 
@@ -104,9 +103,15 @@ namespace Slevyr.WebAppHost
                 Console.WriteLine("ERROR: Impossible to connect to service");
             }
 
-            Logger.Info($"\nWebApp Started on {baseAddress}\n");            
+            Logger.Info($"\nWebApp Started on {baseAddress}\n");
+
+            Console.WriteLine("Stiskni [Enter] pro ukončení!\n");
+
+            SlevyrService.Start();  //zde teprve startuji workery pro praci s jednotkami
 
             Process.Start(baseAddress + "linka-tabule.html");
+
+            Console.ReadLine();
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

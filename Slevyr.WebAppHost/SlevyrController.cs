@@ -131,7 +131,7 @@ namespace Slevyr.WebAppHost
 
             try
             {
-                return SlevyrService.Status(addr);
+                return SlevyrService.GetUnitStatus(addr);
             }
             catch (KeyNotFoundException)
             {
@@ -169,7 +169,7 @@ namespace Slevyr.WebAppHost
 
             try
             {
-                return SlevyrService.Status(addr);
+                return SlevyrService.GetUnitStatus(addr);
             }
             catch (KeyNotFoundException)
             {

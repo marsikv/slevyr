@@ -159,7 +159,7 @@ namespace Slevyr.DataAccess.Model
 
                 res = SendCommandCore(cmd, checkSendConfirmation);
 
-                if (!checkSendConfirmation || i++ > RunConfig.SendAttempts) break;
+                if (!checkSendConfirmation || i++ >= RunConfig.SendAttempts) break;
             }
             return res;
         }
@@ -170,7 +170,7 @@ namespace Slevyr.DataAccess.Model
         /// <returns></returns>
         private bool SendCommandCore(byte cmd, bool checkSendConfirmation = false)
         {
-            bool res;
+            bool res = false;
             Logger.Debug($"+ cmd:{cmd}");
 
             PrepareCommand(cmd);
@@ -180,8 +180,6 @@ namespace Slevyr.DataAccess.Model
             try
             {
                 //odeslat pripraveny command s parametry
-                //TplLogger.Debug($" SendCommand {cmd:x2} to [{_address:x2}] - start");
-
                 SlevyrService.WriteToPort(_sendBuff, BuffLength);
 
                 Thread.Sleep(10);
@@ -193,18 +191,21 @@ namespace Slevyr.DataAccess.Model
                     WaitEventSendConfirm.Reset();
                     var sendConfirmReceived = WaitEventSendConfirm.WaitOne(_runConfig.SendCommandTimeOut);
                     var r = (sendConfirmReceived) ? "confirmed" : "expired";
+
                     TplLogger.Debug($"  SendCommand {cmd:x2} to [{_address:x2}] : send {r}");
-                    return sendConfirmReceived;
+                    res = sendConfirmReceived;
+                }
+
+                if (_runConfig.IsWaitCommandResult)
+                {
+                    WaitEventCommandResult.Reset(); //protoze result mohl prijit necekane po timout-u a mohl byt tudiz ve stavu signaled
                 }
 
                 Thread.Sleep(10);
-
-                res = true;
             }
             catch (Exception ex)
             {
                 Logger.Error(ex);
-                res = false;
             }
 
             Logger.Debug($"- cmd:{cmd} res:{res}");

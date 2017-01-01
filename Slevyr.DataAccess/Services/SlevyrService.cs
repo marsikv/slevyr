@@ -274,12 +274,19 @@ namespace Slevyr.DataAccess.Services
 
         #region UnitStatus operations
 
-        public static UnitStatus Status(byte addr)
+        public static UnitStatus GetUnitStatus(byte addr)
         {
             Logger.Debug($"+ {addr}");
 
             return _unitDictionary[addr].UnitStatus;
         }
+
+        //public static List<Tabule> GetAllTabule()
+        //{
+        //    Logger.Debug("+");
+
+        //    //return _unitDictionary[addr].UnitStatus;
+        //}
 
         //static TaskCompletionSource<bool> _tsc100_96 = null;
         //static TaskCompletionSource<bool> _tsc100_97 = null;
