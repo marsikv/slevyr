@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Configuration;
+using System.IO;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using SledovaniVyroby.SerialPortWraper;
 using Slevyr.DataAccess.Model;
@@ -20,9 +23,9 @@ namespace Slevyr.WebAppHost
 
         public static bool UseLocalHost;
 
-        public static bool StartWebApi;            
+        public static bool StartWebApi;
 
-        public static bool StartSwagger;           
+        public static bool StartSwagger;
 
         public static string WwwRootDir;
 
@@ -33,6 +36,7 @@ namespace Slevyr.WebAppHost
 
         public static void LoadSettings()
         {
+           
             RunConfig = new RunConfig
             {
                 IsMockupMode = bool.Parse(ConfigurationManager.AppSettings["MockupMode"]),
@@ -46,10 +50,15 @@ namespace Slevyr.WebAppHost
                 SendCommandTimeOut = int.Parse(ConfigurationManager.AppSettings["SendCommandTimeOut"]),
                 MinCmdDelay = int.Parse(ConfigurationManager.AppSettings["MinCmdDelay"]),
                 UnitAddrs = ConfigurationManager.AppSettings["UnitAddrs"].Split(';').Select(int.Parse),
-                DataFilePath = ConfigurationManager.AppSettings["JsonFilePath"],
-                IsWaitCommandResult = bool.Parse(ConfigurationManager.AppSettings["IsWaitCommandResult"]),
+                JsonDataFilePath = ConfigurationManager.AppSettings["JsonFilePath"],
+                DbFilePath = ConfigurationManager.AppSettings["DbFilePath"],
                 SendAttempts = int.Parse(ConfigurationManager.AppSettings["SendAttempts"]),
             };
+
+            bool b;
+            bool.TryParse(ConfigurationManager.AppSettings["OldSyncMode"], out b); RunConfig.OldSyncMode = b;            
+            bool.TryParse(ConfigurationManager.AppSettings["IsWaitCommandResult"], out b); RunConfig.IsWaitCommandResult = b;
+            //if (RunConfig.DbFilePath == null) RunConfig.DbFilePath = RunConfig.JsonDataFilePath;
 
             PortConfig = new SerialPortConfig
             {
@@ -67,8 +76,15 @@ namespace Slevyr.WebAppHost
             bool.TryParse(ConfigurationManager.AppSettings["UseLocalHost"], out UseLocalHost);
             int.TryParse(ConfigurationManager.AppSettings["WebAppPort"], out WebAppPort);
             WwwRootDir = ConfigurationManager.AppSettings["www.rootDir"];
-
         }
-    }
+
+        public static string RunConfigToJson()
+        {
+            return JsonConvert.SerializeObject(RunConfig);          
+        }
+    
+}
+
+
 
 }

@@ -14,7 +14,9 @@ namespace Slevyr.DataAccess.Model
         public int ReadResultTimeOut = 5000;  //timeout [ms] pro nacitani dat ktere maji prijit po odeslanem prikazu
         public bool IsReadOkNgTime = true;    //urcuje zda se nacita posledni cas OK a NG
         //public int PortReadTimeout;
-        public string DataFilePath;
+        public string JsonDataFilePath;
+        public string DbFilePath;
+
         public IEnumerable<int> UnitAddrs;
         //public bool IsWriteEmptyToLog;       //pokud je true zapisuje do logu jednotek radek s prazdnymi hodnotami pokud dojde k chybe pri vycitani jednotky
         public int MinCmdDelay = 600;        //příkazy na jednu adresu jednotky by nemyly jít častěji jak jednou za cca 600ms, poté dochází k zahlcení bufferu u 
@@ -22,5 +24,6 @@ namespace Slevyr.DataAccess.Model
         public bool IsWaitCommandConfirmation;
         public bool IsWaitCommandResult;
         public int SendAttempts;            //urcuje max. pocet pokusu ktere provadi send
+        public bool OldSyncMode { get; set; }  //stary rezim komunikace synchronni s vyuzitim await, bez datareceived handleru
     }
 }

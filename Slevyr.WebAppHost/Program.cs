@@ -23,7 +23,10 @@ namespace Slevyr.WebAppHost
 
         static void Main(string[] args)
         {
-            Globals.LoadSettings();           
+            Globals.LoadSettings();
+
+            Logger.Info("");
+            Logger.Info(Globals.RunConfigToJson());
 
             int port = Globals.WebAppPort;
             string baseAddress = $"http://localhost:{port}/";

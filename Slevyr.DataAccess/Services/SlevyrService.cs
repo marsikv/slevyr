@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
@@ -62,6 +63,9 @@ namespace Slevyr.DataAccess.Services
 
         public static int UnitCount => _unitDictionary.Count;
 
+        //TODO je vystaveno jen kvuli staremu zpusobu komunikace, jak to bude mozne tak tohle zrusit
+        public static SerialPortWraper SerialPort => _serialPort;
+
         #endregion
 
         #region init method
@@ -104,12 +108,15 @@ namespace Slevyr.DataAccess.Services
 
             foreach (var m in _unitDictionary.Values)
             {
-                 m.LoadUnitConfigFromFile(m.Address, _runConfig.DataFilePath);
+                 m.LoadUnitConfigFromFile(m.Address, _runConfig.JsonDataFilePath);
             }
 
-            _serialPort.DataReceived += SerialPortOnDataReceived;
+            if (!runConfig.OldSyncMode)
+            {
+                _serialPort.DataReceived += SerialPortOnDataReceived;
 
-            _serialPort.ErrorReceived += _serialPort_ErrorReceived;
+                _serialPort.ErrorReceived += _serialPort_ErrorReceived;
+            }
 
             Logger.Info("Unit count: " + _unitDictionary.Count);
         
@@ -484,7 +491,7 @@ namespace Slevyr.DataAccess.Services
             Logger.Debug($"addr:{unitCfg.Addr}");
 
             _unitDictionary[unitCfg.Addr].UnitConfig = unitCfg;
-            unitCfg.SaveToFile(_runConfig.DataFilePath);                        
+            unitCfg.SaveToFile(_runConfig.JsonDataFilePath);                        
         }
 
         public static UnitConfig GetUnitConfig(byte addr)
@@ -492,7 +499,7 @@ namespace Slevyr.DataAccess.Services
             Logger.Debug($"addr:{addr}");
 
             //nacteno je jiz pri startu
-            //_unitDictionary[addr].LoadUnitConfigFromFile(addr, _runConfig.DataFilePath);
+            //_unitDictionary[addr].LoadUnitConfigFromFile(addr, _runConfig.JsonDataFilePath);
             return _unitDictionary[addr].UnitConfig;          
         }
 
@@ -585,9 +592,14 @@ namespace Slevyr.DataAccess.Services
 
                         bool res = false;
 
-                        if (_runConfig.IsWaitCommandResult)
+                        if (_runConfig.OldSyncMode)
                         {
-                            res = _unitDictionary[addr].ObtainStatusSync();
+                            res = _unitDictionary[addr].OldObtainStatusSync();
+                            if (res) SqlliteDao.AddUnitState(addr, _unitDictionary[addr].UnitStatus);
+                        }
+                        else if (_runConfig.IsWaitCommandResult)
+                        {
+                            res = _unitDictionary[addr].ObtainStatusSync();                            
                         }
                         else
                         {
@@ -614,7 +626,7 @@ namespace Slevyr.DataAccess.Services
                         }
 
                         Logger.Debug($"+send worker sleep: {_runConfig.WorkerSleepPeriod}");
-                        Thread.Sleep(_runConfig.WorkerSleepPeriod);  //pauza pred odeslanim prikazu na dalsi jednotku - parametr
+                        Thread.Sleep(_runConfig.WorkerSleepPeriod);  //pauza pred odeslanim prikazu na dalsi jednotku
                     }
 
                     stopwatch.Stop();
@@ -635,7 +647,7 @@ namespace Slevyr.DataAccess.Services
         /// <param name="e"></param>
         private static void PacketBwDoWork(object sender, DoWorkEventArgs e)
         {
-            SqlliteDao.OpenConnection(true);
+            SqlliteDao.OpenConnection(true, _runConfig.DbFilePath);
 
             while (true)
             {
@@ -699,7 +711,16 @@ namespace Slevyr.DataAccess.Services
             lock (_lock)
             {
                 if (_serialPort.IsOpen)
-                  _serialPort.DiscardOutBuffer(); //zkusime - asi to neni potreba ale kdovi. Ale muze to degradovat vykon.
+                  _serialPort.DiscardOutBuffer(); 
+            }
+        }
+
+        public static void DiscardInBuffer()
+        {
+            lock (_lock)
+            {
+                if (_serialPort.IsOpen)
+                    _serialPort.DiscardInBuffer();
             }
         }
 

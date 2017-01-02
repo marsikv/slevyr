@@ -11,13 +11,15 @@ namespace Slevyr.DataAccess.Model
         private static readonly Logger TplLogger = LogManager.GetLogger("Tpl");
 
         private readonly byte _address;
-        private readonly byte[] _sendBuff;
+        public readonly byte[] _sendBuff;    //TODO public jen pro stary zpusob komunikace, zrusit hned jak to bude mozne
 
         private static RunConfig _runConfig;
 
-        private const int BuffLength = 11;
+        public const int BuffLength = 11;
 
         public byte Address => _address;
+
+        public byte CurrentCmd { get; set; }
 
 
         protected RunConfig RunConfig => _runConfig;
@@ -48,12 +50,20 @@ namespace Slevyr.DataAccess.Model
             _sendBuff[3] = cmd;
         }
 
-        //private void DiscardBuffers()
-        //{
-        //    Logger.Info("");
-        //    _sp.DiscardInBuffer();
-        //    _sp.DiscardOutBuffer();
-        //}
+        protected void OldPrepareCommand(byte cmd)
+        {
+            CurrentCmd = cmd;
+            Array.Clear(_sendBuff, 0, _sendBuff.Length);
+            _sendBuff[2] = _address;
+            _sendBuff[3] = cmd;
+        }
+
+        protected void DiscardBuffers()
+        {
+            Logger.Info("");
+            SlevyrService.DiscardInBuffer();
+            SlevyrService.DiscardOutBuffer();
+        }
 
         public bool SendCommand(byte cmd, byte p1, bool checkSendConfirmation = true)
         {

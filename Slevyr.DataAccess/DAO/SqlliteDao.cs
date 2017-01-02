@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NLog;
 using Slevyr.DataAccess.Model;
 
@@ -19,7 +14,7 @@ namespace Slevyr.DataAccess.DAO
         #region consts
 
         const string DbFileName = @"slevyr.sqlite";
-        const string DbFolder = @"Sqlite";
+        const string DefaultDbFolder = @"Sqlite";
         const string SqlCreateUnitstatusTable = @"CREATE TABLE `observations` (
     `id` INTEGER PRIMARY KEY AUTOINCREMENT,
 	`obTime`	TIMESTAMP  DEFAULT CURRENT_TIMESTAMP,
@@ -61,30 +56,41 @@ namespace Slevyr.DataAccess.DAO
 
         private static SQLiteConnection _dbConnection;
 
-        private static string DbFilePath => Path.Combine(DbFolder, DbFileName);
+        private static string _dbFilePath;
+
+        private static void MakeDbFilePath(string dbFolder)
+        {
+            //if (Path.IsPathRooted(dbFolder))
+            if (String.IsNullOrEmpty(dbFolder)) dbFolder = DefaultDbFolder;
+            _dbFilePath = Path.Combine(dbFolder, DbFileName);
+        }
+
+        // => Path.Combine(dbFolder, DbFileName);
  
         #endregion
 
-        public static void CreateDatabase()
+        private static void CreateDatabase(string dbFolder)
         {
-            Logger.Info($"Db folder:{DbFolder}");
+            Logger.Info($"Db folder:{dbFolder}");
 
-            if (!Directory.Exists(DbFolder))
+            MakeDbFilePath(dbFolder);
+
+            if (!Directory.Exists(dbFolder))
             {
-                Directory.CreateDirectory(DbFolder);
+                Directory.CreateDirectory(dbFolder);
             }
             else
             {
-                if (File.Exists(DbFilePath))
+                if (File.Exists(_dbFilePath))
                 {
-                    File.Delete(DbFilePath + "0");
-                    File.Move(DbFilePath, DbFilePath + "0");   //uchovam jednu kopii, ale je to asi zbytecne
+                    File.Delete(_dbFilePath + "0");
+                    File.Move(_dbFilePath, _dbFilePath + "0");   //uchovam jednu kopii, ale je to asi zbytecne
                 }
             }
 
-            SQLiteConnection.CreateFile(DbFilePath);
+            SQLiteConnection.CreateFile(_dbFilePath);
 
-            using (var connection = new SQLiteConnection($"Data Source={DbFilePath};Version=3;"))
+            using (var connection = new SQLiteConnection($"Data Source={_dbFilePath};Version=3;"))
             {
                 connection.Open();
 
@@ -102,14 +108,17 @@ namespace Slevyr.DataAccess.DAO
             
         }
 
-        public static void OpenConnection(bool checkDbExists)
+        public static void OpenConnection(bool checkDbExists, string dbFolder)
         {
-            Logger.Info("");
+            MakeDbFilePath(dbFolder);
+
+            Logger.Info($"data file:{_dbFilePath}");
+
             if (checkDbExists)
             {
-                if (!File.Exists(DbFilePath)) CreateDatabase();
+                if (!File.Exists(_dbFilePath)) CreateDatabase(dbFolder);
             }
-            _dbConnection = new SQLiteConnection($"Data Source={DbFilePath};Version=3;");
+            _dbConnection = new SQLiteConnection($"Data Source={_dbFilePath};Version=3;");
             _dbConnection.Open();
         }
 
@@ -154,7 +163,6 @@ namespace Slevyr.DataAccess.DAO
             command.ExecuteNonQuery();
 
         }
-
 
         public static void UpdateUnitStateCasOk(byte addr, long lastId, UnitStatus u)
         {
@@ -204,7 +212,6 @@ namespace Slevyr.DataAccess.DAO
             }
 
         }
-
 
         private static int CreateCsvFile(DataTable dt, string strFilePath)
         {

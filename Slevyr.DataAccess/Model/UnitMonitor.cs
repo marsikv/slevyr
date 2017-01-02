@@ -23,6 +23,9 @@ namespace Slevyr.DataAccess.Model
 
         private volatile object _lock = new object();
 
+        private static bool _errorRecorded;
+        private static int _errorRecordedCnt;
+
         #endregion
 
         #region const pro prikazy
@@ -537,5 +540,369 @@ namespace Slevyr.DataAccess.Model
 
         #endregion
 
+        #region old sync with await
+
+        private byte[] _outBuff;
+
+        private bool OldCheckResponseOk()
+        {
+            var res = (_outBuff != null) && (_outBuff[0] == 0 && _outBuff[1] == 0 && _outBuff[2] == Address && (_outBuff[3] == CurrentCmd || CurrentCmd != 20)); //doplneno podle popisu z mailu 28.8. - neni nutne kontrolovat
+            if (!res)
+            {
+                //UnitStatus.SendError = true;
+                //UnitStatus.LastSendErrorDescription = $"cmd=" + _cmd;
+            }
+            Logger.Debug($"res={res}");
+            return res;
+        }
+
+        private bool OldCheckSendOk()
+        {
+            var res = (_outBuff != null) && ((_outBuff[0] == 4 || _outBuff[0] == 0) && _outBuff[1] == 0 && _outBuff[2] == Address);
+            if (!res)
+            {
+                //UnitStatus.SendError = true;
+                //UnitStatus.LastSendErrorDescription = $"cmd=" + _cmd;
+            }
+            Logger.Debug($"res={res}");
+            return res;
+        }
+
+
+        /// <summary>
+        /// posle prikaz na port, parametry jsou jen pro logovani cisla pokusu
+        /// </summary>
+        /// <param name="a1"></param>
+        /// <param name="a2"></param>
+        /// <returns></returns>
+        private bool OldSendCommandBasic(int a1, int a2)
+        {
+            bool res;
+            Logger.Debug($"+ attempt:{a1}.{a2}");
+
+            if (!SlevyrService.CheckIsPortOpen()) return false;
+
+            try
+            {
+                //odeslat pripraveny command s parametry
+                var wtask = SlevyrService.SerialPort.WriteAsync(_sendBuff, BuffLength);
+                wtask.Wait(RunConfig.SendCommandTimeOut);
+
+                Thread.Sleep(7);
+
+                Logger.Debug(" -w");
+
+                //kontrola odeslání
+                var task = SlevyrService.SerialPort.ReadAsync(11);
+
+                task.Wait(RunConfig.SendCommandTimeOut);
+
+                if (!task.IsCompleted)
+                {
+                    Logger.Debug(" -timeout");
+                    res = false;
+                }
+                else
+                {
+                    Logger.Debug(" -ok");
+                    _outBuff = task.Result;
+                    res = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex);
+                res = false;
+            }
+
+            res = res && OldCheckSendOk();
+            Logger.Debug($"-");
+
+            return res;
+        }
+
+        //odesle prikaz, v _inBuffer musi byt prikaz nachystany
+        //provede kontrolu odeslani, 
+        //udela 3 pokusy
+        private bool OldSendCommand(int a)
+        {
+            Logger.Debug("+");
+
+            bool sendOk = false;
+
+            lock (_lock)
+            {
+                sendOk = OldSendCommandBasic(a, 1);
+
+                if (!sendOk)
+                {
+                    Thread.Sleep(RunConfig.RelaxTime);
+                    DiscardBuffers();
+                    sendOk = OldSendCommandBasic(a, 2);
+                }
+
+                if (!sendOk)
+                {
+                    Thread.Sleep(RunConfig.RelaxTime);
+                    DiscardBuffers();
+                    sendOk = OldSendCommandBasic(a, 3);
+                }
+
+                if (!sendOk)
+                {
+                    DiscardBuffers();
+                }
+            }
+
+            Logger.Debug($"- res:{sendOk}");
+            return sendOk;
+        }
+
+        private bool OldReceiveResults(int a)
+        {
+            bool res = false;
+            Logger.Debug($"+ attempt:{a}");
+
+            if (!SlevyrService.CheckIsPortOpen()) return false;
+
+            lock (_lock)
+            {
+                //precte vysledky
+                try
+                {
+                    var task = SlevyrService.SerialPort.ReadAsync(11);
+
+                    task.Wait(RunConfig.ReadResultTimeOut);
+                    if (!task.IsCompleted)
+                    {
+                        Logger.Debug(" -timeout");
+                    }
+                    else
+                    {
+                        Logger.Debug(" -ok");
+                        _outBuff = task.Result;
+                        res = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex);
+                    res = false;
+                }
+            }
+
+            res = res && OldCheckResponseOk();
+
+            Thread.Sleep(RunConfig.RelaxTime);  //cekame po precteni vysledku pred tim nez se posle dalsi pozadavek
+
+            Logger.Debug($"-");
+            return res;
+        }
+
+
+
+        /// <summary>
+        /// posle pozadavek a precte vysledek.
+        /// provadi dva pokusy
+        /// </summary>
+        /// <returns></returns>
+        private bool OldSendReceiveResults()
+        {
+            bool res = false;
+
+            Logger.Debug("+");
+
+            lock (_lock)
+            {
+
+                if (OldSendCommand(1))
+                {
+                    Thread.Sleep(RunConfig.RelaxTime);
+
+                    res = OldReceiveResults(1);
+
+                    if (!res)
+                    {
+                        Thread.Sleep(RunConfig.RelaxTime);
+                        DiscardBuffers();
+                        if (SendCommand(2))
+                        {
+                            Thread.Sleep(RunConfig.RelaxTime);
+                            res = OldReceiveResults(2);
+                            if (!res)
+                            {
+                                Thread.Sleep(RunConfig.RelaxTime);
+                                DiscardBuffers();
+                            }
+                        }
+                    }
+                }
+            }
+
+            Logger.Debug($"- res:{res}");
+
+            return res;
+        }
+
+        public bool OldReadCasOkNg(out Single value)
+        {
+
+            /*
+            * Pro příkaz 0x61 je odpověď = 0x00 0x00 ADR 0x61 LSB MSB LSB MSB 0x00 0x00 0xXX
+               čas posledního OK kusu =(LSB+(256*MSB))/10 , Sekundy na desetiny
+               čas posledního NG kusu =(LSB+(256*MSB))/10 , Sekundy na desetiny
+               Metoda měření cyklu = XX  , 0 = čas posledního cyklu (výchozí); >0 čas od posledního cyklu
+            */
+
+            Logger.Debug($"+ unit {Address}");
+
+            if (RunConfig.IsMockupMode)
+            {
+                value = (Single)DateTime.Now.Hour * 2;  //hod. poslouzi jako hodnota casu ok
+                UnitStatus.CasOk = value;
+                UnitStatus.CasOkNgTime = DateTime.Now;
+                return true;
+            }
+
+
+            OldPrepareCommand(CmdReadCasPosledniOkNg);
+
+            value = 0;
+
+            var res = OldSendReceiveResults();
+
+            if (res)
+            {
+                var casOk10 = Helper.ToShort(_outBuff[4], _outBuff[5]);
+                var casNg10 = Helper.ToShort(_outBuff[6], _outBuff[7]);
+
+                UnitStatus.CasOk = (float)(casOk10 / 10.0);
+                UnitStatus.CasNg = (float)(casNg10 / 10.0);
+
+                UnitStatus.CasOkNgTime = DateTime.Now;
+            }
+
+            UnitStatus.IsCasOkNg = res;
+
+            Logger.Debug($"- unit {Address}");
+
+            return res;
+        }
+
+
+        private bool OldReadStavCitacu(out int okVal, out int ngVal)
+        {
+            Logger.Debug($"+ unit {Address}");
+
+            if (RunConfig.IsMockupMode)
+            {
+                okVal = (short)DateTime.Now.Minute;  //minuta poslouzi jako hodnota ok
+                ngVal = (short)((okVal + 1) / 2);
+                UnitStatus.Ok = okVal;
+                UnitStatus.Ng = ngVal;
+                UnitStatus.OkNgTime = DateTime.Now;
+                return true;
+            }
+
+            OldPrepareCommand(CmdReadStavCitacu);
+
+            okVal = 0;
+            ngVal = 0;
+
+            var res = OldSendReceiveResults();
+
+            if (res)
+            {
+                //načtení výsledku
+
+                okVal = Helper.ToShort(_outBuff[4], _outBuff[5]);
+                ngVal = Helper.ToShort(_outBuff[6], _outBuff[7]);
+
+                var stopTime = Helper.ToShort(_outBuff[8], _outBuff[9]);
+                short machineStatus = _outBuff[10];
+
+
+                //short machineStatus = _outBuff[8];
+                //short shutdownTime = Helper.ToShort(_outBuff[9], _outBuff[10]);
+
+                UnitStatus.Ok = okVal;
+                UnitStatus.Ng = ngVal;
+                UnitStatus.MachineStatus = (MachineStateEnum)machineStatus;
+                UnitStatus.MachineStopTime = stopTime;
+
+                UnitStatus.OkNgTime = DateTime.Now;
+            }
+            else
+            {
+                UnitStatus.Ok = -1;
+                UnitStatus.Ng = -1;
+                UnitStatus.OkNgTime = DateTime.MaxValue;
+                UnitStatus.ErrorTime = DateTime.Now;
+                UnitStatus.MachineStatus = MachineStateEnum.Neznamy;
+            }
+
+            UnitStatus.IsOkNg = res;
+
+            Logger.Debug($"- {res} machineState {UnitStatus.MachineStatus}/unit {Address}");
+
+            return res;
+        }
+
+
+        public bool OldObtainStatusSync()
+        {
+            Logger.Info($"+ *** unit {Address}");
+
+            int ok, ng;
+            Single casOk = -1, casNg = -1;
+            var res = OldReadStavCitacu(out ok, out ng);
+            var s = res ? "" : "err";
+            Logger.Info($">ok:{ok} ng:{ng} " + s);
+
+            if (!res)
+            {
+                _errorRecordedCnt++;
+                if (!_errorRecorded)
+                {
+                    ErrorsLogger.Error($"ReadStavCitacu;{Address};total errors:{_errorRecordedCnt}");
+                    _errorRecorded = true;
+                }
+            }
+            else
+            {
+                if (_errorRecorded)
+                {
+                    ErrorsLogger.Info($"ReadStavCitacu;{Address};recovered");
+                    _errorRecorded = false;
+                }
+            }
+
+            if (res && RunConfig.IsReadOkNgTime)
+            {
+                OldReadCasOkNg(out casOk);
+                Logger.Info($">casOk:{casOk}");
+            }
+
+            if (res)
+            {
+                //prepocitat pro zobrazeni tabule
+                try
+                {
+                    RecalcTabule();
+
+                    UnitStatus.LastCheckTime = DateTime.Now;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex);
+                }
+            }
+
+            Logger.Info($"-");
+
+            return res;
+        }
+
+        #endregion
     }
 }
