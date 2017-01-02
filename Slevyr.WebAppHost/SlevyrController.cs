@@ -146,27 +146,7 @@ namespace Slevyr.WebAppHost
             return SlevyrService.GetAllTabule();
 
         }
-
-        /// <summary>
-        /// Deprecated
-        /// </summary>
-        /// <param name="addr"></param>
-        /// <returns></returns>
-        //[HttpGet]
-        //public UnitStatus RefreshStatus([FromUri] byte addr)
-        //{
-        //    Logger.Info($"+ {addr}");
-        //    //if (RunConfig.IsMockupMode) return Mock.MockUnitStatus();
-
-        //    try
-        //    {
-        //        return SlevyrService.SendUnitStatusRequests(addr);
-        //    }
-        //    catch (KeyNotFoundException)
-        //    {
-        //        throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
-        //    }
-        //}
+      
 
         [HttpGet]
         public UnitStatus GetStatus([FromUri] byte addr)

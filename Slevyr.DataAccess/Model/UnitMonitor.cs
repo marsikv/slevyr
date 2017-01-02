@@ -153,8 +153,8 @@ namespace Slevyr.DataAccess.Model
             UnitConfig.Def2Smeny = def2;
             UnitConfig.Def3Smeny = def3;
 
-            //return SendCommand(CmdSetDefSmen, (byte)varianta, (short)(def1 * 10.0), (short)(def2 * 10.0), (short)(def3 * 10.0));
-            return SendCommand(CmdSetDefSmen, (byte)varianta, def1, def2, def3);
+            return SendCommand(CmdSetDefSmen, (byte)varianta, (short)(def1 * 10.0), (short)(def2 * 10.0), (short)(def3 * 10.0));
+            //return SendCommand(CmdSetDefSmen, (byte)varianta, def1, def2, def3);
         }
 
         //TODO - v jakych jednotkach se zadavaji prestavky ?
