@@ -169,6 +169,12 @@ namespace Slevyr.DataAccess.Model
 
                 res = SendCommandCore(cmd, checkSendConfirmation);
 
+                if (res)
+                {
+                    //Thread.Sleep(RunConfig.RelaxTime);
+                    break;
+                }
+
                 if (!checkSendConfirmation || i++ >= RunConfig.SendAttempts) break;
             }
             return res;
@@ -192,7 +198,7 @@ namespace Slevyr.DataAccess.Model
                 //odeslat pripraveny command s parametry
                 SlevyrService.WriteToPort(_sendBuff, BuffLength);
 
-                Thread.Sleep(10);
+                //Thread.Sleep(10);
 
                 Logger.Debug(" -w");
 
@@ -211,7 +217,7 @@ namespace Slevyr.DataAccess.Model
                     WaitEventCommandResult.Reset(); //protoze result mohl prijit necekane po timout-u a mohl byt tudiz ve stavu signaled
                 }
 
-                Thread.Sleep(10);
+                //Thread.Sleep(10);
             }
             catch (Exception ex)
             {

@@ -16,6 +16,8 @@ namespace Slevyr.DataAccess.Model
 
         public string AktualDefectTabuleTxt { get; set; }
 
+        public string AktualDefectTabuleStr { get; set; }
+
         public int RozdilTabule { get; set; }
 
         public string RozdilTabuleTxt => (RozdilTabule == int.MinValue) ? "-" : RozdilTabule.ToString();

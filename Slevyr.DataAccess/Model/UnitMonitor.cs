@@ -156,8 +156,8 @@ namespace Slevyr.DataAccess.Model
             UnitConfig.Def2Smeny = def2;
             UnitConfig.Def3Smeny = def3;
 
-            return SendCommand(CmdSetDefSmen, (byte)varianta, (short)(def1 * 10.0), (short)(def2 * 10.0), (short)(def3 * 10.0));
-            //return SendCommand(CmdSetDefSmen, (byte)varianta, def1, def2, def3);
+            //return SendCommand(CmdSetDefSmen, (byte)varianta, (short)(def1 * 10.0), (short)(def2 * 10.0), (short)(def3 * 10.0));
+            return SendCommand(CmdSetDefSmen, (byte)varianta, def1, def2, def3);
         }
 
         //TODO - v jakych jednotkach se zadavaji prestavky ?
@@ -467,6 +467,8 @@ namespace Slevyr.DataAccess.Model
                 ErrorsLogger.Error(s);
             }
 
+            Thread.Sleep(RunConfig.RelaxTime);
+
             if (res)
             {
                 CurrentCmdStartTime = DateTime.Now;
@@ -497,6 +499,8 @@ namespace Slevyr.DataAccess.Model
                     TplLogger.Debug(s);
                     ErrorsLogger.Error(s);
                 }
+
+                Thread.Sleep(RunConfig.RelaxTime);
             }
 
             TplLogger.Debug($"-Obtain status [{Address:x2}] res:{res}");
@@ -594,7 +598,6 @@ namespace Slevyr.DataAccess.Model
 
                 //kontrola odeslání
                 var task = SlevyrService.SerialPort.ReadAsync(11);
-
                 task.Wait(RunConfig.SendCommandTimeOut);
 
                 if (!task.IsCompleted)
@@ -714,7 +717,6 @@ namespace Slevyr.DataAccess.Model
 
             lock (_lock)
             {
-
                 if (OldSendCommand(1))
                 {
                     Thread.Sleep(RunConfig.RelaxTime);
@@ -725,7 +727,7 @@ namespace Slevyr.DataAccess.Model
                     {
                         Thread.Sleep(RunConfig.RelaxTime);
                         DiscardBuffers();
-                        if (SendCommand(2))
+                        if (OldSendCommand(2))
                         {
                             Thread.Sleep(RunConfig.RelaxTime);
                             res = OldReceiveResults(2);
@@ -879,7 +881,7 @@ namespace Slevyr.DataAccess.Model
 
             if (res && RunConfig.IsReadOkNgTime)
             {
-                OldReadCasOkNg(out casOk);
+                res = OldReadCasOkNg(out casOk);
                 Logger.Info($">casOk:{casOk}");
             }
 

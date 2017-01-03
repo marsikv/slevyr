@@ -33,7 +33,8 @@ namespace Slevyr.DataAccess.Services
 
         private static RunConfig _runConfig = new RunConfig();
 
-        private static readonly ByteQueue ReceivedByteQueue = new ByteQueue();
+        //private static readonly ByteQueue ReceivedByteQueue = new ByteQueue();
+        private static readonly ReadWriteBuffer ReceivedBuffer = new ReadWriteBuffer(1024);
 
         private static readonly BlockingCollection<byte[]> PackedCollection = new BlockingCollection<byte[]>();
 
@@ -166,17 +167,18 @@ namespace Slevyr.DataAccess.Services
 
             DataSendReceivedLogger.Debug($" <- {len:00}; {BitConverter.ToString(buf)}");
 
-            ReceivedByteQueue.Enqueue(buf,0,len);
+            ReceivedBuffer.Write(buf);
 
-            if (ReceivedByteQueue.Length >= 11)
+            while (ReceivedBuffer.Count >= 11)
             {
-                Byte[] packet = new Byte[11];
-                ReceivedByteQueue.Dequeue(packet, 0, 11);
+                Byte[] packet = ReceivedBuffer.Read(11);
 
                 if (_serialPort.ReceivedBytesThreshold < 11)
                 {
                     DataSendReceivedLogger.Debug($"        {BitConverter.ToString(packet)}");
                 }
+
+                DataSendReceivedLogger.Debug($" -- {ReceivedBuffer.Count:00}; {BitConverter.ToString(packet)}");
 
                 //signatura potvrzeni odeslani
                 //  _outBuff[0] == 4 && _outBuff[1] == 0 && _outBuff[2] == _address
@@ -625,8 +627,8 @@ namespace Slevyr.DataAccess.Services
                             _unitDictionary[addr].UnitStatus.MachineStatus = MachineStateEnum.NotAvailable;
                         }
 
-                        Logger.Debug($"+send worker sleep: {_runConfig.WorkerSleepPeriod}");
-                        Thread.Sleep(_runConfig.WorkerSleepPeriod);  //pauza pred odeslanim prikazu na dalsi jednotku
+                        //Logger.Debug($"+send worker sleep: {_runConfig.WorkerSleepPeriod}");
+                        //Thread.Sleep(_runConfig.WorkerSleepPeriod);  //pauza pred odeslanim prikazu na dalsi jednotku
                     }
 
                     stopwatch.Stop();
