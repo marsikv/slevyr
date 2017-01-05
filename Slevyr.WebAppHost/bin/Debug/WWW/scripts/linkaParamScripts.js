@@ -16,6 +16,7 @@ $(document).ready(function () {
         $("#NastavPrestavky").click(nastavPrestavkySmen);
         $("#NastavDefektivitu").click(nastavDefektivitu);
         $("#NastavJednotku").click(nastavJednotku);
+        $("#NastavTypSmennosti").click(nastavVariantuSmeny);
 
         $("#SyncTime").click(nastavAktualniCas);
 
@@ -166,6 +167,25 @@ $(document).ready(function () {
                 window.slVyr.addNotification('error', 'nastavPocOkNg - error: ' + err);
                 $('#stav').text('Error: ' + err);
                 alert("nastavPocOkNg - error");
+            });
+    }
+
+    function nastavVariantuSmeny() {
+        alert('NastavVariantuSmeny');
+        var varianta = $('#TypSmennosti').val();
+        $.getJSON(uri + '/NastavVariantuSmeny',
+            {
+                addr: addr,
+                varianta: varianta,
+            })
+            .done(function (data) {
+                window.slVyr.addNotification('success', 'Sucessfully set.');
+                // $('#stav').text('');
+            })
+            .fail(function (jqXHR, textStatus, err) {
+                window.slVyr.addNotification('error', 'nastavVariantuSmeny - error: ' + err);
+                // $('#stav').text('Error: ' + err);
+                // alert("nastavCileSmen - error");
             });
     }
 

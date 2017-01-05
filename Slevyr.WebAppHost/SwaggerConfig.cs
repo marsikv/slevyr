@@ -232,7 +232,9 @@
 }
 */
 
+using System;
 using System.Web.Http;
+using System.Xml.XPath;
 using Swashbuckle.Application;
 
 namespace Slevyr.WebAppHost
@@ -249,10 +251,17 @@ namespace Slevyr.WebAppHost
         public static void ConfigureSwagger(SwaggerDocsConfig c)
         {
             c.SingleApiVersion("v1", "Slevyr.WebAppHost");
+            c.IncludeXmlComments(GetXmlCommentsPath());
+        }
+
+        private static string GetXmlCommentsPath()
+        {
+            return string.Format(@"{0}\Slevyr.WebAppHost.XML", System.AppDomain.CurrentDomain.BaseDirectory);
         }
 
         public static void ConfigureSwaggerUi(SwaggerUiConfig c)
         {
+
             //c.InjectStylesheet(containingAssembly, "Swashbuckle.Dummy.SwaggerExtensions.testStyles1.css");
             //c.InjectJavaScript(thisAssembly, "Swashbuckle.Dummy.SwaggerExtensions.testScript1.js");
             //c.BooleanValues(new[] { "0", "1" });

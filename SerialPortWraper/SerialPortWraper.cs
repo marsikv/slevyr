@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
 using System.IO.Ports;
 using System.Threading.Tasks;
 
@@ -32,11 +28,11 @@ namespace SledovaniVyroby.SerialPortWraper
             DtrEnable = false;
             RtsEnable = false;
             Handshake = Handshake.None;
-            ReceivedBytesThreshold = cfg.ReceivedBytesThreshold;
             PortName = cfg.Port;
             BaudRate = cfg.BaudRate;
             DataBits = cfg.DataBits;
             StopBits = cfg.StopBits;
+            if (cfg.UseDataReceivedEvent) ReceivedBytesThreshold = cfg.ReceivedBytesThreshold;
         }
 
 
@@ -49,7 +45,7 @@ namespace SledovaniVyroby.SerialPortWraper
             await this.BaseStream.WriteAsync(buffer, 0, count);
         }
 
-        public async Task ReadAsync( byte[] buffer, int offset, int count)
+        private async Task ReadAsync( byte[] buffer, int offset, int count)
         {
             int bytesToRead = count;
             var temp = new byte[count];
@@ -64,9 +60,9 @@ namespace SledovaniVyroby.SerialPortWraper
 
         public async Task<byte[]> ReadAsync(int count)
         {
-            var datos = new byte[count];
-            await this.ReadAsync(datos, 0, count);
-            return datos;
+            var data = new byte[count];
+            await this.ReadAsync(data, 0, count);
+            return data;
         }
 
         //public new void Open()
@@ -101,31 +97,31 @@ namespace SledovaniVyroby.SerialPortWraper
         #region Implementation of IDisposable
 
 
-        //protected override void Dispose(bool disposing)
-        //{
-        //    if (disposing)
-        //    {
-        //        try
-        //        {
-        //            /* The .Net SerialStream class has a bug that causes its finalizer to crash when working 
-        //             * with virtual COM ports (e.g. FTDI, Prolific, etc.) See the following page for details:
-        //             * http://social.msdn.microsoft.com/Forums/en-US/netfxbcl/thread/8a1825d2-c84b-4620-91e7-3934a4d47330
-        //             * To work around this bug, we suppress the finalizer for the BaseStream and close it ourselves instead.
-        //             * See the Open method for the other half of this workaround.
-        //             */
-        //            if (IsOpen)
-        //            {
-        //                BaseStream.Close();
-        //            }
-        //        }
-        //        catch
-        //        {
-        //            // The BaseStream is already closed, disposed, or in an invalid state. Ignore and continue disposing.
-        //        }
-        //    }
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                try
+                {
+                    /* The .Net SerialStream class has a bug that causes its finalizer to crash when working 
+                     * with virtual COM ports (e.g. FTDI, Prolific, etc.) See the following page for details:
+                     * http://social.msdn.microsoft.com/Forums/en-US/netfxbcl/thread/8a1825d2-c84b-4620-91e7-3934a4d47330
+                     * To work around this bug, we suppress the finalizer for the BaseStream and close it ourselves instead.
+                     * See the Open method for the other half of this workaround.
+                     */
+                    if (IsOpen)
+                    {
+                        BaseStream.Close();
+                    }
+                }
+                catch
+                {
+                    // The BaseStream is already closed, disposed, or in an invalid state. Ignore and continue disposing.
+                }
+            }
 
-        //    base.Dispose(disposing);
-        //}
+            base.Dispose(disposing);
+        }
 
         #endregion
     }

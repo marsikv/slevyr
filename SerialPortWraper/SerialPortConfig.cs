@@ -53,9 +53,10 @@ namespace SledovaniVyroby.SerialPortWraper
         /// </summary>
         public int DataBits { get; set; }
 
+        public int ReceivedBytesThreshold { get; set; } //ma smysl jen pokud je UseDataReceivedEvent
 
-        public int ReceiveLength{ get; set; }
-        public int ReceivedBytesThreshold { get; set; }
+        public bool UseDataReceivedEvent { get; set; } //pro cteni dat z portu pouzivan detereceived event
+
 
         public override string ToString()
         {

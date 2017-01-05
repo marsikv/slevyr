@@ -20,11 +20,11 @@ namespace Slevyr.DataAccess.Model
         public byte Address => _address;
 
         public byte CurrentCmd { get; set; }
-
-
+    
         protected RunConfig RunConfig => _runConfig;
 
         public readonly AutoResetEvent WaitEventCommandResult = new AutoResetEvent(false);
+
         public readonly AutoResetEvent WaitEventSendConfirm = new AutoResetEvent(false);
 
         protected UnitMonitorBasic(byte address,  RunConfig runConfig)

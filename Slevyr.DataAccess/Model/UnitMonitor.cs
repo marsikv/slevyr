@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Globalization;
 using System.Threading;
-using System.Threading.Tasks;
 using NLog;
-using SledovaniVyroby.SerialPortWraper;
-using Slevyr.DataAccess.DAO;
 using Slevyr.DataAccess.Services;
 
 namespace Slevyr.DataAccess.Model
@@ -123,16 +119,13 @@ namespace Slevyr.DataAccess.Model
 
         #region public methods - send command
 
-        public bool SendSetSmennost(char varianta)
+        public bool SendSetSmennost(byte varianta)
         {
             Logger.Info($"+ unit {Address}");
 
-            UnitConfig.TypSmennosti = varianta.ToString();
+            UnitConfig.TypSmennosti = char.ToString((char) varianta);
 
-            var res = SendCommand(CmdSetSmennost, (byte)varianta);
-
-            //TODO
-            //pockat XX ms na potvrzeni ?  
+            var res = SendCommand(CmdSetSmennost, varianta);
 
             return res;
         }
@@ -746,7 +739,7 @@ namespace Slevyr.DataAccess.Model
             return res;
         }
 
-        public bool OldReadCasOkNg(out Single value)
+        private bool OldReadCasOkNg(out Single value)
         {
 
             /*

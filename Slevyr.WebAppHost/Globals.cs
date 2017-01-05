@@ -29,7 +29,6 @@ namespace Slevyr.WebAppHost
 
         public static string WwwRootDir;
 
-
         static Globals()
         {
         }
@@ -58,7 +57,6 @@ namespace Slevyr.WebAppHost
             bool b;
             bool.TryParse(ConfigurationManager.AppSettings["OldSyncMode"], out b); RunConfig.OldSyncMode = b;            
             bool.TryParse(ConfigurationManager.AppSettings["IsWaitCommandResult"], out b); RunConfig.IsWaitCommandResult = b;
-            //if (RunConfig.DbFilePath == null) RunConfig.DbFilePath = RunConfig.JsonDataFilePath;
 
             PortConfig = new SerialPortConfig
             {
@@ -68,8 +66,10 @@ namespace Slevyr.WebAppHost
                 Parity = System.IO.Ports.Parity.None,
                 DataBits = 8,
                 StopBits = System.IO.Ports.StopBits.One,
-                ReceiveLength = 11
+                //ReceiveLength = 11
             };
+            bool.TryParse(ConfigurationManager.AppSettings["UseDataReceivedEvent"], out b); PortConfig.UseDataReceivedEvent = b;
+
 
             bool.TryParse(ConfigurationManager.AppSettings["StartWebApi"], out StartWebApi);
             bool.TryParse(ConfigurationManager.AppSettings["StartSwagger"], out StartSwagger);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Web.Http;
 using NLog;
 using SledovaniVyroby.SerialPortWraper;
@@ -12,24 +13,12 @@ using Slevyr.DataAccess.Services;
 
 namespace Slevyr.WebAppHost
 {
-    /*
-    oprávnění pro různé uživatele, příkazy jsou v Hex: 
-        Host: jen prohlížet
-        Uživatel: měnit 10,11,12,13,14,15.
-        Administrátor basic: + měnit 3,4,5,7.
-        Administrátor advanced: + zbytek.
-
-
-        nastavit cas 
-    */
 
     public class SlevyrController : ApiController
     {
         #region Fields
 
-        static readonly string ApiVersion = "1.0";
-
-        static readonly SerialPortConfig PortConfig;
+        static readonly string ApiVersion = "1.1";
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -46,6 +35,10 @@ namespace Slevyr.WebAppHost
 
         #region RunConfig
 
+        /// <summary>
+        /// Vrací verzi API
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public String GetApiVersion()
         {
@@ -54,6 +47,10 @@ namespace Slevyr.WebAppHost
             return ApiVersion;
         }
 
+        /// <summary>
+        /// Vrací parametry běhové konfigurace, jako je umístění databáze, hodnoty timout parametrů apod.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public RunConfig GetConfig()
         {
@@ -96,8 +93,8 @@ namespace Slevyr.WebAppHost
             {
                 if (Globals.RunConfig.IsMockupMode) return true;
                 SlevyrService.OpenPort();
-               
-                Logger.Info($"Port name:{PortConfig.Port} isOpen:{SlevyrService.SerialPortIsOpen}");
+
+                Logger.Info($"Port name:{Globals.PortConfig.Port} isOpen:{SlevyrService.SerialPortIsOpen}");
                 return SlevyrService.SerialPortIsOpen;
             }
             catch (Exception ex)
@@ -181,6 +178,31 @@ namespace Slevyr.WebAppHost
                 //bool bootloaderOnVal = String.Equals(bootloaderOn, "ANO",StringComparison.InvariantCultureIgnoreCase);
 
                 return SlevyrService.NastavStatus(addr, writeProtectEEprom, minOK, minNG, bootloaderOn, parovanyLED, rozliseniCidel, pracovniJasLed);
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+        }
+
+
+        [HttpGet]
+        public bool NastavVariantuSmeny([FromUri] byte addr, [FromUri] string varianta)
+        {
+            Logger.Info($"addr:{addr} NastavVariantuSmeny:{varianta}");
+
+            if (string.IsNullOrWhiteSpace(varianta) || varianta.Trim().Length != 1) 
+            {
+                throw new ArgumentException();
+            }
+
+            byte[] asciiBytes = Encoding.ASCII.GetBytes(varianta.Trim().ToUpper());
+
+            if (Globals.RunConfig.IsMockupMode) return true;
+
+            try
+            {
+                return SlevyrService.NastavVariantuSmeny(addr, asciiBytes[0]);
             }
             catch (KeyNotFoundException)
             {

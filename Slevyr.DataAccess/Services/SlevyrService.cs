@@ -6,7 +6,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
@@ -43,6 +42,8 @@ namespace Slevyr.DataAccess.Services
         private static BackgroundWorker _sendBw;
 
         private static BackgroundWorker _packetBw;
+
+        private static BackgroundWorker _dataReaderBw;
 
         private static bool _isSendWorkerStarted;
         private static bool _isPacketWorkerStarted;
@@ -112,10 +113,9 @@ namespace Slevyr.DataAccess.Services
                  m.LoadUnitConfigFromFile(m.Address, _runConfig.JsonDataFilePath);
             }
 
-            if (!runConfig.OldSyncMode)
+            if (!runConfig.OldSyncMode && portCfg.UseDataReceivedEvent)
             {
                 _serialPort.DataReceived += SerialPortOnDataReceived;
-
                 _serialPort.ErrorReceived += _serialPort_ErrorReceived;
             }
 
@@ -145,7 +145,6 @@ namespace Slevyr.DataAccess.Services
                 UnitCommandsQueue.Enqueue(uc);
             });
         }
-
 
         private static void _serialPort_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
         {
@@ -186,6 +185,7 @@ namespace Slevyr.DataAccess.Services
                 //  _outBuff[0] == 0 && _outBuff[1] == 0 && _outBuff[2] == _address &&  && _outBuff[2] == cmd
 
                 var adr = packet[2];
+                var cmd = packet[3];
 
                 if (!_unitDictionary.ContainsKey(adr))
                 {
@@ -194,17 +194,15 @@ namespace Slevyr.DataAccess.Services
                     return;
                 }
 
-                var isSendConfirmation = packet[0] == 4 && packet[1] == 0 && packet[2] > 0;
+                var isSendConfirmation = packet[0] == 4 && packet[1] == 0 && adr > 0;
                 if (isSendConfirmation)
                 {                   
                     _unitDictionary[adr].WaitEventSendConfirm.Set();
                     TplLogger.Debug($"  WaitEventSendConfirm.Set - adr:[{adr:x2}]");
                     return;
                 }
-
-                var cmd = packet[3];
-
-                var isResult = packet[0] == 0 && packet[1] == 0 && packet[2] > 0 && cmd > 0;
+                
+                var isResult = packet[0] == 0 && packet[1] == 0 && adr > 0 && cmd > 0;
                 if (isResult)
                 {
                     //oznamim jednotce ze byla prijata response na prikaz cmd
@@ -213,7 +211,7 @@ namespace Slevyr.DataAccess.Services
 
                     if (_runConfig.IsWaitCommandResult)
                     {
-                        _unitDictionary[adr].WaitEventCommandResult.Set();   // rozlisit podle typu prikazu ?
+                        _unitDictionary[adr].WaitEventCommandResult.Set();   // TODO rozlisit podle typu prikazu ?
                         TplLogger.Debug($"  WaitEventCommandResult.Set - adr:[{adr:x2}]");
                     }
 
@@ -231,6 +229,66 @@ namespace Slevyr.DataAccess.Services
                 }
             }           
         }
+
+        private static async void DatareadWorkerDoWork(object sender, DoWorkEventArgs e)
+        {
+            OpenPort();
+            if (!CheckIsPortOpen()) return;
+
+            while (true)
+            {
+                //DataSendReceivedLogger.Debug(".");
+                byte[] packet = await SerialPort.ReadAsync(UnitMonitorBasic.BuffLength);
+                if (packet != null && packet.Length == UnitMonitorBasic.BuffLength)
+                {
+                    DataSendReceivedLogger.Debug($" <- {11:00}; {BitConverter.ToString(packet)}");
+                    var adr = packet[2];
+                    var cmd = packet[3];
+                    if (!_unitDictionary.ContainsKey(adr))
+                    {
+                        Logger.Error($"unit [{adr}] not found");
+                        ErrorsLogger.Error($"unit [{adr}] not found");
+                        continue;
+                    }
+
+                    var isSendConfirmation = packet[0] == 4 && packet[1] == 0 && adr > 0;
+                    if (isSendConfirmation)
+                    {
+                        _unitDictionary[adr].WaitEventSendConfirm.Set();
+                        TplLogger.Debug($"  WaitEventSendConfirm.Set - adr:[{adr:x2}]");
+                        continue;
+                    }
+
+                    var isResult = packet[0] == 0 && packet[1] == 0 && adr > 0 && cmd > 0;
+                    if (isResult)
+                    {
+                        //oznamim jednotce ze byla prijata response na prikaz cmd
+                        _unitDictionary[adr].ResponseReceived(cmd);
+                        TplLogger.Debug($"  Response received cmd:{cmd:x2} from [{adr:x2}]");
+
+                        if (_runConfig.IsWaitCommandResult)
+                        {
+                            _unitDictionary[adr].WaitEventCommandResult.Set(); // rozlisit podle typu prikazu ?
+                            TplLogger.Debug($"  WaitEventCommandResult.Set - adr:[{adr:x2}]");
+                        }
+
+                        switch (cmd)
+                        {
+                            case UnitMonitor.CmdReadStavCitacu:
+                            case UnitMonitor.CmdReadCasPosledniOkNg:
+                            case UnitMonitor.CmdReadRozdilKusu:
+                            case UnitMonitor.CmdReadDefektivita:
+                            case UnitMonitor.CmdReadHodnotuPrumCykluOkNg:
+                                //zaradim ke zpracovani ktere probiha v PacketBw
+                                PackedCollection.Add(packet);
+                                break;
+                        }
+                    }                    
+                }
+                //DataSendReceivedLogger.Debug("+");
+            }
+        }
+
 
         #endregion
 
@@ -431,6 +489,18 @@ namespace Slevyr.DataAccess.Services
             return true;
         }
 
+        public static bool NastavVariantuSmeny(byte addr, byte asciiByte)
+        {
+            Logger.Debug($"addr:{addr}");
+
+            if (_runConfig.IsMockupMode) return true;
+
+            var uc = new UnitCommand(() => _unitDictionary[addr].SendSetSmennost(asciiByte), "SendSetSmennost", addr);
+            UnitCommandsQueue.Enqueue(uc);
+
+            return true;
+        }
+
 
         public static bool NastavHandshake(byte addr, bool value)
         {
@@ -513,9 +583,13 @@ namespace Slevyr.DataAccess.Services
         {
             if (!_isSendWorkerStarted)
             {
+                _dataReaderBw = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
+                _dataReaderBw.DoWork += DatareadWorkerDoWork;
+                _dataReaderBw.RunWorkerAsync();
+
                 _isSendWorkerStarted = true;
                 _sendBw = new BackgroundWorker {WorkerReportsProgress = true, WorkerSupportsCancellation = true};
-                _sendBw.DoWork += SendBwDoWork;
+                _sendBw.DoWork += SendWorkerDoWork;
                 _sendBw.RunWorkerAsync();
                 Logger.Info("*** send worker started ***");
             }
@@ -527,7 +601,7 @@ namespace Slevyr.DataAccess.Services
             {
                 _isPacketWorkerStarted = true;
                 _packetBw = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
-                _packetBw.DoWork += PacketBwDoWork;
+                _packetBw.DoWork += PacketWorkerDoWork;
                 _packetBw.RunWorkerAsync();
                 Logger.Info("*** packet worker started ***");
             }
@@ -536,14 +610,17 @@ namespace Slevyr.DataAccess.Services
         public static void StopSendWorker()
         {
             _sendBw.CancelAsync();
+            _dataReaderBw.CancelAsync();
         }
 
-        public static void StopPacketWorker()
+        private static void StopPacketWorker()
         {
             _packetBw.CancelAsync();
         }
 
-        private static void SendBwDoWork(object sender, DoWorkEventArgs e)
+
+
+        private static void SendWorkerDoWork(object sender, DoWorkEventArgs e)
         {
             OpenPort();
             Stopwatch stopwatch = null;
@@ -647,7 +724,7 @@ namespace Slevyr.DataAccess.Services
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private static void PacketBwDoWork(object sender, DoWorkEventArgs e)
+        private static void PacketWorkerDoWork(object sender, DoWorkEventArgs e)
         {
             SqlliteDao.OpenConnection(true, _runConfig.DbFilePath);
 
@@ -744,6 +821,6 @@ namespace Slevyr.DataAccess.Services
             }
             DataSendReceivedLogger.Debug($"->  {buffLength}; {BitConverter.ToString(inBuff)}");
         }
-      
+
     }
 }

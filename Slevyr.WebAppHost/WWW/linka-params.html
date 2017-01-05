@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="">
   <head>
     <meta charset="utf-8">
@@ -41,11 +41,16 @@
 
         <section class="params">
 
+            <h3>Směnnost a cíle</h3>
             <div class="params--section">
-                <div class="params--item params--item-1">
+                <div class="params--item params--item-3">
                     <div class="label">Typ směnnosti</div>
-                    <input id="TypSmennosti" class="input" type="text" value="A" />
+                    <input id="TypSmennosti" class="input" type="text" value="A"/>
                 </div>
+                <div class="params--action">
+                    <button class="btn btn-fill" type="button" id="NastavTypSmennosti">Nastav směnnost</button>
+                </div>
+
                 <div class="params--item params--item-3">
                     <div class="label">Cíl 1. směny</div>
                     <input id="Cil1Smeny" class="input" type="number" value="1000" />
@@ -113,7 +118,25 @@
                 </div>
                 <div class="params--item params--item-3 params--item-3-last">
                     <div class="label">Začátek 3. směny</div>
-                    <input id="Zacatek3Smeny" class="input" type="time" step="1" />
+                    <input id="Zacatek3Smeny" class="input" type="time" step="1"/>
+                </div>
+                <!--<div class="params--action">
+                    <button class="btn btn-fill" type="button" id="NastavSmeny">Nastav</button>
+                </div>-->
+            </div>
+
+            <h3>Nastaveni OK a NG</h3>
+            <div class="params--section">
+                <div class="params--item params--item-3">
+                    <div class="label">Počet OK</div>
+                    <input id="PocetOk" class="input" type="number" value="0" />
+                </div>
+                <div class="params--item params--item-3 params--item-3-last">
+                    <div class="label">Počet NG</div>
+                    <input id="PocetNg" class="input" type="number" value="0"/>
+                </div>
+                <div class="params--action">
+                    <button class="btn btn-fill" type="button" id="NastavPocOkNg">Nastav</button>
                 </div>
             </div>
 

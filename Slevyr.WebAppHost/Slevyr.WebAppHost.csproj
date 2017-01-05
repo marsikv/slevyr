@@ -26,6 +26,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>bin\Debug\Slevyr.WebAppHost.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -166,10 +167,16 @@
     <Compile Include="SlevyrController.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="WWW\export-csv.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="WWW\images\check-white.svg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="WWW\images\menu-close.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="WWW\images\menu-export.svg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="WWW\images\menu-hamburger.svg">
@@ -274,6 +281,7 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>robocopy $(TargetDir)  $(SolutionDir)..\deploy *.dll *.exe *.config *.bat *.txt
+copy $(TargetDir)\Slevyr.WebAppHost.XML  $(SolutionDir)..\deploy 
 robocopy $(TargetDir)WWW  $(SolutionDir)..\deploy\WWW /S
 robocopy $(TargetDir)x64  $(SolutionDir)..\deploy\x64 /S
 robocopy $(TargetDir)x86  $(SolutionDir)..\deploy\x86 /S

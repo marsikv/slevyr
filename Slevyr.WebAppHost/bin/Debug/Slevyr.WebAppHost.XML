@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Slevyr.WebAppHost</name>
+    </assembly>
+    <members>
+        <member name="F:Slevyr.WebAppHost.Service.components">
+            <summary> 
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:Slevyr.WebAppHost.Service.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:Slevyr.WebAppHost.Service.InitializeComponent">
+            <summary> 
+            Required method for Designer support - do not modify 
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="M:Slevyr.WebAppHost.SlevyrController.GetApiVersion">
+            <summary>
+            Vrací verzi API
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Slevyr.WebAppHost.SlevyrController.GetConfig">
+            <summary>
+            Vrací parametry běhové konfigurace, jako je umístění databáze, hodnoty timout parametrů apod.
+            </summary>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

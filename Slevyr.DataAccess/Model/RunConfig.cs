@@ -23,9 +23,15 @@ namespace Slevyr.DataAccess.Model
         public IEnumerable<int> UnitAddrs;
         //public bool IsWriteEmptyToLog;       //pokud je true zapisuje do logu jednotek radek s prazdnymi hodnotami pokud dojde k chybe pri vycitani jednotky
                                              //jednotek s Led panelem, tento delay by bylo dobré mít pod kontrolou.
-        public bool IsWaitCommandConfirmation;
+        //public bool IsWaitCommandConfirmation;   //na to se ceka vzdy
         public bool IsWaitCommandResult;
         public int SendAttempts;            //urcuje max. pocet pokusu ktere provadi send
-        public bool OldSyncMode { get; set; }  //stary rezim komunikace synchronni s vyuzitim await, bez datareceived handleru
+
+        /// <summary>
+        /// stara metoda vycitani hodnot - bude doufam zruseno
+        /// </summary>
+        public bool OldSyncMode { get; set; }  
+
+//stary rezim komunikace synchronni s vyuzitim await, bez datareceived handleru
     }
 }
