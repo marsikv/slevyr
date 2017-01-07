@@ -32,7 +32,7 @@ namespace SledovaniVyroby.SerialPortWraper
             BaudRate = cfg.BaudRate;
             DataBits = cfg.DataBits;
             StopBits = cfg.StopBits;
-            if (cfg.UseDataReceivedEvent) ReceivedBytesThreshold = cfg.ReceivedBytesThreshold;
+            ReceivedBytesThreshold = cfg.ReceivedBytesThreshold;
         }
 
 

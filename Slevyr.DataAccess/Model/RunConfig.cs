@@ -27,6 +27,8 @@ namespace Slevyr.DataAccess.Model
         public bool IsWaitCommandResult;
         public int SendAttempts;            //urcuje max. pocet pokusu ktere provadi send
 
+        public bool UseDataReceivedEvent { get; set; } //pro cteni dat z portu pouzivan detereceived event
+
         /// <summary>
         /// stara metoda vycitani hodnot - bude doufam zruseno
         /// </summary>

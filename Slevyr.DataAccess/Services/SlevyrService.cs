@@ -77,7 +77,7 @@ namespace Slevyr.DataAccess.Services
         {
             StopPacketWorker();
 
-            StopSendWorker();
+            StopSendReceiveWorker();
 
             ClosePort();
         }
@@ -86,7 +86,7 @@ namespace Slevyr.DataAccess.Services
         {
             OpenPort();
 
-            StartSendWorker();
+            StartSendReceiveWorkers();
 
             StartPacketWorker();
         }
@@ -113,7 +113,7 @@ namespace Slevyr.DataAccess.Services
                  m.LoadUnitConfigFromFile(m.Address, _runConfig.JsonDataFilePath);
             }
 
-            if (!runConfig.OldSyncMode && portCfg.UseDataReceivedEvent)
+            if (!runConfig.OldSyncMode && runConfig.UseDataReceivedEvent)
             {
                 _serialPort.DataReceived += SerialPortOnDataReceived;
                 _serialPort.ErrorReceived += _serialPort_ErrorReceived;
@@ -579,13 +579,21 @@ namespace Slevyr.DataAccess.Services
 
         #region send a packet worker
 
-        public static void StartSendWorker()
+        public static void StartSendReceiveWorkers()
         {
             if (!_isSendWorkerStarted)
             {
-                _dataReaderBw = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
-                _dataReaderBw.DoWork += DatareadWorkerDoWork;
-                _dataReaderBw.RunWorkerAsync();
+                if (!_runConfig.UseDataReceivedEvent)
+                {
+                    _dataReaderBw = new BackgroundWorker
+                    {
+                        WorkerReportsProgress = true,
+                        WorkerSupportsCancellation = true
+                    };
+                    _dataReaderBw.DoWork += DatareadWorkerDoWork;
+                    _dataReaderBw.RunWorkerAsync();
+                    Logger.Info("*** datareader worker started ***");
+                }
 
                 _isSendWorkerStarted = true;
                 _sendBw = new BackgroundWorker {WorkerReportsProgress = true, WorkerSupportsCancellation = true};
@@ -607,7 +615,7 @@ namespace Slevyr.DataAccess.Services
             }
         }
 
-        public static void StopSendWorker()
+        public static void StopSendReceiveWorker()
         {
             _sendBw.CancelAsync();
             _dataReaderBw.CancelAsync();

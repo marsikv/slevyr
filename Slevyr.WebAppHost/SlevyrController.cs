@@ -72,9 +72,9 @@ namespace Slevyr.WebAppHost
             //RunConfig.RelaxTime = relaxTime;
 
             if (isTimerOn)
-                SlevyrService.StartSendWorker();
+                SlevyrService.StartSendReceiveWorkers();
             else
-                SlevyrService.StopSendWorker();
+                SlevyrService.StopSendReceiveWorker();
 
             SlevyrService.StartPacketWorker();
 
