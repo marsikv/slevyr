@@ -14,26 +14,26 @@ namespace Slevyr.DataAccess.Model
         public int ReadResultTimeOut = 5000;  //timeout [ms] pro nacitani dat ktere maji prijit po odeslanem prikazu
         public int MinCmdDelay = 600;         //příkazy na jednu adresu jednotky by nemyly jít častěji jak jednou za cca 600ms, poté dochází k zahlcení bufferu u 
 
-
-        public bool IsReadOkNgTime = true;    //urcuje zda se nacita posledni cas OK a NG
+        ///<summary>urcuje zda se nacita posledni cas OK a NG</summary>
+        public bool IsReadOkNgTime = true; 
         //public int PortReadTimeout;
         public string JsonDataFilePath;
         public string DbFilePath;
 
         public IEnumerable<int> UnitAddrs;
         //public bool IsWriteEmptyToLog;       //pokud je true zapisuje do logu jednotek radek s prazdnymi hodnotami pokud dojde k chybe pri vycitani jednotky
-                                             //jednotek s Led panelem, tento delay by bylo dobré mít pod kontrolou.
+
         //public bool IsWaitCommandConfirmation;   //na to se ceka vzdy
+        /// <summary>po odeslani prikazu thread ceka na response nebo timeout</summary>
         public bool IsWaitCommandResult;
+        ///<summary></summary>
         public int SendAttempts;            //urcuje max. pocet pokusu ktere provadi send
 
-        public bool UseDataReceivedEvent { get; set; } //pro cteni dat z portu pouzivan detereceived event
+        /// <summary>pro cteni dat z portu pouzivan detereceived event</summary>
+        public bool UseDataReceivedEvent { get; set; } 
+        //public bool OldSyncMode { get; set; }   //stary rezim komunikace synchronni s vyuzitim await, bez datareceived handleru
 
-        /// <summary>
-        /// stara metoda vycitani hodnot - bude doufam zruseno
-        /// </summary>
-        public bool OldSyncMode { get; set; }  
-
-//stary rezim komunikace synchronni s vyuzitim await, bez datareceived handleru
+        ///<summary> výchozí hodnota pro export do souboru </summary>
+        public string DefaultExportFileName { get; set; }  
     }
 }

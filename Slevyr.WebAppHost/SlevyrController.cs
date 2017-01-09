@@ -444,7 +444,54 @@ namespace Slevyr.WebAppHost
             }
 
             var cnt = SqlliteDao.ExportToCsv(value);
-            return Ok($"Počet exportovaných záznamů: {cnt}");
+            return Ok($"Počet exportovaných záznamů od {value.TimeFrom} do {value.TimeTo} : {cnt}");            
+        }
+
+        /*
+         * FileName: $('#exportFilename').val(),
+            UnitId: $('#linkaId').val(),
+            ExportAll: $('#exportAll').prop('checked'),
+            ExportAllSeparated: $('#exportAllSeparated').prop('checked'),
+            exportVariant: 1
+         */
+        [HttpGet]
+        public IHttpActionResult ExportIntervalPredef([FromUri] string fileName, [FromUri]int unitId, [FromUri]bool expAll, [FromUri]bool expAllSepar, [FromUri]int exportVariant)
+        {
+            Logger.Info($"exportFilename:{fileName} exportvar:{exportVariant}");
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                throw new ArgumentException("Neplatná hodnota pro název souboru");
+            }
+
+            var exportDef = new IntervalExport()
+            {
+                ExportAll = expAll,
+                UnitId = unitId,
+                FileName = fileName,
+                ExportAllSeparated = expAllSepar
+            };
+
+            DateTime now = DateTime.Now;
+
+            switch (exportVariant)
+            {
+                case 1:
+                    exportDef.TimeFrom = new DateTime(now.Year, now.Month, now.Day,6 , 0, 0);
+                    exportDef.TimeTo = new DateTime(now.Year, now.Month, now.Day,14 , 0, 0);
+                    break;
+                case 2:
+                    exportDef.TimeFrom = new DateTime(now.Year, now.Month, now.Day, 14, 0, 0);
+                    exportDef.TimeTo = new DateTime(now.Year, now.Month, now.Day, 22, 0, 0);
+                    break;
+                case 3:
+                    exportDef.TimeFrom = new DateTime(now.Year, now.Month, now.Day-1, 22, 0, 0);
+                    exportDef.TimeTo = new DateTime(now.Year, now.Month, now.Day, 6, 0, 0);
+                    break;
+                default: throw new ArgumentException("Neplatná hodnota pro variantu exportu");
+            }
+
+            var cnt = SqlliteDao.ExportToCsv(exportDef);
+            return Ok($"Počet exportovaných záznamů od {exportDef.TimeFrom} do {exportDef.TimeTo} : {cnt}");
         }
 
 

@@ -113,7 +113,7 @@ namespace Slevyr.DataAccess.Services
                  m.LoadUnitConfigFromFile(m.Address, _runConfig.JsonDataFilePath);
             }
 
-            if (!runConfig.OldSyncMode && runConfig.UseDataReceivedEvent)
+            if (runConfig.UseDataReceivedEvent)
             {
                 _serialPort.DataReceived += SerialPortOnDataReceived;
                 _serialPort.ErrorReceived += _serialPort_ErrorReceived;
@@ -410,17 +410,17 @@ namespace Slevyr.DataAccess.Services
         }
 
 
-        public static bool NastavStatus(byte addr, bool writeProtectEEprom, byte minOK, byte minNG, bool bootloaderOn, byte parovanyLED,
+        public static bool NastavStatus(byte addr, bool writeProtectEEprom, byte minOk, byte minNg, bool bootloaderOn, byte parovanyLed,
             byte rozliseniCidel, byte pracovniJasLed)
         {
-            Logger.Debug($"addr:{addr} writeProtectEEprom:{writeProtectEEprom} minOK:{minOK} minNG:{minNG} parovanyLED:{parovanyLED}");
+            Logger.Debug($"addr:{addr} writeProtectEEprom:{writeProtectEEprom} minOK:{minOk} minNG:{minNg} parovanyLED:{parovanyLed}");
 
             if (_runConfig.IsMockupMode) return true;
 
             byte writeProtectEEpromVal = (byte)(writeProtectEEprom ? 0 : 1);
             byte bootloaderOnVal = (byte)(bootloaderOn ? 0 : 1);
-            //return _unitDictionary[addr].SendSetZaklNastaveni(writeProtectEEpromVal, minOK, minNG, bootloaderOnVal, parovanyLED, rozliseniCidel, pracovniJasLed);
-            var uc = new UnitCommand(() => _unitDictionary[addr].SendSetZaklNastaveni(writeProtectEEpromVal, minOK, minNG, bootloaderOnVal, parovanyLED, rozliseniCidel, pracovniJasLed), "SendSetZaklNastaveni", addr);
+            //return _unitDictionary[addr].SendSetZaklNastaveni(writeProtectEEpromVal, minOk, minNg, bootloaderOnVal, parovanyLed, rozliseniCidel, pracovniJasLed);
+            var uc = new UnitCommand(() => _unitDictionary[addr].SendSetZaklNastaveni(writeProtectEEpromVal, minOk, minNg, bootloaderOnVal, parovanyLed, rozliseniCidel, pracovniJasLed), "SendSetZaklNastaveni", addr);
             UnitCommandsQueue.Enqueue(uc);
 
             return true;
@@ -679,12 +679,7 @@ namespace Slevyr.DataAccess.Services
 
                         bool res = false;
 
-                        if (_runConfig.OldSyncMode)
-                        {
-                            res = _unitDictionary[addr].OldObtainStatusSync();
-                            if (res) SqlliteDao.AddUnitState(addr, _unitDictionary[addr].UnitStatus);
-                        }
-                        else if (_runConfig.IsWaitCommandResult)
+                        if (_runConfig.IsWaitCommandResult)  //synchronizace nejen potvrzeni odeslani prikazu ale i prijeti vysledku
                         {
                             res = _unitDictionary[addr].ObtainStatusSync();                            
                         }

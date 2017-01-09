@@ -11,7 +11,7 @@ namespace Slevyr.DataAccess.Model
         private static readonly Logger TplLogger = LogManager.GetLogger("Tpl");
 
         private readonly byte _address;
-        public readonly byte[] _sendBuff;    //TODO public jen pro stary zpusob komunikace, zrusit hned jak to bude mozne
+        private readonly byte[] _sendBuff;   
 
         private static RunConfig _runConfig;
 
@@ -46,14 +46,6 @@ namespace Slevyr.DataAccess.Model
         //pripravime send/in buffer na predani příkazu
         private void PrepareCommand(byte cmd)
         {
-            _sendBuff[2] = _address;
-            _sendBuff[3] = cmd;
-        }
-
-        protected void OldPrepareCommand(byte cmd)
-        {
-            CurrentCmd = cmd;
-            Array.Clear(_sendBuff, 0, _sendBuff.Length);
             _sendBuff[2] = _address;
             _sendBuff[3] = cmd;
         }
@@ -160,8 +152,8 @@ namespace Slevyr.DataAccess.Model
         private bool SendCommandLambda(byte cmd, Func<bool> lambda, bool checkSendConfirmation)
         {
             int i = 1;
-            bool res = false;
-            while (!res)
+            bool res;
+            while (true)
             {
                 ClearSendBuffer();
 

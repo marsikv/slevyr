@@ -52,10 +52,10 @@ namespace Slevyr.WebAppHost
                 JsonDataFilePath = ConfigurationManager.AppSettings["JsonFilePath"],
                 DbFilePath = ConfigurationManager.AppSettings["DbFilePath"],
                 SendAttempts = int.Parse(ConfigurationManager.AppSettings["SendAttempts"]),
+                DefaultExportFileName = ConfigurationManager.AppSettings["DefaultExportFileName"]
             };
 
             bool b;
-            bool.TryParse(ConfigurationManager.AppSettings["OldSyncMode"], out b); RunConfig.OldSyncMode = b;            
             bool.TryParse(ConfigurationManager.AppSettings["IsWaitCommandResult"], out b); RunConfig.IsWaitCommandResult = b;
             bool.TryParse(ConfigurationManager.AppSettings["UseDataReceivedEvent"], out b); RunConfig.UseDataReceivedEvent = b;
 
@@ -67,7 +67,6 @@ namespace Slevyr.WebAppHost
                 Parity = System.IO.Ports.Parity.None,
                 DataBits = 8,
                 StopBits = System.IO.Ports.StopBits.One,
-                //ReceiveLength = 11
             };           
 
             bool.TryParse(ConfigurationManager.AppSettings["StartWebApi"], out StartWebApi);

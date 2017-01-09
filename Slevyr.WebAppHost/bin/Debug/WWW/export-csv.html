@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="">
   <head>
     <meta charset="utf-8">
@@ -31,43 +31,74 @@
         <h1>Export do CSV</h1>
 
         <section class="params">
-            <form id="exportInterval">
-                <div class="params--section">
-                    <div class="params--item params--item-1">
-                        <div class="label">Výstupní soubor</div>
-                        <input id="exportFilename"
-                               class="input"
-                               name="fileName"
-                               type="text"
-                               value="c:\temp\export.csv"
-                               placeholder="c:\temp\export.csv" />
-                    </div>
-                    <div class="params--item params--item-2">
-                        <div class="label">Datum a čas od</div>
-                        <input id="exportTimeFrom" class="input" name="timeFrom" type="datetime-local" />
-                    </div>
-                    <div class="params--item params--item-2 params--item-2-last">
-                        <div class="label">Datum a čas do</div>
-                        <input id="exportTimeTo" class="input" name="timeTo" type="datetime-local" />
-                    </div>
-                    <div class="params--item params--item-1">
-                        <div class="label">Identifikátor linky</div>
-                        <input id="linkaId" class="input" name="linkaId" type="number" value="100" />
-                    </div>
-                    <div class="params--item params--item-2">
-                        <input id="exportAll" type="checkbox" checked="checked">
-                        <label for="exportAll" class="checkbox">Exportovat za všechny linky</label>
-                    </div>
-                    <div class="params--item params--item-2 params--item-2-last">
-                        <input id="exportAllSeparated" type="checkbox">
-                        <label for="exportAllSeparated" class="checkbox">Po linkách do samostatných souborů</label>
-                    </div>
-
-                    <div class="params--action">
-                        <button class="btn btn-fill" type="button">Exportovat</button>
-                    </div>
+            
+            <h3>Poslední ranní směna</h3>
+            <div class="params--section">
+                <div class="label">6:00 - 14:00</div>
+                <div class="params--action">
+                    <button class="btn btn-fill" type="button" id="ExportCsv1">Exportovat</button>
                 </div>
-            </form>
+            </div>
+
+            <h3>Poslední odpolední směna</h3>
+            <div class="params--section">
+                <div class="label">14:00 - 22:00</div>
+                <div class="params--action">
+                    <button class="btn btn-fill" type="button" id="ExportCsv2">Exportovat</button>
+                </div>
+            </div>
+
+            <h3>Poslední noční směna</h3>
+            <div class="params--section">
+                <div class="label">22:00 - 6:00</div>
+                <div class="params--action">
+                    <button class="btn btn-fill" type="button" id="ExportCsv3">Exportovat</button>
+                </div>
+            </div>
+
+            <h3>Uživatelský interval</h3>
+            <div class="params--section">
+                <div class="params--item params--item-2">
+                    <div class="label">Datum a čas Od</div>
+                    <input id="exportTimeFrom" class="input" name="timeFrom" type="datetime-local"/>
+                </div>
+
+                <div class="params--item params--item-2 params--item-2-last">
+                    <div class="label">Datum a čas Do</div>
+                    <input id="exportTimeTo" class="input" name="timeTo" type="datetime-local" />
+                </div>
+
+                <div class="params--action">
+                    <button class="btn btn-fill" type="button" id="ExportToCsv">Exportovat</button>
+                </div>
+            </div>
+
+            <h3>Nastavení výstupu</h3>
+
+            <div class="params--section">
+                <div class="params--item params--item-2">
+                    <div class="label">Výstupní soubor</div>
+                    <input id="exportFilename"
+                           class="input"
+                           name="fileName"
+                           type="text"
+                           value="c:\temp\export.csv"
+                           placeholder="export.csv" />
+                </div>
+                <div class="params--item params--item-2">
+                    <div class="label">Identifikátor linky</div>
+                    <input id="linkaId" class="input" name="linkaId" type="number" value="100" />
+                </div>
+                <div class="params--item params--item-2">
+                    <input id="exportAll" type="checkbox" checked="checked">
+                    <label for="exportAll" class="checkbox">Exportovat za všechny linky</label>
+                </div>
+                <div class="params--item params--item-2 params--item-2-last">
+                    <input id="exportAllSeparated" type="checkbox">
+                    <label for="exportAllSeparated" class="checkbox">Po linkách do samostatných souborů</label>
+                </div>
+            </div>
+
         </section>
 
     </main>
