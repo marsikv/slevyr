@@ -4,6 +4,7 @@ using System.Data.SQLite;
 using System.IO;
 using NLog;
 using Slevyr.DataAccess.Model;
+using Slevyr.DataAccess.Services;
 
 namespace Slevyr.DataAccess.DAO
 {
@@ -45,6 +46,15 @@ namespace Slevyr.DataAccess.DAO
 
         const string SqlCreateStavLinkyTable = @"CREATE TABLE `ProductionLineStatus` 
 (`id`	INTEGER,	`name`	TEXT);";
+
+        const string SqlExportToCsv = "select datetime(obTime,'localtime') as time,cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky from observations " +
+                "where obTime between @timeFrom and @timeTo";
+
+        static readonly string[] SqlExportToCsvFieldNames =
+        {
+            "Čas","Cmd","UnitId","Přestávka","Cíl OK","Počet OK","Čas posl OK","Prům čas OK","Cíl NG","Počet NG",
+            "Čas posl NG","Prům čas NG","Rozdíl","Atuální defectivita","Stav linky"
+        };
 
         const string SqlCreateIndex = @"CREATE INDEX `observations_time_idx` ON `observations` (`obTime` ASC)";
 
@@ -184,9 +194,8 @@ namespace Slevyr.DataAccess.DAO
 
         public static int ExportToCsv(IntervalExport export)
         {
-            string sql =
-                "select datetime(obTime,'localtime') as time,cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky from observations " +
-                "where obTime between @timeFrom and @timeTo";
+            string sql = SqlExportToCsv;
+
             if (!export.ExportAll)
             {
                 sql += " and unitId = @unitId";
@@ -221,7 +230,10 @@ namespace Slevyr.DataAccess.DAO
             int iColCount = dt.Columns.Count;
             for (int i = 0; i < iColCount; i++)
             {
-                sw.Write(dt.Columns[i]);
+                //sw.Write(dt.Columns[i]);
+                sw.Write(SqlExportToCsvFieldNames[i]);
+                //sw.Write(Helper.ConvertUtfToLatin2(SqlExportToCsvFieldNames[i]));
+
                 if (i < iColCount - 1)
                 {
                     sw.Write(";");
@@ -251,6 +263,5 @@ namespace Slevyr.DataAccess.DAO
 
             return cnt;
         }
-
     }
 }

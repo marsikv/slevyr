@@ -258,6 +258,14 @@ namespace Slevyr.DataAccess.Model
             return SendCommand(CmdReadDefektivita);
         }
 
+        public bool SendReadStavCitacuKonecSmeny(int cmd)
+        {
+            Logger.Info($"+ unit {Address} cmd: {cmd}");
+
+            return SendCommand((byte)cmd);  //to je specificke protoze prikaz se lisi podle smeny
+        }
+
+
         #endregion
 
         #region public methods - read response handlers

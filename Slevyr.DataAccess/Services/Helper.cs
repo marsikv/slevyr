@@ -43,7 +43,15 @@ namespace Slevyr.DataAccess.Services
                 Logger.Error(ex);
                 return "Error: Neznámý stav";
             }
+        }
 
+        public static string ConvertUtfToLatin2(string s)
+        {
+            Encoding iso = Encoding.GetEncoding("ISO-8859-2");
+            Encoding utf8 = Encoding.UTF8;
+            byte[] utfBytes = utf8.GetBytes(s);
+            byte[] isoBytes = Encoding.Convert(utf8, iso, utfBytes);
+            return iso.GetString(isoBytes);
         }
 
     }

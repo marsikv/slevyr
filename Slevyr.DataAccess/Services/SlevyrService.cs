@@ -135,13 +135,13 @@ namespace Slevyr.DataAccess.Services
 
             int cmd = (int) smena;
 
-            Logger.Info($"prechod smeny addr:{us.Addr} cmd:{cmd:x2}");
+            Logger.Info($"prechod smeny {smena} addr:{us.Addr} cmd:{cmd:x2}");
 
             //prikaz na vycteni hodnoty se posila po zpozdeni 2sec 
             //TODO parametr do config
             Task.Delay(2000).ContinueWith(t =>
             {
-                var uc = new UnitCommand(() => _unitDictionary[us.Addr].SendCommand((byte)cmd), "CmdReadStavCitacuKonecSmeny", us.Addr);
+                var uc = new UnitCommand(() => _unitDictionary[us.Addr].SendReadStavCitacuKonecSmeny(cmd), "CmdReadStavCitacuKonecSmeny", us.Addr);
                 UnitCommandsQueue.Enqueue(uc);
             });
         }
@@ -222,6 +222,9 @@ namespace Slevyr.DataAccess.Services
                         case UnitMonitor.CmdReadRozdilKusu:
                         case UnitMonitor.CmdReadDefektivita:
                         case UnitMonitor.CmdReadHodnotuPrumCykluOkNg:
+                        case UnitMonitor.CmdReadStavCitacuRanniSmena:
+                        case UnitMonitor.CmdReadStavCitacuOdpoledniSmena:
+                        case UnitMonitor.CmdReadStavCitacuNocniSmena:
                             //zaradim ke zpracovani ktere probiha v PacketBw
                             PackedCollection.Add(packet);
                             break;
@@ -279,6 +282,9 @@ namespace Slevyr.DataAccess.Services
                             case UnitMonitor.CmdReadRozdilKusu:
                             case UnitMonitor.CmdReadDefektivita:
                             case UnitMonitor.CmdReadHodnotuPrumCykluOkNg:
+                            case UnitMonitor.CmdReadStavCitacuRanniSmena:
+                            case UnitMonitor.CmdReadStavCitacuOdpoledniSmena:
+                            case UnitMonitor.CmdReadStavCitacuNocniSmena:
                                 //zaradim ke zpracovani ktere probiha v PacketBw
                                 PackedCollection.Add(packet);
                                 break;
