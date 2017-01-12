@@ -2,57 +2,8 @@ $(document).ready(function () {
     var $tabule = $('#tabule'),
         uri = 'api/slevyr';
 
-    var data = [
-      {
-        "LinkaName": "TEST nazuv liky strasne dlouheho chacha",
-        "CilKusuTabule": 2000,
-        "CilDefectTabule": 15,
-        "CilDefectTabuleStr": "15",
-        "AktualDefectTabule": "100 %",
-        "AktualDefectTabuleTxt": "-",
-        "AktualDefectTabuleStr": "null",
-        "RozdilTabule": -1658,
-        "RozdilTabuleTxt": "-1658"
-      },
-      {
-        "LinkaName": "Linka 101",
-        "CilKusuTabule": 3850,
-        "CilDefectTabule": 1.5,
-        "CilDefectTabuleStr": "1.5",
-        "AktualDefectTabule": "NaN",
-        "AktualDefectTabuleTxt": "-",
-        "AktualDefectTabuleStr": "null",
-        "RozdilTabule": -3192,
-        "RozdilTabuleTxt": "-3192"
-      },
-      {
-        "LinkaName": "TEST nazuv liky strasne dlouheho chacha",
-        "CilKusuTabule": 2000,
-        "CilDefectTabule": 15,
-        "CilDefectTabuleStr": "15",
-        "AktualDefectTabule": "NaN",
-        "AktualDefectTabuleTxt": "-",
-        "AktualDefectTabuleStr": "null",
-        "RozdilTabule": -1658,
-        "RozdilTabuleTxt": "-1658"
-      },
-      {
-        "LinkaName": "Linka 101",
-        "CilKusuTabule": 3850,
-        "CilDefectTabule": 1.5,
-        "CilDefectTabuleStr": "1.5",
-        "AktualDefectTabule": "NaN",
-        "AktualDefectTabuleTxt": "-",
-        "AktualDefectTabuleStr": "null",
-        "RozdilTabule": -3192,
-        "RozdilTabuleTxt": "-3192"
-      }
-    ];
-
     var get = function () {
-        console.log('aaa');
-
-        $.getJSON(uri + '/GetAllTabule?')
+        $.getJSON(uri + '/GetAllTabule')
             .done(function (data) {
                 add(data);
             })
@@ -76,6 +27,5 @@ $(document).ready(function () {
     };
 
     get();
-    add(data);
 
 });
