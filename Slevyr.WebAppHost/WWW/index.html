@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sledování výroby</title>
+
+    <link rel="stylesheet" href="styles/main.css">
+  </head>
+<body>
+
+    <div id="menuOpener" class="menuSwitcher menuSwitcher-open"></div>
+
+    <nav id="menu" class="menu">
+            <div class="menu--header">
+                <h4>Sledování výroby</h4>
+            </div>
+            <ul class="menu--list">
+                <a href="index.html"><li class="menu--item menu--item-home menu--item-active">Home</li></a>
+                <a href="linka-tabule.html"><li class="menu--item menu--item-tabule menu--item">Tabule</li></a>
+                <a href="linka-params.html"><li class="menu--item menu--item-params">Parametry</li></a>
+                <a href="nastaveni.html"><li class="menu--item menu--item-settings">Nastavení</li></a>
+                <a href="export-csv.html"><li class="menu--item menu--item-export">Export</li></a>
+            </ul>
+        <div id="menuCloser" class="menuSwitcher menuSwitcher-close"></div>
+    </nav>
+
+    <main class="main">
+        <div id="tabule" class="tabuleContainer"></div>
+    </main>
+
+    <aside id="notification" class="aside-bottom"></aside>
+
+    <script src="scripts\jquery.min.js"></script>
+    <script src="scripts\main.js"></script>
+    <script src="scripts\allTabule.js"></script>
+
+</body>
+</html>
