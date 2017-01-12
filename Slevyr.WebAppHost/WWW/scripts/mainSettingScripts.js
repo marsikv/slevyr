@@ -1,5 +1,4 @@
-var uri = 'api/slevyr',
-    $notification = $('#notification');
+var uri = 'api/slevyr';
 
     $(document).ready(function () {
         readRunConfig();
