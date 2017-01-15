@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NLog;
 using Slevyr.DataAccess.Services;
 
@@ -156,6 +151,7 @@ namespace Slevyr.DataAccess.Model
         #region events
         /// <summary>
         /// event se vyhazuje po prechodu z jedne smeny na druhy (napr. z ranni na odpoledni)
+        /// tzn. aktualni smena konci (vraci se jako parametr) a zacina nova
         /// </summary>
         public event EventHandler<SmenyEnum> PrechodSmeny;
 
@@ -304,11 +300,13 @@ namespace Slevyr.DataAccess.Model
 
                 Logger.Debug(smena);
 
-                if (smena != SmenyEnum.Nedef && smena != CurrentSmena)
+                if (smena != SmenyEnum.Nedef && smena != CurrentSmena)  //dochazi ke zmene smeny
                 {
                     if (CurrentSmena != SmenyEnum.Nedef)  //aby bylo zajisteno ze se opravdu jedna o prechod z jedne smeny do druhe 
                     {
-                        PrechodSmeny?.Invoke(this, CurrentSmena);  //po odchyceni se po definovanem zpozdeni zaradi prikaz k nacteni stavu do fronty adhoc prikazu
+                        //udalost oznamuje ze aktualni smena konci
+                        //po odchyceni se po definovanem zpozdeni zaradi prikaz k nacteni stavu do fronty adhoc prikazu
+                        PrechodSmeny?.Invoke(this, CurrentSmena);  
                     }
                     CurrentSmena = smena;
                 }

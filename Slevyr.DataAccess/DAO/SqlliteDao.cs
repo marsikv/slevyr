@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.SQLite;
 using System.IO;
+using System.Text;
 using NLog;
 using Slevyr.DataAccess.Model;
 using Slevyr.DataAccess.Services;
@@ -39,7 +40,7 @@ namespace Slevyr.DataAccess.DAO
 (cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
 
         const string SqlInsertLastStatusIntoObservations = @"insert into observations 
-(cmd,unitId,pocetOk,casPoslednihoOk,pocetNg,casPoslednihoNg,stavLinky) values ";
+(obTime,cmd,unitId,pocetOk,casPoslednihoOk,pocetNg,casPoslednihoNg,rozdil,atualniDefectivita,stavLinky) values ";
 
         const string SqlUpdateStatusIntoObservations =
             @"update observations set casPoslednihoOk=@casOk, casPoslednihoNg=@casNg where id=@id";
@@ -47,12 +48,12 @@ namespace Slevyr.DataAccess.DAO
         const string SqlCreateStavLinkyTable = @"CREATE TABLE `ProductionLineStatus` 
 (`id`	INTEGER,	`name`	TEXT);";
 
-        const string SqlExportToCsv = "select datetime(obTime,'localtime') as time,cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky from observations " +
+        const string SqlExportToCsv = "select id, datetime(obTime,'localtime') as time,cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky from observations " +
                 "where obTime between @timeFrom and @timeTo";
 
         static readonly string[] SqlExportToCsvFieldNames =
         {
-            "Čas","Cmd","UnitId","Přestávka","Cíl OK","Počet OK","Čas posl OK","Prům čas OK","Cíl NG","Počet NG",
+            "id", "Čas","Cmd","UnitId","Přestávka","Cíl OK","Počet OK","Čas posl OK","Prům čas OK","Cíl NG","Počet NG",
             "Čas posl NG","Prům čas NG","Rozdíl","Atuální defectivita","Stav linky"
         };
 
@@ -158,12 +159,24 @@ namespace Slevyr.DataAccess.DAO
             return (long) command.ExecuteScalar();
         }
 
-        public static void AddUnitKonecSmenyState(byte addr, byte cmd, UnitStatus u)
-        {            
+        public static void AddUnitKonecSmenyState(byte addr, byte cmd, UnitStatus u, TimeSpan zacatekNoveSmeny, int cilSmeny )
+        {
+            //potrebuji ziskat konec predchozi smeny, posunume o sekundu vzad
+            var konecSmeny = zacatekNoveSmeny.Subtract(new TimeSpan(0, 0, 1));
+            DateTime dt = DateTime.Today.AddSeconds(konecSmeny.TotalSeconds);
+
+            //SQLite pozaduje format: yyyy - MM - dd HH: mm: ss
+            string timeDateStr = dt.ToString("yyyy-MM-dd HH':'mm':'ss");
+
+            //spocitam i defektivitu a rozdil pro posledni ok a ng
+            var defectivita = (float)u.LastNg / (float)u.LastOk;
+            var rozdil = u.LastOk - cilSmeny;
+
             string sql = SqlInsertLastStatusIntoObservations +
-                       $"({cmd},{addr}," +
+                       $"('{timeDateStr}', {cmd},{addr}," +
                        $"{u.LastOk},null," +  //posledni cas ok neznam
                        $"{u.LastNg},null," +  //posledni cas ng neznam
+                       $"{rozdil},{defectivita}," +  
                        $"{(int)u.MachineStatus})";
 
             Logger.Info(sql);
@@ -224,44 +237,53 @@ namespace Slevyr.DataAccess.DAO
         private static int CreateCsvFile(DataTable dt, string strFilePath)
         {
             int cnt = 0;
-            StreamWriter sw = new StreamWriter(strFilePath, false);
-
-            // First we will write the headers.
-            int iColCount = dt.Columns.Count;
-            for (int i = 0; i < iColCount; i++)
+            using (var sw = new StreamWriter(new FileStream(strFilePath, FileMode.OpenOrCreate, FileAccess.Write),Encoding.GetEncoding("ISO-8859-2")))
             {
-                //sw.Write(dt.Columns[i]);
-                sw.Write(SqlExportToCsvFieldNames[i]);
-                //sw.Write(Helper.ConvertUtfToLatin2(SqlExportToCsvFieldNames[i]));
-
-                if (i < iColCount - 1)
-                {
-                    sw.Write(";");
-                }
-            }       
-            sw.Write(sw.NewLine);
-
-            // Now write all the rows.
-            
-            foreach (DataRow dr in dt.Rows)
-            {
+                // First we will write the headers.
+                int iColCount = dt.Columns.Count;
                 for (int i = 0; i < iColCount; i++)
                 {
-                    if (!Convert.IsDBNull(dr[i]))
-                    {
-                        sw.Write(dr[i].ToString());
-                    }
+                    //sw.Write(dt.Columns[i]); -- takto by zapsal nazvy sloupcu dle tabulky
+                    sw.Write(SqlExportToCsvFieldNames[i]);
+                    //sw.Write(Helper.ConvertUtfToLatin2(SqlExportToCsvFieldNames[i]));
+
                     if (i < iColCount - 1)
                     {
                         sw.Write(";");
                     }
                 }
                 sw.Write(sw.NewLine);
-                cnt++;
-            }
-            sw.Close();
 
-            return cnt;
+                // Now write all the rows.
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    for (int i = 0; i < iColCount; i++)
+                    {
+                        if (!Convert.IsDBNull(dr[i]))
+                        {
+                            if (i == 14 || i == 12 || i == 8) //aktualni defektivita, prum. cas ok a prum. cas ng
+                            {
+                                var d = Convert.ToDouble(dr[i]);
+                                sw.Write($"{d:#.00}");
+                            }
+                            else
+                            {
+                                sw.Write(dr[i].ToString());
+                            }
+                        }
+                        if (i < iColCount - 1)
+                        {
+                            sw.Write(";");
+                        }
+                    }
+                    sw.Write(sw.NewLine);
+                    cnt++;
+                }
+                sw.Close();
+
+                return cnt;
+            }
         }
     }
 }

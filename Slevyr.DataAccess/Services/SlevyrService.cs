@@ -128,7 +128,7 @@ namespace Slevyr.DataAccess.Services
         /// je vyvolan po prechodu smeny, napr. z nocni na ranni
         /// </summary>
         /// <param name="sender">objekt UnitStatus</param>
-        /// <param name="smena">Smena, hodnota enumu je prikaz ktery se ma pouzit pro vycteni citacu po skonceni smeny</param>
+        /// <param name="smena">Smena, hodnota enumu je prikaz ktery se ma pouzit pro vycteni citacu po skonceni smeny, tzn. ta co prave skoncila</param>
         private static void UnitStatusOnPrechodSmeny(object sender, SmenyEnum smena)
         {
             UnitStatus us = sender as UnitStatus;
@@ -777,12 +777,23 @@ namespace Slevyr.DataAccess.Services
                             //_unitDictionary[addr].DoReadDefectivita(packet);
                             break;
                         case UnitMonitor.CmdReadStavCitacuNocniSmena:
+                            //udalost prichazi kdyz dochazi ke zmene stavu a cmd urcuje ktera smena prace skoncila. 
+                            //zacatek nasledujici smeny je zaroven koncem predchozi                           
+                            _unitDictionary[addr].DoReadStavCitacuKonecSmeny(packet);
+                            SqlliteDao.AddUnitKonecSmenyState(addr, cmd, _unitDictionary[addr].UnitStatus,
+                                _unitDictionary[addr].UnitConfig.Zacatek1SmenyTime, _unitDictionary[addr].UnitConfig.Cil3Smeny);
+                            break;
                         case UnitMonitor.CmdReadStavCitacuOdpoledniSmena:
+                            _unitDictionary[addr].DoReadStavCitacuKonecSmeny(packet);
+                            SqlliteDao.AddUnitKonecSmenyState(addr, cmd, _unitDictionary[addr].UnitStatus,
+                                _unitDictionary[addr].UnitConfig.Zacatek3SmenyTime, _unitDictionary[addr].UnitConfig.Cil2Smeny);
+                            break;
                         case UnitMonitor.CmdReadStavCitacuRanniSmena:
                             _unitDictionary[addr].DoReadStavCitacuKonecSmeny(packet);
-                            SqlliteDao.AddUnitKonecSmenyState(addr, cmd, _unitDictionary[addr].UnitStatus);
+                            SqlliteDao.AddUnitKonecSmenyState(addr, cmd, _unitDictionary[addr].UnitStatus,
+                                _unitDictionary[addr].UnitConfig.Zacatek2SmenyTime, _unitDictionary[addr].UnitConfig.Cil1Smeny);
                             break;
-                    }                    
+                    }
 
                 }
                 catch (Exception ex)

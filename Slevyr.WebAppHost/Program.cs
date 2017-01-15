@@ -112,7 +112,7 @@ namespace Slevyr.WebAppHost
 
             SlevyrService.Start();  //zde teprve startuji workery pro praci s jednotkami
 
-            Process.Start(baseAddress + "linka-tabule.html");
+            Process.Start(baseAddress + "index.html");
 
             Console.ReadLine();
         }

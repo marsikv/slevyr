@@ -3,8 +3,6 @@ var isTimerEnabled = false;
 var refreshTimer;
 var addr = null;
 
-var $notification = $('#notification');
-
     $(document).ready(function () {
         readRunConfig();
 
@@ -67,12 +65,12 @@ var $notification = $('#notification');
 
                 onAddrIdChange();
 
-                $notification.prepend('<div class="notification notification-success">Sucessfully read config.</div>');
+                window.slVyr.addNotification('success', 'Sucessfully read config..');
                 //$('#stav').text('');
 
             })
             .fail(function (jqXHR, textStatus, err) {
-                $notification.prepend('<div class="notification notification-error">ReadRunConfig - error: ' + err + '</div>');
+                window.slVyr.addNotification('error', 'ReadRunConfig - error: ' + err);
             });
     }
 
@@ -82,10 +80,10 @@ var $notification = $('#notification');
         $.getJSON(uri + '/GetUnitConfig?', {addr: addr})
             .done(function (data) {
                 $('#LinkaName').text(data.UnitName);
-                $notification.prepend('<div class="notification notification-success">Sucessfully read unit config.</div>');
+                window.slVyr.addNotification('success', 'Sucessfully read unit config.');
             })
             .fail(function (jqXHR, textStatus, err) {
-                $notification.prepend('<div class="notification notification-error">LoadParams - error: ' + err + '</div>');
+                window.slVyr.addNotification('error', 'LoadParams - error: ' + err);
             });
     }
 
@@ -106,7 +104,7 @@ var $notification = $('#notification');
                 updateTableElements(data);
             })
             .fail(function (jqXHR, textStatus, err) {
-                $notification.prepend('<div class="notification notification-error">RefreshStatus - error: ' + err + '</div>');
+                window.slVyr.addNotification('error', 'RefreshStatus - error: ' + err);
             });
     }
 
@@ -116,7 +114,7 @@ var $notification = $('#notification');
                 updateTableElements(data);
             })
             .fail(function (jqXHR, textStatus, err) {
-                $notification.prepend('<div class="notification notification-error">GetStatus - error: ' + err + '</div>');
+                window.slVyr.addNotification('error', 'GetStatus - error: ' + err);
             });
     }
 
@@ -126,7 +124,7 @@ var $notification = $('#notification');
             $('#ngNumValue').text(data.Ng);
             $('#okNgRefreshTime').text(data.OkNgTimeTxt);
         } else {
-            $notification.prepend('<div class="notification notification-error">Chyba jednotky - ' + data.ErrorTimeTxt + '</div>');
+            window.slVyr.addNotification('error', 'Chyba jednotky - error: ' + err);
         }
 
         if (data.IsPrestavkaTabule) {
