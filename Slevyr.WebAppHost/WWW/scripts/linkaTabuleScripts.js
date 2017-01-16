@@ -144,8 +144,8 @@ var addr = null;
 
         //$('#stav').text('');
         if (data.MachineStatus == 0)
-            $('#stav').text('ok');
+            $('#stav').text('Vyroba');
         else
-            $('#stav').text(data.MachineStatusTxt);
+            $('#stav').text(data.Tabule.MachineStatusTxt);
     }
 

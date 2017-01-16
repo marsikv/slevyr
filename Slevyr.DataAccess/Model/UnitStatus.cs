@@ -55,13 +55,7 @@ namespace Slevyr.DataAccess.Model
 
         public int Ok { get; set; }
 
-        public int Ng { get; set; }
-
-        /// <summary>
-        /// Stav stroje
-        /// </summary>
-        public MachineStateEnum MachineStatus { get; set; }
-        public string MachineStatusTxt => Helper.GetDescriptionFromEnumValue(MachineStatus);
+        public int Ng { get; set; }      
 
         /// <summary>
         /// Jak dlouho stroj stoji v sec

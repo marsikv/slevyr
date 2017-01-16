@@ -288,7 +288,7 @@ namespace Slevyr.DataAccess.Model
 
             UnitStatus.Ok = okVal;
             UnitStatus.Ng = ngVal;
-            UnitStatus.MachineStatus = (MachineStateEnum)machineStatus;
+            UnitStatus.Tabule.MachineStatus = (MachineStateEnum)machineStatus;
             UnitStatus.MachineStopTime = stopTime;
 
             UnitStatus.OkNgTime = DateTime.Now;

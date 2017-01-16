@@ -699,7 +699,7 @@ namespace Slevyr.DataAccess.Services
                                     TplLogger.Error($"Timeout cmd:{_unitDictionary[addr].CurrentCmd:x2} [{addr:x2}]");
                                     _unitDictionary[addr].UpdateStatusTokenSource?.Cancel();
                                     _unitDictionary[addr].SetCommandIsPending(false);
-                                    _unitDictionary[addr].UnitStatus.MachineStatus = MachineStateEnum.NotAvailable;
+                                    _unitDictionary[addr].UnitStatus.Tabule.MachineStatus = MachineStateEnum.NotAvailable;
                                 }
                             }
                             else
@@ -710,7 +710,7 @@ namespace Slevyr.DataAccess.Services
 
                         if (!res)
                         {
-                            _unitDictionary[addr].UnitStatus.MachineStatus = MachineStateEnum.NotAvailable;
+                            _unitDictionary[addr].UnitStatus.Tabule.MachineStatus = MachineStateEnum.NotAvailable;
                         }
 
                         //Logger.Debug($"+send worker sleep: {_runConfig.WorkerSleepPeriod}");

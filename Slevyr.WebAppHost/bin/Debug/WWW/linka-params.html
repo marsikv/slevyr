@@ -17,6 +17,7 @@
     <nav id="menu" class="menu">
         <div class="menu--header">
             <h4>Sledování výroby</h4>
+            <h2>Copreci CZ</h2>
         </div>
         <ul class="menu--list">
             <a href="index.html"><li class="menu--item menu--item-home menu--item">Home</li></a>
@@ -42,34 +43,38 @@
 
         <section class="params">
 
-            <h3>Směnnost a cíle</h3>
-            <div class="params--section">
-                <div class="params--item params--item-3">
+            <h3>Směnnost - (Nastaví typ směnnosti, A = třísměnný, B = nepřetržitý provoz a aktualizuje párovaný LED panel)</h3>
+                <div class="params--section">
+                <div class="params--item params--item-1">
                     <div class="label">Typ směnnosti</div>
                     <input id="TypSmennosti" class="input" type="text" value="A"/>
                 </div>
+
                 <div class="params--action">
                     <button class="btn btn-fill" type="button" id="NastavTypSmennosti">Nastav směnnost</button>
-                </div>
+		</div>
+            </div>
 
+
+            <h3>Cíle směn - (Nastaví cíle vyrobených OK kusů a aktualizuje párovaný LED panel)</h3>
+                <div class="params--section">
                 <div class="params--item params--item-3">
                     <div class="label">Cíl 1. směny</div>
                     <input id="Cil1Smeny" class="input" type="number" value="1000" />
                 </div>
                 <div class="params--item params--item-3">
                     <div class="label">Cíl 2. směny</div>
-                    <input id="Cil2Smeny" class="input" type="number" value="2000" />
+                    <input id="Cil2Smeny" class="input" type="number" value="1000" />
                 </div>
                 <div class="params--item params--item-3 params--item-3-last">
                     <div class="label">Cíl 3. směny</div>
-                    <input id="Cil3Smeny" class="input" type="number" value="3000" />
+                    <input id="Cil3Smeny" class="input" type="number" value="1000" />
                 </div>
                 <div class="params--action">
                     <button class="btn btn-fill" type="button" id="NastavCileSmen">Nastav cíle směn</button>
                 </div>
             </div>
-
-            <h3>Defektivita</h3>
+            <h3>Defektivita - (Nastaví povolenou defektivitu každé směny a aktualizuje párovaný LED panel)</h3>
             <div class="params--section">
                 <div class="params--item params--item-3">
                     <div class="label">Cíl defektivity 1. směny</div>
@@ -84,11 +89,11 @@
                     <input id="Def3Smeny" class="input" type="number" value="1.5" />
                 </div>
                 <div class="params--action">
-                    <button class="btn btn-fill" type="button" id="NastavDefektivitu">Nastav</button>
+                    <button class="btn btn-fill" type="button" id="NastavDefektivitu">Nastav defektivitu směn</button>
                 </div>
             </div>
 
-            <h3>Přestávky</h3>
+            <h3>Přestávky - (Nastaví 30 minutové přestávky každé směny a aktualizuje párovaný LED panel)</h3>
             <div class="params--section">
                 <div class="params--item params--item-3">
                     <div class="label">Přestávka 1. směny</div>
@@ -103,11 +108,11 @@
                     <input id="Prestavka3Smeny" class="input" type="time" step="1" value="10:00" />
                 </div>
                 <div class="params--action">
-                    <button class="btn btn-fill" type="button" id="NastavPrestavky">Nastav</button>
+                    <button class="btn btn-fill" type="button" id="NastavPrestavky">Nastav přestávky směn</button>
                 </div>
             </div>
 
-            <h3>Začátek směny</h3>
+            <h3>Začátek směny - (důležité pro správnou funkci výpočtů)</h3>
             <div class="params--section">
                 <div class="params--item params--item-3">
                     <div class="label">Začátek 1. směny</div>
@@ -126,7 +131,7 @@
                 </div>-->
             </div>
 
-            <h3>Nastaveni OK a NG</h3>
+            <h3>Nastavení OK a NG - (aktualizuje zvolený stav do čítačů stroje)</h3>
             <div class="params--section">
                 <div class="params--item params--item-3">
                     <div class="label">Počet OK</div>
@@ -137,11 +142,11 @@
                     <input id="PocetNg" class="input" type="number" value="0"/>
                 </div>
                 <div class="params--action">
-                    <button class="btn btn-fill" type="button" id="NastavPocOkNg">Nastav</button>
+                    <button class="btn btn-fill" type="button" id="NastavPocOkNg">Aktualizuj stav čítačů</button>
                 </div>
             </div>
 
-            <h3>Nastavení jednotky</h3>
+            <h3>Nastavení jednotky - (aktualizace parametrů provede restart jednotky se ztrátou dat)</h3>
             <div class="params--section">
                 <div class="params--item params--item-2">
                     <!-- <div class="label"></div> -->
@@ -177,7 +182,7 @@
                 </div>
 
                 <div class="params--action">
-                    <button class="btn btn-fill" type="button" id="NastavJednotku">Nastav</button>
+                    <button class="btn btn-fill" type="button" id="NastavJednotku">Nastav data</button>
                 </div>
             </div>
 

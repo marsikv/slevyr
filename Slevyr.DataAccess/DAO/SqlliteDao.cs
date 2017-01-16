@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.SQLite;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using NLog;
@@ -37,23 +38,25 @@ namespace Slevyr.DataAccess.DAO
 );";
 
         const string SqlInsertStatusIntoObservation = @"insert into observations 
-(cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
+                (cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
 
         const string SqlInsertLastStatusIntoObservations = @"insert into observations 
-(obTime,cmd,unitId,pocetOk,casPoslednihoOk,pocetNg,casPoslednihoNg,rozdil,atualniDefectivita,stavLinky) values ";
+                (obTime,cmd,unitId,pocetOk,casPoslednihoOk,pocetNg,casPoslednihoNg,rozdil,atualniDefectivita,stavLinky) values ";
 
         const string SqlUpdateStatusIntoObservations =
-            @"update observations set casPoslednihoOk=@casOk, casPoslednihoNg=@casNg where id=@id";
+                @"update observations set casPoslednihoOk=@casOk, casPoslednihoNg=@casNg where id=@id";
 
         const string SqlCreateStavLinkyTable = @"CREATE TABLE `ProductionLineStatus` 
-(`id`	INTEGER,	`name`	TEXT);";
+                (`id`	INTEGER,	`name`	TEXT);";
 
-        const string SqlExportToCsv = "select id, datetime(obTime,'localtime') as time,cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky from observations " +
+        const string SqlExportToCsv = "select datetime(obTime,'localtime') as time,cmd,unitId,isPrestavka,cilOk,pocetOk,printf(\"%.2f\", casPoslednihoOk),"+
+                                      "printf(\"%.2f\", prumCasVyrobyOk),cilNg,pocetNg,printf(\"%.2f\", casPoslednihoNg),printf(\"%.2f\", prumCasVyrobyNg)," +
+                                      "rozdil,printf(\"%.2f\", atualniDefectivita),stavLinky from observations "+
                 "where obTime between @timeFrom and @timeTo";
 
         static readonly string[] SqlExportToCsvFieldNames =
         {
-            "id", "Čas","Cmd","UnitId","Přestávka","Cíl OK","Počet OK","Čas posl OK","Prům čas OK","Cíl NG","Počet NG",
+            "Čas","Cmd","UnitId","Přestávka","Cíl OK","Počet OK","Čas posl OK","Prům čas OK","Cíl NG","Počet NG",
             "Čas posl NG","Prům čas NG","Rozdíl","Atuální defectivita","Stav linky"
         };
 
@@ -71,13 +74,10 @@ namespace Slevyr.DataAccess.DAO
 
         private static void MakeDbFilePath(string dbFolder)
         {
-            //if (Path.IsPathRooted(dbFolder))
             if (String.IsNullOrEmpty(dbFolder)) dbFolder = DefaultDbFolder;
             _dbFilePath = Path.Combine(dbFolder, DbFileName);
         }
 
-        // => Path.Combine(dbFolder, DbFileName);
- 
         #endregion
 
         private static void CreateDatabase(string dbFolder)
@@ -146,7 +146,7 @@ namespace Slevyr.DataAccess.DAO
                          $"(4,{addr},{(u.IsPrestavkaTabule ? 1 : 0)},{u.Tabule.CilKusuTabule},{u.Ok},{u.CasOkStr}," +
                          $"{u.PrumCasVyrobyOkStr},{u.Tabule.CilDefectTabuleStr}," +
                          $"{u.Ng},{u.CasNgStr},{u.PrumCasVyrobyNgStr}," +
-                         $"{u.Tabule.RozdilTabule},{u.Tabule.AktualDefectTabuleStr},{(int)u.MachineStatus})";
+                         $"{u.Tabule.RozdilTabule},{u.Tabule.AktualDefectTabuleStr},{(int)u.Tabule.MachineStatus})";
 
 
             Logger.Info(sql);
@@ -169,15 +169,15 @@ namespace Slevyr.DataAccess.DAO
             string timeDateStr = dt.ToString("yyyy-MM-dd HH':'mm':'ss");
 
             //spocitam i defektivitu a rozdil pro posledni ok a ng
-            var defectivita = (float)u.LastNg / (float)u.LastOk;
+            var defectivitaStr = (u.LastOk == 0) ? "null" : Math.Round(((float)u.LastNg / (float)u.LastOk) * 100, 2).ToString(CultureInfo.InvariantCulture);
             var rozdil = u.LastOk - cilSmeny;
 
             string sql = SqlInsertLastStatusIntoObservations +
                        $"('{timeDateStr}', {cmd},{addr}," +
                        $"{u.LastOk},null," +  //posledni cas ok neznam
                        $"{u.LastNg},null," +  //posledni cas ng neznam
-                       $"{rozdil},{defectivita}," +  
-                       $"{(int)u.MachineStatus})";
+                       $"{rozdil},{defectivitaStr}," +  
+                       $"{(int)u.Tabule.MachineStatus})";
 
             Logger.Info(sql);
 
@@ -245,7 +245,6 @@ namespace Slevyr.DataAccess.DAO
                 {
                     //sw.Write(dt.Columns[i]); -- takto by zapsal nazvy sloupcu dle tabulky
                     sw.Write(SqlExportToCsvFieldNames[i]);
-                    //sw.Write(Helper.ConvertUtfToLatin2(SqlExportToCsvFieldNames[i]));
 
                     if (i < iColCount - 1)
                     {
@@ -262,15 +261,7 @@ namespace Slevyr.DataAccess.DAO
                     {
                         if (!Convert.IsDBNull(dr[i]))
                         {
-                            if (i == 14 || i == 12 || i == 8) //aktualni defektivita, prum. cas ok a prum. cas ng
-                            {
-                                var d = Convert.ToDouble(dr[i]);
-                                sw.Write($"{d:#.00}");
-                            }
-                            else
-                            {
-                                sw.Write(dr[i].ToString());
-                            }
+                            sw.Write(dr[i].ToString());
                         }
                         if (i < iColCount - 1)
                         {

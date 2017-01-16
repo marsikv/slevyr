@@ -1,4 +1,4 @@
-var tabule = $('#tabule');
+﻿var tabule = $('#tabule');
 var uri = 'api/slevyr';
 var isTimerEnabled = false;
 var refreshTimer;
@@ -30,9 +30,10 @@ function formatTable(data) {
         var html = '<div class="tabule">' +
             '<div class="tabule--name">' + device.LinkaName + '</div>' +
             '<div class="tabule--row" data-title="Cíl">' + device.CilKusuTabule + '</div>' +
-            '<div class="tabule--row" data-title="Rozdíl">' + device.RozdilTabule + '</div>' +
+            '<div class="tabule--row" data-title="Rozdíl">' + device.RozdilTabuleTxt + '</div>' +
             '<div class="tabule--row" data-title="Cíl defektivita">' + device.CilDefectTabule + '</div>' +
-            '<div class="tabule--row" data-title="Aktualni defektivita">' + device.AktualDefectTabule + '</div>' +
+            '<div class="tabule--row" data-title="Aktualni defektivita">' + device.AktualDefectTabuleTxt + '</div>' +
+            '<div class="tabule--row">' +device.MachineStatusTxt + '</div>' +
         '</div>';
         
         $('#tabule').append(html);

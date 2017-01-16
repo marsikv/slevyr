@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Slevyr.DataAccess.Services;
 
 namespace Slevyr.DataAccess.Model
 {
@@ -21,6 +22,13 @@ namespace Slevyr.DataAccess.Model
         public int RozdilTabule { get; set; }
 
         public string RozdilTabuleTxt => (RozdilTabule == int.MinValue) ? "-" : RozdilTabule.ToString();
+
+        /// <summary>
+        /// Stav stroje
+        /// </summary>
+        public MachineStateEnum MachineStatus { get; set; }
+
+        public string MachineStatusTxt => Helper.GetDescriptionFromEnumValue(MachineStatus);
 
     }
 }
