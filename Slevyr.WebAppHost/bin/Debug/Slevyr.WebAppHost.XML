@@ -21,13 +21,13 @@
             the contents of this method with the code editor.
             </summary>
         </member>
-        <member name="M:Slevyr.WebAppHost.SlevyrController.GetApiVersion">
+        <member name="M:Slevyr.WebAppHost.Controllers.SlevyrController.GetApiVersion">
             <summary>
             Vrací verzi API
             </summary>
             <returns></returns>
         </member>
-        <member name="M:Slevyr.WebAppHost.SlevyrController.GetConfig">
+        <member name="M:Slevyr.WebAppHost.Controllers.SlevyrController.GetConfig">
             <summary>
             Vrací parametry běhové konfigurace, jako je umístění databáze, hodnoty timout parametrů apod.
             </summary>

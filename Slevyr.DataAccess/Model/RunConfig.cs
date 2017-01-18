@@ -20,10 +20,9 @@ namespace Slevyr.DataAccess.Model
         public string JsonDataFilePath;
         public string DbFilePath;
 
+        /// <summary>seznam adres jednotek (linek)</summary>
         public IEnumerable<int> UnitAddrs;
-        //public bool IsWriteEmptyToLog;       //pokud je true zapisuje do logu jednotek radek s prazdnymi hodnotami pokud dojde k chybe pri vycitani jednotky
 
-        //public bool IsWaitCommandConfirmation;   //na to se ceka vzdy
         /// <summary>po odeslani prikazu thread ceka na response nebo timeout</summary>
         public bool IsWaitCommandResult;
         ///<summary></summary>

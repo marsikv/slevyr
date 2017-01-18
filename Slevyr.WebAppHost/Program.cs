@@ -5,9 +5,7 @@ using System.Net.Http;
 using System.ServiceProcess;
 using Microsoft.Owin.Hosting;
 using NLog;
-using SledovaniVyroby.SerialPortWraper;
 using Slevyr.DataAccess.Services;
-using Slevyr.WebAppHost.Properties;
 
 namespace Slevyr.WebAppHost
 {
@@ -58,8 +56,14 @@ namespace Slevyr.WebAppHost
                 }
                 else
                 {
-                    SlevyrService.Start();
-                    Console.ReadLine();
+                    if (!SlevyrService.Start())
+                    {
+                        Console.WriteLine($"\n\nNelze otevrit seriovy port {Globals.PortConfig.Port} \n");
+                    }
+                    else
+                    {
+                        Console.ReadLine();
+                    }
                 }
 
                 //Console.WriteLine("Napiš: exit pro ukončení!\n");
@@ -70,7 +74,7 @@ namespace Slevyr.WebAppHost
 
                 SlevyrService.Stop();
 
-                Console.WriteLine("Ukonceno; stiskni libovolnou klavesu...");
+                Console.WriteLine("Ukonceno - stiskni libovolnou klavesu...");
                 Console.ReadKey();
             }
             else
@@ -110,11 +114,16 @@ namespace Slevyr.WebAppHost
 
             Console.WriteLine("Stiskni [Enter] pro ukončení!\n");
 
-            SlevyrService.Start();  //zde teprve startuji workery pro praci s jednotkami
+            if (SlevyrService.Start()) //zde teprve startuji workery pro praci s jednotkami
+            {
+                Process.Start(baseAddress + "index.html");
+                Console.ReadLine();
+            }
+            else
+            {
+                Console.WriteLine($"\n\nNelze otevrit seriovy port {Globals.PortConfig.Port}\n");
+            }
 
-            Process.Start(baseAddress + "index.html");
-
-            Console.ReadLine();
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

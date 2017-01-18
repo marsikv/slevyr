@@ -20,9 +20,7 @@ namespace Slevyr.WebAppHost
             int port = Globals.WebAppPort;
             string baseAddress = $"http://localhost:{port}/";
 
-            SlevyrService.Start();
-
-            if (Globals.StartWebApi)
+            if (SlevyrService.Start() && Globals.StartWebApi)
             {
                 if (Globals.UseLocalHost)
                 {

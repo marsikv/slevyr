@@ -6,14 +6,14 @@ using System.Net.Http;
 using System.Text;
 using System.Web.Http;
 using NLog;
-using SledovaniVyroby.SerialPortWraper;
 using Slevyr.DataAccess.DAO;
 using Slevyr.DataAccess.Model;
 using Slevyr.DataAccess.Services;
 
-namespace Slevyr.WebAppHost
+namespace Slevyr.WebAppHost.Controllers
 {
 
+    //[Route("api/[controller]")]
     public class SlevyrController : ApiController
     {
         #region Fields

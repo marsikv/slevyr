@@ -18,16 +18,28 @@ namespace Slevyr.WebAppHost.Middleware
             try
             {
                 var ipAddress = context.Request.RemoteIpAddress;
-                var user = context.Authentication.User.Identity.Name;
+                string user;
+
+                try
+                {
+                    user = context.Authentication.User.Identity.Name;
+                    bool isAuthenticated = context.Authentication.User.Identity.IsAuthenticated;
+                    Logger.Info($"user:{user} ip:{ipAddress} isAuth:{isAuthenticated}");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex);
+                    throw;
+                }
 
                 bool autorizationActive = Globals.AuthorizedUsers != null;
                 if (autorizationActive)
                 {
-                    bool userAuthorized = Globals.AuthorizedUsers.FirstOrDefault(
+                    bool userAuthorized = user!=null && Globals.AuthorizedUsers.FirstOrDefault(
                         s => s.Equals(user, StringComparison.InvariantCultureIgnoreCase)) != null;
 
                     if (!userAuthorized && context.Request.Path.HasValue &&
-                        context.Request.Path.Value.Contains("/linka-params.html"))
+                        (context.Request.Path.Value.Contains("/linka-params.html") || context.Request.Path.Value.Contains("/nastaveni.html")))
                     {
                         NotAuthorizedResponse(context, user);
                         return;
@@ -37,7 +49,7 @@ namespace Slevyr.WebAppHost.Middleware
                         context.Request.Path.Value.Contains("nastav"))
                     {
                         context.Response.StatusCode = 401;
-                        NotAuthorizedResponse(context, user);
+                        //NotAuthorizedResponse(context, user);
                         return;
                     }
                 }
@@ -54,11 +66,13 @@ namespace Slevyr.WebAppHost.Middleware
 
         private void NotAuthorizedResponse(IOwinContext context, string user)
         {
-            //context.Response.StatusCode = 401;
-            //context.Response.Redirect("http://192.168.10.230:81/service/ErrorPages/401.html#" + ipAddress);
+            context.Response.StatusCode = 401;
+            context.Response.Redirect("401.html#" + user);
 
-            context.Response.ContentType = "text/plain";
-            context.Response.WriteAsync($"Uživatel {user} nebyl autorizován !");
+            Logger.Info($"{user} not autorized");
+
+            //context.Response.ContentType = "text/html";
+            //context.Response.WriteAsync($"Uživatel {user} nebyl autorizován !");
         
         }
     }

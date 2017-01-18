@@ -82,13 +82,17 @@ namespace Slevyr.DataAccess.Services
             ClosePort();
         }
 
-        public static void Start()
+        public static bool Start()
         {
-            OpenPort();
+            var res = OpenPort();
 
-            StartSendReceiveWorkers();
+            if (res)
+            {
+                StartSendReceiveWorkers();
+                StartPacketWorker();
+            }
 
-            StartPacketWorker();
+            return res;
         }
 
 
@@ -322,15 +326,17 @@ namespace Slevyr.DataAccess.Services
             catch (Exception ex)
             {
                 Logger.Error(ex);
-                throw;
+                return false;
+                //throw;
             }
         }
 
         public static bool ClosePort()
         {
-            Logger.Info("+");
+            Logger.Debug("+");
 
             if (_runConfig.IsMockupMode) return true;
+
             if (CheckIsPortOpen())
             {
                 lock (_lock)
@@ -340,7 +346,7 @@ namespace Slevyr.DataAccess.Services
                     _serialPort.Close();
                 }
             }
-            Logger.Info("-");
+            Logger.Debug("-");
             return !_serialPort.IsOpen;
         }
 
@@ -623,20 +629,20 @@ namespace Slevyr.DataAccess.Services
 
         public static void StopSendReceiveWorker()
         {
-            _sendBw.CancelAsync();
-            _dataReaderBw.CancelAsync();
+            _sendBw?.CancelAsync();
+            _dataReaderBw?.CancelAsync();
         }
 
         private static void StopPacketWorker()
         {
-            _packetBw.CancelAsync();
+            _packetBw?.CancelAsync();
         }
-
-
 
         private static void SendWorkerDoWork(object sender, DoWorkEventArgs e)
         {
             OpenPort();
+            if (!CheckIsPortOpen()) return;
+
             Stopwatch stopwatch = null;
 
             while (true)
