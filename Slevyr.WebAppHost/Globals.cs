@@ -29,6 +29,8 @@ namespace Slevyr.WebAppHost
 
         public static string WwwRootDir;
 
+        public static IEnumerable<string> AuthorizedUsers;
+
         static Globals()
         {
         }
@@ -52,12 +54,14 @@ namespace Slevyr.WebAppHost
                 JsonDataFilePath = ConfigurationManager.AppSettings["JsonFilePath"],
                 DbFilePath = ConfigurationManager.AppSettings["DbFilePath"],
                 SendAttempts = int.Parse(ConfigurationManager.AppSettings["SendAttempts"]),
-                DefaultExportFileName = ConfigurationManager.AppSettings["DefaultExportFileName"]
+                DefaultExportFileName = ConfigurationManager.AppSettings["DefaultExportFileName"],                
             };
 
             bool b;
             bool.TryParse(ConfigurationManager.AppSettings["IsWaitCommandResult"], out b); RunConfig.IsWaitCommandResult = b;
             bool.TryParse(ConfigurationManager.AppSettings["UseDataReceivedEvent"], out b); RunConfig.UseDataReceivedEvent = b;
+            var s = ConfigurationManager.AppSettings["DecimalSeparator"];
+            if (!String.IsNullOrEmpty(s)) RunConfig.DecimalSeparator = s[0];
 
             PortConfig = new SerialPortConfig
             {
@@ -74,6 +78,8 @@ namespace Slevyr.WebAppHost
             bool.TryParse(ConfigurationManager.AppSettings["UseLocalHost"], out UseLocalHost);
             int.TryParse(ConfigurationManager.AppSettings["WebAppPort"], out WebAppPort);
             WwwRootDir = ConfigurationManager.AppSettings["www.rootDir"];
+
+            AuthorizedUsers = ConfigurationManager.AppSettings["AuthorizedUsers"]?.Split(';');
         }
 
         public static string RunConfigToJson()

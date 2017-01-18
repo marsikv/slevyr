@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Owin;
 using NLog;
 
-namespace Slevyr.WebAppHost
+namespace Slevyr.WebAppHost.Middleware
 {
     public class GlobalExceptionMiddleware : OwinMiddleware
     {

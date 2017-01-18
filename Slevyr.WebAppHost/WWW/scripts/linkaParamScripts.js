@@ -173,7 +173,7 @@ $(document).ready(function () {
     function nastavVariantuSmeny() {
         alert('NastavVariantuSmeny');
         var varianta = $('#TypSmennosti').val();
-        $.getJSON(uri + '/NastavVariantuSmeny',
+        $.getJSON(uri + '/nastavVariantuSmeny',
             {
                 addr: addr,
                 varianta: varianta,
@@ -220,7 +220,7 @@ $(document).ready(function () {
         var p1Smeny = $('#Prestavka1Smeny').val();
         var p2Smeny = $('#Prestavka2Smeny').val();
         var p3Smeny = $('#Prestavka3Smeny').val();
-        $.getJSON(uri + '/NastavPrestavkySmen',
+        $.getJSON(uri + '/nastavPrestavkySmen',
             {
                 addr: addr,
                 varianta: varianta,
@@ -293,7 +293,7 @@ $(document).ready(function () {
         var parovanyLed = $('#AddrParovanyLed').val();
         var rozliseniCidel = $('#RozliseniCidelTeploty').val();
         var pracovniJasLed = $('#PracovniJasLed').val();
-        $.getJSON(uri + '/NastavJednotku',
+        $.getJSON(uri + '/nastavJednotku',
             {
                 addr: addr,
                 writeProtectEEprom: writeProtectEEprom,

@@ -61,7 +61,7 @@ namespace Slevyr.WebAppHost
 
 
         [HttpGet]
-        public bool SetConfig([FromUri] bool isMockupMode,[FromUri] bool isTimerOn, [FromUri] int refreshTimerPeriod, [FromUri] bool readCasOkNg)
+        public bool SetRunConfig([FromUri] bool isMockupMode,[FromUri] bool isTimerOn, [FromUri] int refreshTimerPeriod, [FromUri] bool readCasOkNg)
         {
             Logger.Info($"isMockupMode: {isMockupMode}, isTimerOn: {isTimerOn},timerPeriod: {refreshTimerPeriod}");
             Globals.RunConfig.IsMockupMode = isMockupMode;
@@ -117,22 +117,6 @@ namespace Slevyr.WebAppHost
         #endregion
 
         #region UnitStatus operations
-
-        //[HttpGet]
-        //public UnitStatus Status([FromUri] byte addr)
-        //{
-        //    Logger.Info("+");
-        //    if (Globals.RunConfig.IsMockupMode) return Mock.MockUnitStatus();
-
-        //    try
-        //    {
-        //        return SlevyrService.GetUnitStatus(addr);
-        //    }
-        //    catch (KeyNotFoundException)
-        //    {
-        //        throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
-        //    }
-        //}
 
         [HttpGet]
         public IEnumerable<UnitTabule> GetAllTabule()
@@ -443,7 +427,7 @@ namespace Slevyr.WebAppHost
                 return BadRequest("Neplatné parametry");
             }
 
-            var cnt = SqlliteDao.ExportToCsv(value);
+            var cnt = SqlliteDao.ExportToCsv(value, Globals.RunConfig.DecimalSeparator);
             return Ok($"Počet exportovaných záznamů od {value.TimeFrom} do {value.TimeTo} : {cnt}");            
         }
 
@@ -500,7 +484,7 @@ namespace Slevyr.WebAppHost
                  exportDef.TimeTo = exportDef.TimeTo.AddDays(-1);
             }
 
-            var cnt = SqlliteDao.ExportToCsv(exportDef);
+            var cnt = SqlliteDao.ExportToCsv(exportDef, Globals.RunConfig.DecimalSeparator);
             return Ok($"Počet exportovaných záznamů od {exportDef.TimeFrom} do {exportDef.TimeTo} : {cnt} \n{(moveToPrevious ? "Směna probíhá nebo ještě nezačala, export byl proveden za předchozí den !":"")}");
         }
 

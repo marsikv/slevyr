@@ -30,7 +30,7 @@ var uri = 'api/slevyr';
 
     function applySettings() {
         //alert('applySettings');
-        $.getJSON(uri + '/setConfig',
+        $.getJSON(uri + '/setRunConfig',
             {
                 //isMockupMode: $('#isMockupMode').prop('checked'),
                 isMockupMode: false,
@@ -46,13 +46,13 @@ var uri = 'api/slevyr';
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'Set Configuration Error: ' + err);
                 // $('#error').text('Error: ' + err);
-                // alert("setConfig - error");
+                // alert("setRunConfig - error");
             });
     }
 
     function nastavAktualniCas() {
         //alert('nastavAktualniCas pro vsechny jednotky');
-        $.getJSON(uri + '/NastavAktualniCasAllUnits',
+        $.getJSON(uri + '/nastavAktualniCasAllUnits',
             {
             })
             .done(function (data) {

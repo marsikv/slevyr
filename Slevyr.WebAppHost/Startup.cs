@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Configuration;
+using System.Net;
 using System.Web.Http;
 using Microsoft.Owin.FileSystems;
 using Microsoft.Owin.StaticFiles;
 using Owin;
+using Slevyr.WebAppHost.Middleware;
 using Swashbuckle.Application;
 
 namespace Slevyr.WebAppHost
@@ -26,9 +28,16 @@ namespace Slevyr.WebAppHost
         // parameter in the WebApp.Start method.
         public void Configuration(IAppBuilder appBuilder)
         {
+            HttpListener listener =
+                (HttpListener)appBuilder.Properties["System.Net.HttpListener"];
+            listener.AuthenticationSchemes =
+                AuthenticationSchemes.IntegratedWindowsAuthentication;
+
             //registruji middleware odchytávající a zapisující vyjimky
             appBuilder.Use<GlobalExceptionMiddleware>();
-            
+
+            appBuilder.Use<AuthMiddleware>();
+
             // Configure Web API for self-host.             
 
             HttpConfiguration config = new HttpConfiguration();
@@ -43,7 +52,8 @@ namespace Slevyr.WebAppHost
             config.Formatters.XmlFormatter.SupportedMediaTypes.Remove(appXmlType);
             //config.Formatters.JsonFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/html"))
 
-            appBuilder.Use<GlobalExceptionMiddleware>().UseWebApi(config);
+            //appBuilder.Use<GlobalExceptionMiddleware>().UseWebApi(config);
+            appBuilder.UseWebApi(config);
 
             if (Globals.StartSwagger) ConfigureSwagger(config);
 

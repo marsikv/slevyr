@@ -6,7 +6,6 @@ using System.IO;
 using System.Text;
 using NLog;
 using Slevyr.DataAccess.Model;
-using Slevyr.DataAccess.Services;
 
 namespace Slevyr.DataAccess.DAO
 {
@@ -49,10 +48,16 @@ namespace Slevyr.DataAccess.DAO
         const string SqlCreateStavLinkyTable = @"CREATE TABLE `ProductionLineStatus` 
                 (`id`	INTEGER,	`name`	TEXT);";
 
-        const string SqlExportToCsv = "select datetime(obTime,'localtime') as time,cmd,unitId,isPrestavka,cilOk,pocetOk,printf(\"%.2f\", casPoslednihoOk),"+
-                                      "printf(\"%.2f\", prumCasVyrobyOk),cilNg,pocetNg,printf(\"%.2f\", casPoslednihoNg),printf(\"%.2f\", prumCasVyrobyNg)," +
-                                      "rozdil,printf(\"%.2f\", atualniDefectivita),stavLinky from observations "+
-                "where obTime between @timeFrom and @timeTo";
+        //const string SqlExportToCsv = "select datetime(obTime,'localtime') as time,cmd,unitId,isPrestavka,cilOk,pocetOk,printf(\"%.2f\", casPoslednihoOk),"+
+        //                              "printf(\"%.2f\", prumCasVyrobyOk),cilNg,pocetNg,printf(\"%.2f\", casPoslednihoNg),printf(\"%.2f\", prumCasVyrobyNg)," +
+        //                              "rozdil,printf(\"%.2f\", atualniDefectivita),stavLinky from observations "+
+        //        "where obTime between @timeFrom and @timeTo";
+
+        const string SqlExportToCsv = "select datetime(obTime,'localtime') as time,cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk," +
+                              "prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg," +
+                              "rozdil,atualniDefectivita,stavLinky from observations " +
+        "where obTime between @timeFrom and @timeTo";
+
 
         static readonly string[] SqlExportToCsvFieldNames =
         {
@@ -205,7 +210,7 @@ namespace Slevyr.DataAccess.DAO
         //takto lze vypsat cas v lokalnim formatovani:
         // select time(timeStamp,'localtime'),time(timeStamp,'utc'),date(timeStamp,'localtime'), datetime(timeStamp,'localtime'), unitId from observations order by timeStamp
 
-        public static int ExportToCsv(IntervalExport export)
+        public static int ExportToCsv(IntervalExport export, char decimalSeparator)
         {
             string sql = SqlExportToCsv;
 
@@ -229,12 +234,12 @@ namespace Slevyr.DataAccess.DAO
 
                 myAdapter.Fill(data);
 
-                return CreateCsvFile(data, export.FileName);
+                return CreateCsvFile(data, export.FileName, decimalSeparator);
             }
 
         }
 
-        private static int CreateCsvFile(DataTable dt, string strFilePath)
+        private static int CreateCsvFile(DataTable dt, string strFilePath, char decimalSeparator)
         {
             int cnt = 0;
             using (var sw = new StreamWriter(new FileStream(strFilePath, FileMode.OpenOrCreate, FileAccess.Write),Encoding.GetEncoding("ISO-8859-2")))
@@ -261,7 +266,15 @@ namespace Slevyr.DataAccess.DAO
                     {
                         if (!Convert.IsDBNull(dr[i]))
                         {
-                            sw.Write(dr[i].ToString());
+                            if (dr[i] is float || dr[i] is double)
+                            {
+                                var s = ((double)dr[i]).ToString("0.##",CultureInfo.InvariantCulture);
+                                //s = String.Format("{0:0.00}", dr[i]);
+                                if (decimalSeparator != '.') s = s.Replace('.', decimalSeparator);
+                                sw.Write(s);
+                            }
+                            else
+                            { sw.Write(dr[i].ToString());}
                         }
                         if (i < iColCount - 1)
                         {

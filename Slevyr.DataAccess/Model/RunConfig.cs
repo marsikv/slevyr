@@ -34,6 +34,9 @@ namespace Slevyr.DataAccess.Model
         //public bool OldSyncMode { get; set; }   //stary rezim komunikace synchronni s vyuzitim await, bez datareceived handleru
 
         ///<summary> výchozí hodnota pro export do souboru </summary>
-        public string DefaultExportFileName { get; set; }  
+        public string DefaultExportFileName { get; set; }
+
+        /// <summary>  znak pro separator desetinne casti v CSV exportu  </summary>
+        public char DecimalSeparator = ',';
     }
 }

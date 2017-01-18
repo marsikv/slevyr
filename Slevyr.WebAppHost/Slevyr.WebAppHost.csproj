@@ -146,8 +146,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Middleware\AuthMiddleware.cs" />
     <Compile Include="SwaggerConfig.cs" />
-    <Compile Include="GlobalExceptionMiddleware.cs" />
+    <Compile Include="Middleware\GlobalExceptionMiddleware.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="Mock.cs" />
     <Compile Include="Program.cs" />
