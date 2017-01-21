@@ -308,7 +308,6 @@ namespace Slevyr.DataAccess.Model
 
                 //if (!IsPrestavkaTabule)   //issue https://github.com/marsikv/slevyr/issues/42
                 {
-
                     try
                     {
                         double casNa1Kus = (double)delkaSmenySec / (double)Tabule.CilKusuTabule;

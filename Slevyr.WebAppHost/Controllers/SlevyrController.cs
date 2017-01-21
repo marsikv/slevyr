@@ -14,6 +14,8 @@ namespace Slevyr.WebAppHost.Controllers
 {
 
     //[Route("api/[controller]")]
+    [Authorize]
+
     public class SlevyrController : ApiController
     {
         #region Fields

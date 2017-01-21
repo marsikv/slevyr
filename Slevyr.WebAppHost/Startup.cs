@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Configuration;
-using System.Net;
+using System.Security.Claims;
 using System.Web.Http;
 using Microsoft.Owin.FileSystems;
 using Microsoft.Owin.StaticFiles;
 using Owin;
 using Slevyr.WebAppHost.Middleware;
+using Slevyr.WebAppHost.Model;
 using Swashbuckle.Application;
+using Thinktecture.IdentityModel.Owin;
 
 namespace Slevyr.WebAppHost
 {
@@ -28,10 +28,15 @@ namespace Slevyr.WebAppHost
         // parameter in the WebApp.Start method.
         public void Configuration(IAppBuilder appBuilder)
         {
-            HttpListener listener =
-                (HttpListener)appBuilder.Properties["System.Net.HttpListener"];
-            listener.AuthenticationSchemes =
-                AuthenticationSchemes.IntegratedWindowsAuthentication;
+            //Integrate windows authentication
+            //HttpListener listener =
+            //    (HttpListener)appBuilder.Properties["System.Net.HttpListener"];
+            //listener.AuthenticationSchemes =
+            //    AuthenticationSchemes.IntegratedWindowsAuthentication;
+
+            //Basic authentication
+            appBuilder.UseBasicAuthentication(new BasicAuthenticationOptions("SlevyrApi",
+                async (username, password) => await Authenticate(username, password)));
 
             //registruji middleware odchytávající a zapisující vyjimky
             appBuilder.Use<GlobalExceptionMiddleware>();
@@ -71,15 +76,16 @@ namespace Slevyr.WebAppHost
             };
             options.StaticFileOptions.FileSystem = physicalFileSystem;
             options.StaticFileOptions.ServeUnknownFileTypes = true;
-            options.StaticFileOptions.OnPrepareResponse = (staticFileResponseContext) =>
-            {
-                staticFileResponseContext.OwinContext.Response.Headers.Add("Cache-Control",
-                    new[] { "public", "no-cache, no-store, must-revalidate, max-age=0" });
-            };
+
+            //options.StaticFileOptions.OnPrepareResponse = (staticFileResponseContext) =>
+            //{
+            //    staticFileResponseContext.OwinContext.Response.Headers.Add("Cache-Control",
+            //        new[] { "public", "no-cache, no-store, must-revalidate, max-age=0" });
+            //};
 
             options.DefaultFilesOptions.DefaultFileNames = new[]
             {
-                "menu.html"
+                "index.html"
             };
 
             appBuilder.UseFileServer(options);
@@ -89,5 +95,36 @@ namespace Slevyr.WebAppHost
             //    FileSystem = new PhysicalFileSystem(contentDir)
             //});
         }
+
+        
+        /// <summary>
+        /// Autentizacni handler pro BasicAuthentication
+        /// </summary>
+        /// <param Name="username"></param>
+        /// <param Name="password"></param>
+        /// <returns></returns>
+        private async Task<IEnumerable<Claim>> Authenticate(string username, string password)
+        {
+            // authenticate user
+            User autentizedUser = Globals.Users.FirstOrDefault(
+                        u => u.IsValid(username, password));
+
+            if (autentizedUser != null)
+            {
+                var claims = new List<Claim>
+                {
+                    new Claim("Name", autentizedUser.Name),
+                    new Claim(ClaimTypes.Name, autentizedUser.Name),
+                    //new Claim(ClaimTypes.Role,"admin")   //TODO 
+                };
+                return claims;
+                //var id = new ClaimsIdentity(claims, "Console App");
+                //var user = new ClaimsPrincipal(id);
+                //Thread.CurrentPrincipal = user;
+            }
+
+            return null;
+        }
+        
     }
 }

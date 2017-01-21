@@ -65,14 +65,14 @@
 
                         // Each operation be assigned one or more tags which are then used by consumers for various reasons.
                         // For example, the swagger-ui groups operations according to the first tag of each operation.
-                        // By default, this will be controller name but you can use the "GroupActionsBy" option to
+                        // By default, this will be controller Name but you can use the "GroupActionsBy" option to
                         // override with any value.
                         //
                         //c.GroupActionsBy(apiDesc => apiDesc.HttpMethod.ToString());
 
                         // You can also specify a custom sort order for groups (as defined by "GroupActionsBy") to dictate
                         // the order in which operations are listed. For example, if the default grouping is in place
-                        // (controller name) and you specify a descending alphabetic sort order, then actions from a
+                        // (controller Name) and you specify a descending alphabetic sort order, then actions from a
                         // ProductsController will be listed before those from a CustomersController. This is typically
                         // used to customize the order of groupings in the swagger-ui.
                         //
@@ -104,9 +104,9 @@
                         //c.SchemaFilter<ApplySchemaVendorExtensions>();
 
                         // In a Swagger 2.0 document, complex types are typically declared globally and referenced by unique
-                        // Schema Id. By default, Swashbuckle does NOT use the full type name in Schema Ids. In most cases, this
+                        // Schema Id. By default, Swashbuckle does NOT use the full type Name in Schema Ids. In most cases, this
                         // works well because it prevents the "implementation detail" of type namespaces from leaking into your
-                        // Swagger docs and UI. However, if you have multiple types in your API with the same class name, you'll
+                        // Swagger docs and UI. However, if you have multiple types in your API with the same class Name, you'll
                         // need to opt out of this behavior to avoid Schema Id conflicts.
                         //
                         //c.UseFullTypeNameInSchemaIds();

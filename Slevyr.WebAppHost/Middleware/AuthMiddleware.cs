@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.Owin;
 using NLog;
@@ -18,13 +19,20 @@ namespace Slevyr.WebAppHost.Middleware
             try
             {
                 var ipAddress = context.Request.RemoteIpAddress;
-                string user;
+                ClaimsIdentity claimsIdentity;
+                string user=null;
 
                 try
                 {
-                    user = context.Authentication.User.Identity.Name;
-                    bool isAuthenticated = context.Authentication.User.Identity.IsAuthenticated;
-                    Logger.Info($"user:{user} ip:{ipAddress} isAuth:{isAuthenticated}");
+                    //-pro windows authentication
+                    //user = context.Authentication.User.Identity.Name;
+                    //bool isAuthenticated = context.Authentication.User.Identity.IsAuthenticated;
+
+                    //-pro basic authentication - asi to neni legeartis
+                    claimsIdentity = context.Authentication.User?.Identity as System.Security.Claims.ClaimsIdentity;
+                    if (claimsIdentity != null) user = claimsIdentity.Name;
+
+                    Logger.Info($"user:{user} ip:{ipAddress}");
                 }
                 catch (Exception ex)
                 {
@@ -32,10 +40,17 @@ namespace Slevyr.WebAppHost.Middleware
                     throw;
                 }
 
-                bool autorizationActive = Globals.AuthorizedUsers != null;
+                if (user == null || !claimsIdentity.IsAuthenticated)
+                {
+                    context.Authentication.Challenge();
+                    return;
+                }
+               
+
+                bool autorizationActive = Globals.PowerUsers != null;
                 if (autorizationActive)
                 {
-                    bool userAuthorized = user!=null && Globals.AuthorizedUsers.FirstOrDefault(
+                    bool userAuthorized = Globals.PowerUsers.FirstOrDefault(
                         s => s.Equals(user, StringComparison.InvariantCultureIgnoreCase)) != null;
 
                     if (!userAuthorized && context.Request.Path.HasValue &&
@@ -60,7 +75,7 @@ namespace Slevyr.WebAppHost.Middleware
             catch (Exception ex)
             {
                 Logger.Error(ex);
-                //throw;
+                throw;
             }
         }
 

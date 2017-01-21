@@ -28,7 +28,7 @@ function formatTable(data) {
 
     data.forEach(function (device) {
         var html = '<div class="tabule">' +
-            '<div class="tabule--name">' + device.LinkaName + '</div>' +
+            '<div class="tabule--Name">' + device.LinkaName + '</div>' +
             '<div class="tabule--row" data-title="Cíl">' + device.CilKusuTabule + '</div>' +
             '<div class="tabule--row" data-title="Rozdíl">' + device.RozdilTabuleTxt + '</div>' +
             '<div class="tabule--row" data-title="Cíl defektivita">' + device.CilDefectTabule + '</div>' +

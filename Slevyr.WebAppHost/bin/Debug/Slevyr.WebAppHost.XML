@@ -13,13 +13,21 @@
             <summary>
             Clean up any resources being used.
             </summary>
-            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+            <param Name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         </member>
         <member name="M:Slevyr.WebAppHost.Service.InitializeComponent">
             <summary> 
             Required method for Designer support - do not modify 
             the contents of this method with the code editor.
             </summary>
+        </member>
+        <member name="M:Slevyr.WebAppHost.Startup.Authenticate(System.String,System.String)">
+            <summary>
+            Autentizacni handler pro BasicAuthentication
+            </summary>
+            <param Name="username"></param>
+            <param Name="password"></param>
+            <returns></returns>
         </member>
         <member name="M:Slevyr.WebAppHost.Controllers.SlevyrController.GetApiVersion">
             <summary>
@@ -31,6 +39,26 @@
             <summary>
             Vrací parametry běhové konfigurace, jako je umístění databáze, hodnoty timout parametrů apod.
             </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Slevyr.WebAppHost.Model.SvUser">
+            <summary>
+            Uzivatel ktery je pouzivany pro autentizaci a autorizaci
+            TODO pouzit odpovidajici ASP.NET tridu (Principal ?)
+            </summary>
+        </member>
+        <member name="M:Slevyr.WebAppHost.Model.SvUser.#ctor(System.String)">
+            <summary>
+            konstruktor z dvojice Name-pswd md5 hash
+            </summary>
+            <param Name="configTuple"></param>
+        </member>
+        <member name="M:Slevyr.WebAppHost.Model.SvUser.IsValid(System.String,System.String)">
+            <summary>
+            Ověří zda odpovída jmeno uživatele i jeho heslo
+            </summary>
+            <param name="username"></param>
+            <param name="password"></param>
             <returns></returns>
         </member>
     </members>

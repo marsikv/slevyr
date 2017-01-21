@@ -1,22 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Configuration;
-using System.IO;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
 using SledovaniVyroby.SerialPortWraper;
 using Slevyr.DataAccess.Model;
+using Slevyr.WebAppHost.Model;
 
 namespace Slevyr.WebAppHost
 {
     public static class Globals
     {
         public static RunConfig RunConfig { get; private set; }
-
         public static SerialPortConfig PortConfig { get; private set; }
 
         public static int WebAppPort;
@@ -29,7 +24,8 @@ namespace Slevyr.WebAppHost
 
         public static string WwwRootDir;
 
-        public static IEnumerable<string> AuthorizedUsers;
+        public static IEnumerable<string> PowerUsers;
+        public static IEnumerable<Model.User> Users;
 
         static Globals()
         {
@@ -79,7 +75,9 @@ namespace Slevyr.WebAppHost
             int.TryParse(ConfigurationManager.AppSettings["WebAppPort"], out WebAppPort);
             WwwRootDir = ConfigurationManager.AppSettings["www.rootDir"];
 
-            AuthorizedUsers = ConfigurationManager.AppSettings["AuthorizedUsers"]?.Split(';');
+            PowerUsers = ConfigurationManager.AppSettings["PowerUsers"]?.Split(';');
+            var usersDef = ConfigurationManager.AppSettings["Users"]?.Split(';');
+            Users = usersDef?.Select(u => new User(u));            
         }
 
         public static string RunConfigToJson()
