@@ -4,6 +4,18 @@
         <name>Slevyr.WebAppHost</name>
     </assembly>
     <members>
+        <member name="M:Slevyr.WebAppHost.Controllers.SlevyrController.GetApiVersion">
+            <summary>
+            Vrací verzi API
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Slevyr.WebAppHost.Controllers.SlevyrController.GetConfig">
+            <summary>
+            Vrací parametry běhové konfigurace, jako je umístění databáze, hodnoty timout parametrů apod.
+            </summary>
+            <returns></returns>
+        </member>
         <member name="F:Slevyr.WebAppHost.Service.components">
             <summary> 
             Required designer variable.
@@ -27,18 +39,6 @@
             </summary>
             <param Name="username"></param>
             <param Name="password"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Slevyr.WebAppHost.Controllers.SlevyrController.GetApiVersion">
-            <summary>
-            Vrací verzi API
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:Slevyr.WebAppHost.Controllers.SlevyrController.GetConfig">
-            <summary>
-            Vrací parametry běhové konfigurace, jako je umístění databáze, hodnoty timout parametrů apod.
-            </summary>
             <returns></returns>
         </member>
         <member name="T:Slevyr.WebAppHost.Model.User">

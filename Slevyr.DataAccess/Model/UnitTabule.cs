@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using Slevyr.DataAccess.Services;
 
 namespace Slevyr.DataAccess.Model
@@ -30,5 +31,13 @@ namespace Slevyr.DataAccess.Model
 
         public string MachineStatusTxt => Helper.GetDescriptionFromEnumValue(MachineStatus);
 
+        /// <summary>
+        /// Jak dlouho stroj stoji v sec
+        /// </summary>
+        public int MachineStopDuration { get; set; }
+
+        public DateTime? MachineStopTime { get; set; }
+
+        public string MachineStopTimeTxt => MachineStopTime?.ToShortTimeString() ?? "-";
     }
 }

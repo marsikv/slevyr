@@ -283,18 +283,22 @@ namespace Slevyr.DataAccess.Model
              */
             var okVal = Helper.ToShort(buff[4], buff[5]);
             var ngVal = Helper.ToShort(buff[6], buff[7]);
-            var stopTime = Helper.ToShort(buff[8], buff[9]);
-            short machineStatus = buff[10];
+            var stopDuration = Helper.ToShort(buff[8], buff[9]);
+            short machineStatusInt = buff[10];
 
+            MachineStateEnum machineStatus = (MachineStateEnum)machineStatusInt;
+
+            UnitStatus.SetStopTime(machineStatus);
+            
             UnitStatus.Ok = okVal;
             UnitStatus.Ng = ngVal;
-            UnitStatus.Tabule.MachineStatus = (MachineStateEnum)machineStatus;
-            UnitStatus.MachineStopTime = stopTime;
+            UnitStatus.Tabule.MachineStatus = machineStatus;
+            UnitStatus.Tabule.MachineStopDuration = stopDuration;
 
             UnitStatus.OkNgTime = DateTime.Now;
             UnitStatus.IsOkNg = true;
 
-            Logger.Info($"okVal:{okVal} ngVal:{ngVal} machineStatus:{machineStatus} unit: {Address}");
+            Logger.Info($"okVal:{okVal} ngVal:{ngVal} machineStatus:{machineStatusInt} unit: {Address}");
         }
 
         public void DoReadCasOkNg(byte[] buff)
@@ -374,19 +378,21 @@ namespace Slevyr.DataAccess.Model
         {
             Logger.Debug("");
 
-            byte addr = buff[2];
-            byte cmd = buff[3];
+            //byte addr = buff[2];
+            //byte cmd = buff[3];
 
             var okVal = Helper.ToShort(buff[4], buff[5]);
             var ngVal = Helper.ToShort(buff[6], buff[7]);
-            var stopTime = Helper.ToShort(buff[8], buff[9]);
-            short machineStatus = buff[10];
+            var stopDuration = Helper.ToShort(buff[8], buff[9]);
+            short machineStatusInt = buff[10];
+            MachineStateEnum machineStatus = (MachineStateEnum)machineStatusInt;
 
-            UnitStatus.LastOk = okVal;
-            UnitStatus.LastNg = ngVal;
-            UnitStatus.LastMachineStatus = (MachineStateEnum)machineStatus;
-            UnitStatus.LastMachineStopTime = stopTime;
+            UnitStatus.SetStopTime(machineStatus);
 
+            UnitStatus.Ok = okVal;
+            UnitStatus.Ng = ngVal;
+            UnitStatus.Tabule.MachineStatus = machineStatus;
+            UnitStatus.Tabule.MachineStopDuration = stopDuration;
 
             Logger.Info($"okVal:{okVal} ngVal:{ngVal} machineStatus:{machineStatus} unit: {Address}");
         }

@@ -20,7 +20,7 @@ namespace Slevyr.WebAppHost.Controllers
     {
         #region Fields
 
-        static readonly string ApiVersion = "1.1";
+        static readonly string ApiVersion = "1.2";
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

@@ -55,20 +55,13 @@ namespace Slevyr.DataAccess.Model
 
         public int Ok { get; set; }
 
-        public int Ng { get; set; }      
-
-        /// <summary>
-        /// Jak dlouho stroj stoji v sec
-        /// </summary>
-        public int MachineStopTime { get; set; }
+        public int Ng { get; set; }             
 
         public DateTime LastCheckTime { get; set; }
         public string LastCheckTimeTxt => LastCheckTime.ToShortTimeString();
 
         public DateTime ErrorTime { get; set; }
         public string ErrorTimeTxt => ErrorTime.ToString(CultureInfo.CurrentCulture);
-
-        //public bool Handshake { get; set; }
 
         public DateTime OkNgTime { get; set; }
         public string OkNgTimeTxt => OkNgTime.ToShortTimeString();
@@ -137,8 +130,8 @@ namespace Slevyr.DataAccess.Model
         /// Pocet NG ktery se zaznamena po konci smeny
         /// </summary>
         public short LastNg { get; set; }
-        public MachineStateEnum LastMachineStatus { get; set; }
-        public short LastMachineStopTime { get; set; }
+        //public MachineStateEnum LastMachineStatus { get; set; }
+        //public short LastMachineStopTime { get; set; }
 
         #endregion
 
@@ -347,5 +340,19 @@ namespace Slevyr.DataAccess.Model
         }
 
         #endregion
+
+        public void SetStopTime(MachineStateEnum machineStatus)
+        {
+            if (machineStatus == MachineStateEnum.Porucha && Tabule.MachineStatus != machineStatus)
+            {
+                //zaznamenam cas kdy jsme poruchu zaznamenali
+                Tabule.MachineStopTime = DateTime.Now;
+            }
+            else if (machineStatus == MachineStateEnum.Vyroba)
+            {
+                //kdyz uz je normalni tak stop time resetuju
+                Tabule.MachineStopTime = null;
+            }
+        }
     }
 }

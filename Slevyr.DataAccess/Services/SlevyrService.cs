@@ -368,6 +368,16 @@ namespace Slevyr.DataAccess.Services
             return _unitDictionary.Values.Select(um => um.UnitStatus.Tabule).ToList();
         }
 
+        public static IEnumerable<UnitTabule> GetAllUdrzba()
+        {
+            Logger.Debug("+");
+
+            var res = _unitDictionary.Values.Where(u => u.UnitStatus.Tabule.MachineStatus == MachineStateEnum.Porucha ||
+                //u.UnitStatus.Tabule.MachineStatus == MachineStateEnum.Stop || 
+                u.UnitStatus.Tabule.MachineStatus == MachineStateEnum.Servis).Select(um => um.UnitStatus.Tabule).ToList();
+            return res;
+        }
+
 
         /// <summary>
         /// prepocitat pro zobrazeni tabule
@@ -848,5 +858,6 @@ namespace Slevyr.DataAccess.Services
             DataSendReceivedLogger.Debug($"->  {buffLength}; {BitConverter.ToString(inBuff)}");
         }
 
+       
     }
 }
