@@ -41,21 +41,21 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="T:Slevyr.WebAppHost.Model.SvUser">
+        <member name="T:Slevyr.WebAppHost.Model.User">
             <summary>
             Uzivatel ktery je pouzivany pro autentizaci a autorizaci
             TODO pouzit odpovidajici ASP.NET tridu (Principal ?)
             </summary>
         </member>
-        <member name="M:Slevyr.WebAppHost.Model.SvUser.#ctor(System.String)">
+        <member name="M:Slevyr.WebAppHost.Model.User.#ctor(System.String)">
             <summary>
             konstruktor z dvojice Name-pswd md5 hash
             </summary>
             <param Name="configTuple"></param>
         </member>
-        <member name="M:Slevyr.WebAppHost.Model.SvUser.IsValid(System.String,System.String)">
+        <member name="M:Slevyr.WebAppHost.Model.User.IsAutentized(System.String,System.String)">
             <summary>
-            Ověří zda odpovída jmeno uživatele i jeho heslo
+            Autentizuje uživatele, ověří zda odpovída jmeno uživatele i jeho heslo
             </summary>
             <param name="username"></param>
             <param name="password"></param>

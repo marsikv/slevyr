@@ -107,7 +107,7 @@ namespace Slevyr.WebAppHost
         {
             // authenticate user
             User autentizedUser = Globals.Users.FirstOrDefault(
-                        u => u.IsValid(username, password));
+                        u => u.IsAutentized(username, password));
 
             if (autentizedUser != null)
             {

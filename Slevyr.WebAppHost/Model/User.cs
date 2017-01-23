@@ -10,10 +10,29 @@ namespace Slevyr.WebAppHost.Model
     /// </summary>
     public class User
     {
-        public string Name;
+        #region private fields
+
         private readonly string Pswdhash;
 
         private static readonly MD5CryptoServiceProvider Md5Provider = new MD5CryptoServiceProvider();
+
+        #endregion
+
+
+        #region properties
+
+        public string Name { get; set; }
+
+        public bool NastaveniEnabled { get; set; }
+
+        public bool ExportEnabled { get; set; }
+
+        public bool TabuleEnabled { get; set; }
+
+        public bool PrehledUdrzbyEnabled { get; set; }
+
+        #endregion
+
 
         /// <summary>
         /// konstruktor z dvojice Name-pswd md5 hash
@@ -26,6 +45,7 @@ namespace Slevyr.WebAppHost.Model
             {
                 Name = s[0];
                 Pswdhash = s[1];
+                SetBasicRole();
             }
             else
             {
@@ -36,6 +56,30 @@ namespace Slevyr.WebAppHost.Model
         private bool PasswordIsValid(string pswd)
         {
             return Pswdhash.Equals(MD5Hash(pswd));
+        }
+
+        public void SetBasicRole()
+        {
+            ExportEnabled = true;
+            NastaveniEnabled = false;
+            PrehledUdrzbyEnabled = true;
+            TabuleEnabled = true;
+        }
+
+        public void SetAdminRole()
+        {
+            ExportEnabled = true;
+            NastaveniEnabled = true;
+            PrehledUdrzbyEnabled = true;
+            TabuleEnabled = true;
+        }
+
+        public void SetMaintenanceRole()
+        {
+            ExportEnabled = false;
+            NastaveniEnabled = false;
+            PrehledUdrzbyEnabled = true;
+            TabuleEnabled = false;
         }
 
         public string MD5Hash(string input)
@@ -51,14 +95,19 @@ namespace Slevyr.WebAppHost.Model
         }
 
         /// <summary>
-        /// Ovìøí zda odpovída jmeno uživatele i jeho heslo
+        /// Autentizuje uživatele, ovìøí zda odpovída jmeno uživatele i jeho heslo
         /// </summary>
         /// <param name="username"></param>
         /// <param name="password"></param>
         /// <returns></returns>
-        public bool IsValid(string username, string password)
+        public bool IsAutentized(string username, string password)
         {
             return Name.Equals(username, StringComparison.InvariantCultureIgnoreCase) && PasswordIsValid(password);
+        }
+
+        public bool NameMatch(string username)
+        {
+            return Name.Equals(username, StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }

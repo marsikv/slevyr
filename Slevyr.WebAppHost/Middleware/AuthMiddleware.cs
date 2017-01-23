@@ -20,7 +20,7 @@ namespace Slevyr.WebAppHost.Middleware
             {
                 var ipAddress = context.Request.RemoteIpAddress;
                 ClaimsIdentity claimsIdentity;
-                string user=null;
+                string userName = null;
 
                 try
                 {
@@ -30,9 +30,9 @@ namespace Slevyr.WebAppHost.Middleware
 
                     //-pro basic authentication - asi to neni legeartis
                     claimsIdentity = context.Authentication.User?.Identity as System.Security.Claims.ClaimsIdentity;
-                    if (claimsIdentity != null) user = claimsIdentity.Name;
+                    if (claimsIdentity != null) userName = claimsIdentity.Name;
 
-                    Logger.Info($"user:{user} ip:{ipAddress}");
+                    Logger.Info($"user:{userName} ip:{ipAddress}");
                 }
                 catch (Exception ex)
                 {
@@ -40,32 +40,35 @@ namespace Slevyr.WebAppHost.Middleware
                     throw;
                 }
 
-                if (user == null || !claimsIdentity.IsAuthenticated)
+                if (userName == null || !claimsIdentity.IsAuthenticated)
                 {
                     context.Authentication.Challenge();
                     return;
                 }
                
 
-                bool autorizationActive = Globals.PowerUsers != null;
-                if (autorizationActive)
+                bool autorizationActive = Globals.Users != null;
+                if (autorizationActive && context.Request.Path.HasValue)
                 {
-                    bool userAuthorized = Globals.PowerUsers.FirstOrDefault(
-                        s => s.Equals(user, StringComparison.InvariantCultureIgnoreCase)) != null;
+                    var user = Globals.Users.FirstOrDefault(s => s.NameMatch(userName));
 
-                    if (!userAuthorized && context.Request.Path.HasValue &&
-                        (context.Request.Path.Value.Contains("/linka-params.html") || context.Request.Path.Value.Contains("/nastaveni.html")))
+                    if (context.Request.Path.Value.Contains("/linka-params.html") || context.Request.Path.Value.Contains("/nastaveni.html"))
                     {
-                        NotAuthorizedResponse(context, user);
-                        return;
+                        if (user == null || !user.NastaveniEnabled)
+                        {
+                            NotAuthorizedResponse(context, userName);
+                            return;
+                        }
                     }
 
-                    if (!userAuthorized && context.Request.Path.HasValue &&
-                        context.Request.Path.Value.Contains("nastav"))
+                    if (context.Request.Path.Value.Contains("nastav"))
                     {
-                        context.Response.StatusCode = 401;
-                        //NotAuthorizedResponse(context, user);
-                        return;
+                        if (user == null || !user.NastaveniEnabled)
+                        {
+                            context.Response.StatusCode = 401;
+                            //NotAuthorizedResponse(context, user);
+                            return;
+                        }
                     }
                 }
 

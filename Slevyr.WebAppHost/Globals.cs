@@ -24,8 +24,9 @@ namespace Slevyr.WebAppHost
 
         public static string WwwRootDir;
 
-        public static IEnumerable<string> PowerUsers;
-        public static IEnumerable<Model.User> Users;
+        //public static IEnumerable<string> PowerUsers;
+
+        public static List<Model.User> Users;
 
         static Globals()
         {
@@ -75,17 +76,36 @@ namespace Slevyr.WebAppHost
             int.TryParse(ConfigurationManager.AppSettings["WebAppPort"], out WebAppPort);
             WwwRootDir = ConfigurationManager.AppSettings["www.rootDir"];
 
-            PowerUsers = ConfigurationManager.AppSettings["PowerUsers"]?.Split(';');
             var usersDef = ConfigurationManager.AppSettings["Users"]?.Split(';');
-            Users = usersDef?.Select(u => new User(u));            
+            Users = usersDef?.Select(u => new User(u)).ToList();
+            if (Users != null)
+            {
+                ClassifyAdminUsers(ConfigurationManager.AppSettings["AdminUsers"]?.Split(';'));
+                ClassifyMaintenanceUsers(ConfigurationManager.AppSettings["MaintenanceUsers"]?.Split(';'));
+            }
         }
 
         public static string RunConfigToJson()
         {
             return JsonConvert.SerializeObject(RunConfig);          
         }
-    
-}
+
+        private static void ClassifyAdminUsers(IEnumerable<string> userNames)
+        {
+            foreach (var user in userNames.Select(pu => Users.FirstOrDefault(u => u.Name.Equals(pu, StringComparison.InvariantCultureIgnoreCase))))
+            {
+                user?.SetAdminRole();
+            }
+        }
+
+        private static void ClassifyMaintenanceUsers(IEnumerable<string> userNames)
+        {
+            foreach (var user in userNames.Select(pu => Users.FirstOrDefault(u => u.Name.Equals(pu, StringComparison.InvariantCultureIgnoreCase))))
+            {
+                user?.SetMaintenanceRole();
+            }
+        }
+    }
 
 
 
