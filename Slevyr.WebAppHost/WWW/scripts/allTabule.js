@@ -26,15 +26,25 @@ function getAllTabule() {
 function formatTable(data) {
     $('#tabule').empty();
 
-    data.forEach(function (device) {
+
+    //<a href="index.html">Home</a>
+
+    data.forEach(function (unitTabule) {
         var html = '<div class="tabule">' +
-            '<div class="tabule--Name">' + device.LinkaName + '</div>' +
-            '<div class="tabule--row" data-title="Cíl">' + device.CilKusuTabule + '</div>' +
-            '<div class="tabule--row" data-title="Rozdíl">' + device.RozdilTabuleTxt + '</div>' +
-            '<div class="tabule--row" data-title="Cíl defektivita">' + device.CilDefectTabule + '</div>' +
-            '<div class="tabule--row" data-title="Aktualni defektivita">' + device.AktualDefectTabuleTxt + '</div>' +
-            '<div class="tabule--row">' +device.MachineStatusTxt + '</div>' +
-        '</div>';
+            //'<div class="tabule--Name">' + unitTabule.LinkaName + '</div>' +
+            '<div class="tabule--Name">' + '<a href="linka-tabule.html#'+unitTabule.Addr+'">'+unitTabule.LinkaName+'</a>' + '</div>' +
+            '<div class="tabule--row" data-title="Cíl">' + unitTabule.CilKusuTabule + '</div>' +
+            '<div class="tabule--row" data-title="Rozdíl">' + unitTabule.RozdilTabuleTxt + '</div>' +
+            '<div class="tabule--row" data-title="Cíl defektivita">' + unitTabule.CilDefectTabule + '</div>' +
+            '<div class="tabule--row" data-title="Aktualni defektivita">' + unitTabule.AktualDefectTabuleTxt + '</div>';
+       
+        if (unitTabule.IsPrestavkaTabule) {
+            html = html + '<div class="tabule--rowCenterEnhanced"> Přestávka </div>';
+        } else {
+            html = html + '<div class="tabule--rowCenter">' + unitTabule.MachineStatusTxt + '</div>';
+        }
+
+        html = html + '</div>';
         
         $('#tabule').append(html);
     });

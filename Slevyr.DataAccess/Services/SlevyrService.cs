@@ -393,34 +393,6 @@ namespace Slevyr.DataAccess.Services
 
                 _unitDictionary[addr].UnitStatus.LastCheckTime = DateTime.Now;
 
-                /* hodne stary zapis do CSV
-                string casOkStr = (_runConfig.IsReadOkNgTime)
-                    ? casOk.ToString(CultureInfo.InvariantCulture)
-                    : string.Empty;
-                string casNgStr = (_runConfig.IsReadOkNgTime)
-                    ? casNg.ToString(CultureInfo.InvariantCulture)
-                    : string.Empty;
-                UnitsLogger.Info($"4;{addr};{ok};{ng};{casOkStr};{casNgStr};{(int)_unitDictionary[addr].UnitStatus.MachineStatus}");
-                */
-
-                /* stary zapis do CSV
-                StringBuilder sb = new StringBuilder();
-                sb.Append($"4;{_unitDictionary[addr].UnitConfig.UnitName};{addr}"); //az po 4
-                sb.Append($";{_unitDictionary[addr].UnitStatus.CilKusuTabule}"); //5
-                sb.Append($";{ok}"); //6
-                sb.Append(_runConfig.IsReadOkNgTime ? $";{casOk}" : ";"); //7
-                sb.Append(ok != 0 ? $";{_unitDictionary[addr].UnitStatus.UbehlyCasSmenySec / (float)ok:F}" : ";");
-                sb.Append($";{_unitDictionary[addr].UnitStatus.CilDefectTabule:F}"); //9
-                sb.Append($";{ng}"); //10
-                sb.Append(_runConfig.IsReadOkNgTime ? $";{casNg}" : ";"); //11
-                sb.Append(ng != 0 ? $";{_unitDictionary[addr].UnitStatus.UbehlyCasSmenySec / (float)ng:F}" : ";"); //12
-                sb.Append($";{_unitDictionary[addr].UnitStatus.RozdilTabuleTxt}"); //13
-                sb.Append($";{_unitDictionary[addr].UnitStatus.AktualDefectTabuleTxt}"); //14
-                sb.Append($";{_unitDictionary[addr].UnitStatus.MachineStatus}"); //15
-                sb.Append($";{Convert.ToInt32(_unitDictionary[addr].UnitStatus.IsPrestavkaTabule)}"); //16
-                UnitsLogger.Info(sb.ToString);
-                */
-
                 SqlliteDao.AddUnitState(addr, _unitDictionary[addr].UnitStatus);
             }
             catch (Exception ex)

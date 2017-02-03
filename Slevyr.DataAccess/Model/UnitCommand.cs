@@ -18,46 +18,28 @@ namespace Slevyr.DataAccess.Model
         Completed
     }
 
+    /// <summary>
+    /// Reprezentuje jeden prikaz ktery se naplanuje ke spusteni
+    /// </summary>
     public class UnitCommand
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        //private List<Object> _params;
-        //private Dictionary<int, UnitMonitor> _unitDictionary;
         private readonly Func<bool> _func;
-        private string _description;
-        private int _unitAddr;
+        private readonly string _description;
+        private readonly int _unitAddr;
 
         #region properties
 
-        public bool Result { get; set; }
-        public string ExceptionMessage { get; set; }
-        public CommandStatus CommandStatus { get; set; }
+        public bool Result { get; private set; }
+        private string ExceptionMessage { get; set; }
+        private CommandStatus CommandStatus { get; set; }
 
-        public string Description
-        {
-            get { return _description; }
-        }
+        public string Description => _description;
 
         #endregion
 
-        /*
-        public List<object> Params
-        {
-            get { return _params; }
-        }
-        #endregion
-
-        public void AddParam(object p)
-        {
-            if (_params == null)
-            {
-                _params = new List<object>();
-            }
-            _params.Add(p);
-        }
-        */
-
+ 
         public UnitCommand(Func<bool> func,string description, int unitAddr)
         {
             CommandStatus = CommandStatus.Created;
@@ -66,11 +48,6 @@ namespace Slevyr.DataAccess.Model
             _unitAddr = unitAddr;
         }
 
-        //public UnitCommand(Dictionary<int, UnitMonitor> unitDictionary)
-        //{
-        //    CommandStatus = CommandStatus.Created;
-        //    _unitDictionary = unitDictionary;
-        //}
 
         public void Run()
         {

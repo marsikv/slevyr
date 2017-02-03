@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Web.Http;
 using NLog;
@@ -41,6 +42,7 @@ namespace Slevyr.WebAppHost.Controllers
         /// Vrací verzi API
         /// </summary>
         /// <returns></returns>
+        [AllowAnonymous]
         [HttpGet]
         public String GetApiVersion()
         {
@@ -417,79 +419,7 @@ namespace Slevyr.WebAppHost.Controllers
             {
                 throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
             }
-        }
-
-        [HttpPost]
-        public IHttpActionResult ExportInterval([FromBody]IntervalExport value)
-        {
-            Logger.Info($"exportFilename:{value.FileName} from:{value.TimeFromStr} to:{value.TimeToStr}");
-            if (string.IsNullOrWhiteSpace(value.FileName) || string.IsNullOrWhiteSpace(value.TimeFromStr) ||
-                string.IsNullOrWhiteSpace(value.TimeToStr))
-            {
-                return BadRequest("Neplatné parametry");
-            }
-
-            var cnt = SqlliteDao.ExportToCsv(value, Globals.RunConfig.DecimalSeparator);
-            return Ok($"Počet exportovaných záznamů od {value.TimeFrom} do {value.TimeTo} : {cnt}");            
-        }
-
-        /*
-         * FileName: $('#exportFilename').val(),
-            UnitId: $('#linkaId').val(),
-            ExportAll: $('#exportAll').prop('checked'),
-            ExportAllSeparated: $('#exportAllSeparated').prop('checked'),
-            exportVariant: 1
-         */
-        [HttpGet]
-        public IHttpActionResult ExportIntervalPredef([FromUri] string fileName, [FromUri]int unitId, [FromUri]bool expAll, [FromUri]bool expAllSepar, [FromUri]int exportVariant)
-        {
-            Logger.Info($"exportFilename:{fileName} exportvar:{exportVariant}");
-            if (string.IsNullOrWhiteSpace(fileName))
-            {
-                throw new ArgumentException("Neplatná hodnota pro název souboru");
-            }
-
-            var exportDef = new IntervalExport()
-            {
-                ExportAll = expAll,
-                UnitId = unitId,
-                FileName = fileName,
-                ExportAllSeparated = expAllSepar
-            };
-
-            DateTime now = DateTime.Now;
-            bool moveToPrevious = false;
-
-            switch (exportVariant)
-            {
-                case 1:                    
-                    exportDef.TimeFrom = new DateTime(now.Year, now.Month, now.Day,6 , 0, 0);
-                    exportDef.TimeTo = new DateTime(now.Year, now.Month, now.Day,14 , 0, 0);
-                    moveToPrevious = (now.Hour < 14); //smena prave probiha nebo jeste nezacala, musim o den zpet
-                    break;
-                case 2:
-                    exportDef.TimeFrom = new DateTime(now.Year, now.Month, now.Day, 14, 0, 0);
-                    exportDef.TimeTo = new DateTime(now.Year, now.Month, now.Day, 22, 0, 0);
-                    moveToPrevious = (DateTime.Now.Hour < 22); //smena prave probiha, musim o den zpet
-                    break;
-                case 3:
-                    exportDef.TimeFrom = new DateTime(now.Year, now.Month, now.Day-1, 22, 0, 0);
-                    exportDef.TimeTo = new DateTime(now.Year, now.Month, now.Day, 6, 0, 0);
-                    moveToPrevious = (now.Hour >= 22) || (DateTime.Now.Hour < 6); //smena prave probiha, musim o den zpet
-                    break;
-                default: throw new ArgumentException("Neplatná hodnota pro variantu exportu");
-            }
-
-            if (moveToPrevious)
-            {
-                 exportDef.TimeFrom = exportDef.TimeFrom.AddDays(-1);
-                 exportDef.TimeTo = exportDef.TimeTo.AddDays(-1);
-            }
-
-            var cnt = SqlliteDao.ExportToCsv(exportDef, Globals.RunConfig.DecimalSeparator);
-            return Ok($"Počet exportovaných záznamů od {exportDef.TimeFrom} do {exportDef.TimeTo} : {cnt} \n{(moveToPrevious ? "Směna probíhá nebo ještě nezačala, export byl proveden za předchozí den !":"")}");
-        }
-
+        }       
 
     }
 }

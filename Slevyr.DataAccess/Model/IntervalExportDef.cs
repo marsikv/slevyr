@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Slevyr.DataAccess.Model
 {
-    public class IntervalExport
+    public class IntervalExportDef
     {
         private string _timeFromStr;
         private string _timeToStr;
@@ -37,12 +37,12 @@ namespace Slevyr.DataAccess.Model
         public DateTime TimeFrom { get; set; }
         public DateTime TimeTo { get; set; }
 
-        public IntervalExport()
+        public IntervalExportDef()
         {
             
         }
 
-        public IntervalExport(string timeFromStr, string timeToStr)
+        public IntervalExportDef(string timeFromStr, string timeToStr)
         {
             TimeFrom = string.IsNullOrWhiteSpace(timeFromStr) ? DateTime.Now : DateTime.Parse(timeFromStr);
             TimeTo = string.IsNullOrWhiteSpace(timeToStr) ? DateTime.Now : DateTime.Parse(timeToStr);

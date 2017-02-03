@@ -532,6 +532,7 @@ namespace Slevyr.DataAccess.Model
             UnitConfig = new UnitConfig();
             UnitConfig.LoadFromFile(addr, dataFilePath);
             UnitStatus.Tabule.LinkaName = UnitConfig.UnitName;
+            UnitStatus.Tabule.Addr = addr;
         }
 
         public void SetCommandIsPending(bool val)

@@ -2,6 +2,14 @@ var uri = 'api/slevyr';
 var isTimerEnabled = false;
 var refreshTimer;
 var addr = null;
+var startAddr = null;
+
+(function () {
+    var hash = location.hash.substr(1);
+    startAddr = hash;
+    //document.getElementById('user').innerHTML = hash;
+})();
+
 
     $(document).ready(function () {
         readRunConfig();
@@ -62,6 +70,11 @@ var addr = null;
                                    .attr("value", value)
                                    .text(value));
                 });
+
+                if (startAddr) {
+                    $('#AddrIdDropDown').val(startAddr);
+                    startAddr = null;
+                }
 
                 onAddrIdChange();
 
@@ -127,7 +140,7 @@ var addr = null;
             window.slVyr.addNotification('error', 'Chyba jednotky - error: ' + err);
         }
 
-        if (data.IsPrestavkaTabule) {
+        if (data.Tabule.IsPrestavkaTabule) {
             $('#isPrestavkaTabule').addClass('linka--prestavka-visible');
         } else {
             $('#isPrestavkaTabule').removeClass('linka--prestavka-visible');

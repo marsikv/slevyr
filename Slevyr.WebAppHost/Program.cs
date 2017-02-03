@@ -109,7 +109,7 @@ namespace Slevyr.WebAppHost
             {
                 Console.WriteLine("ERROR: Impossible to connect to service");
             }
-
+            
             Logger.Info($"\nWebApp Started on {baseAddress}\n");
 
             Console.WriteLine("Stiskni [Enter] pro ukončení!\n");

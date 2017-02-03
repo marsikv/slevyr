@@ -148,7 +148,7 @@ namespace Slevyr.DataAccess.DAO
         {
             //(cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
             string sql = SqlInsertStatusIntoObservation +
-                         $"(4,{addr},{(u.IsPrestavkaTabule ? 1 : 0)},{u.Tabule.CilKusuTabule},{u.Ok},{u.CasOkStr}," +
+                         $"(4,{addr},{(u.Tabule.IsPrestavkaTabule ? 1 : 0)},{u.Tabule.CilKusuTabule},{u.Ok},{u.CasOkStr}," +
                          $"{u.PrumCasVyrobyOkStr},{u.Tabule.CilDefectTabuleStr}," +
                          $"{u.Ng},{u.CasNgStr},{u.PrumCasVyrobyNgStr}," +
                          $"{u.Tabule.RozdilTabule},{u.Tabule.AktualDefectTabuleStr},{(int)u.Tabule.MachineStatus})";
@@ -210,22 +210,22 @@ namespace Slevyr.DataAccess.DAO
         //takto lze vypsat cas v lokalnim formatovani:
         // select time(timeStamp,'localtime'),time(timeStamp,'utc'),date(timeStamp,'localtime'), datetime(timeStamp,'localtime'), unitId from observations order by timeStamp
 
-        public static int ExportToCsv(IntervalExport export, char decimalSeparator)
+        public static int ExportToCsv(IntervalExportDef exportDef, char decimalSeparator, MemoryStream memStream)
         {
             string sql = SqlExportToCsv;
 
-            if (!export.ExportAll)
+            if (!exportDef.ExportAll)
             {
                 sql += " and unitId = @unitId";
             }
 
             using (SQLiteCommand command = new SQLiteCommand(sql, _dbConnection))
             {                
-                command.Parameters.Add(new SQLiteParameter("@timeFrom", export.TimeFrom.ToUniversalTime()));
-                command.Parameters.Add(new SQLiteParameter("@timeTo", export.TimeTo.ToUniversalTime()));
-                if (!export.ExportAll)
+                command.Parameters.Add(new SQLiteParameter("@timeFrom", exportDef.TimeFrom.ToUniversalTime()));
+                command.Parameters.Add(new SQLiteParameter("@timeTo", exportDef.TimeTo.ToUniversalTime()));
+                if (!exportDef.ExportAll)
                 {
-                    command.Parameters.Add(new SQLiteParameter("@unitId", export.UnitId));
+                    command.Parameters.Add(new SQLiteParameter("@unitId", exportDef.UnitId));
                 }
 
                 DataTable data = new DataTable();
@@ -234,15 +234,22 @@ namespace Slevyr.DataAccess.DAO
 
                 myAdapter.Fill(data);
 
-                return CreateCsvFile(data, export.FileName, decimalSeparator);
+                if (memStream != null)
+                {
+                    return CreateCsvStream(data, exportDef.FileName, decimalSeparator, memStream);
+                }
+                else
+                {
+                    return CreateCsvFile(data, exportDef.FileName, decimalSeparator);
+                }
             }
 
         }
-
+        
         private static int CreateCsvFile(DataTable dt, string strFilePath, char decimalSeparator)
         {
             int cnt = 0;
-            using (var sw = new StreamWriter(new FileStream(strFilePath, FileMode.OpenOrCreate, FileAccess.Write),Encoding.GetEncoding("ISO-8859-2")))
+            using (var sw = new StreamWriter(new FileStream(strFilePath, FileMode.OpenOrCreate, FileAccess.Write), Encoding.GetEncoding("ISO-8859-2")))
             {
                 // First we will write the headers.
                 int iColCount = dt.Columns.Count;
@@ -268,13 +275,13 @@ namespace Slevyr.DataAccess.DAO
                         {
                             if (dr[i] is float || dr[i] is double)
                             {
-                                var s = ((double)dr[i]).ToString("0.##",CultureInfo.InvariantCulture);
+                                var s = ((double)dr[i]).ToString("0.##", CultureInfo.InvariantCulture);
                                 //s = String.Format("{0:0.00}", dr[i]);
                                 if (decimalSeparator != '.') s = s.Replace('.', decimalSeparator);
                                 sw.Write(s);
                             }
                             else
-                            { sw.Write(dr[i].ToString());}
+                            { sw.Write(dr[i].ToString()); }
                         }
                         if (i < iColCount - 1)
                         {
@@ -285,6 +292,60 @@ namespace Slevyr.DataAccess.DAO
                     cnt++;
                 }
                 sw.Close();
+
+                return cnt;
+            }
+        }
+
+        private static int CreateCsvStream(DataTable dt, string strFilePath, char decimalSeparator, MemoryStream memStream)
+        {
+            int cnt = 0;
+            var sw = new StreamWriter(memStream, Encoding.GetEncoding("ISO-8859-2"));
+            //using (var sw = new StreamWriter(memStream))
+            {
+                // First we will write the headers.
+                int iColCount = dt.Columns.Count;
+                for (int i = 0; i < iColCount; i++)
+                {
+                    //sw.Write(dt.Columns[i]); -- takto by zapsal nazvy sloupcu dle tabulky
+                    sw.Write(SqlExportToCsvFieldNames[i]);
+
+                    if (i < iColCount - 1)
+                    {
+                        sw.Write(";");
+                    }
+                }
+                sw.Write(sw.NewLine);
+
+                // Now write all the rows.
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    for (int i = 0; i < iColCount; i++)
+                    {
+                        if (!Convert.IsDBNull(dr[i]))
+                        {
+                            if (dr[i] is float || dr[i] is double)
+                            {
+                                var s = ((double)dr[i]).ToString("0.##", CultureInfo.InvariantCulture);
+                                //s = String.Format("{0:0.00}", dr[i]);
+                                if (decimalSeparator != '.') s = s.Replace('.', decimalSeparator);
+                                sw.Write(s);
+                            }
+                            else
+                            { sw.Write(dr[i].ToString()); }
+                        }
+                        if (i < iColCount - 1)
+                        {
+                            sw.Write(";");
+                        }
+                    }
+                    sw.Write(sw.NewLine);
+                    cnt++;
+                }
+
+                sw.Flush();
+                //sw.Close();
 
                 return cnt;
             }

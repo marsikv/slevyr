@@ -4,6 +4,48 @@
         <name>Slevyr.WebAppHost</name>
     </assembly>
     <members>
+        <member name="T:Slevyr.WebAppHost.Controllers.ExportController">
+            <summary>
+            Provadi export z databaze a vraci CSV jako response
+            </summary>
+        </member>
+        <member name="M:Slevyr.WebAppHost.Controllers.ExportController.ExportInterval(Slevyr.DataAccess.Model.IntervalExportDef)">
+            <summary>
+            Operace provádí export z databáze pro obecně zadaný časový interval, výsledný CSV soubor ulozeny na serveru
+            </summary>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Slevyr.WebAppHost.Controllers.ExportController.ExportIntervalDownload(System.String,System.String,System.String,System.Int32,System.Boolean,System.Boolean)">
+            <summary>
+            Operace provádí export z databáze pro obecně zadaný časový interval, response CSV soubor
+            </summary>
+            <param name="value"></param>
+            <returns></returns>
+            
+        </member>
+        <member name="M:Slevyr.WebAppHost.Controllers.ExportController.ExportPredef(System.String,System.Int32,System.Boolean,System.Boolean,System.Int32)">
+            <summary>
+            Operace provádí download preddefinovaneho exportu z databáze, vysledný soubor uloží na server
+            </summary>
+            <param name="fileName"></param>
+            <param name="unitId"></param>
+            <param name="expAll"></param>
+            <param name="expAllSepar"></param>
+            <param name="exportVariant"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Slevyr.WebAppHost.Controllers.ExportController.ExportPredefDownload(System.Int32,System.Int32)">
+            <summary>
+            Operace provádí download preddefinovaneho exportu z databáze
+            </summary>
+            <param name="fileName"></param>
+            <param name="unitId"></param>
+            <param name="expAll"></param>
+            <param name="expAllSepar"></param>
+            <param name="exportVariant"></param>
+            <returns>CSV soubor</returns>
+        </member>
         <member name="M:Slevyr.WebAppHost.Controllers.SlevyrController.GetApiVersion">
             <summary>
             Vrací verzi API

@@ -8,6 +8,8 @@ namespace Slevyr.DataAccess.Model
     {
         public string LinkaName { get; set; }
 
+        public int Addr { get; set; }
+
         public int CilKusuTabule { get; set; }
 
         public float CilDefectTabule { get; set; }
@@ -39,5 +41,8 @@ namespace Slevyr.DataAccess.Model
         public DateTime? MachineStopTime { get; set; }
 
         public string MachineStopTimeTxt => MachineStopTime?.ToShortTimeString() ?? "-";
+
+        public bool IsPrestavkaTabule { get; set; }
+
     }
 }

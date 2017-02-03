@@ -79,7 +79,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DAO\SqlliteDao.cs" />
-    <Compile Include="Model\IntervalExport.cs" />
+    <Compile Include="Model\IntervalExportDef.cs" />
     <Compile Include="Model\RunConfig.cs" />
     <Compile Include="Model\UnitCommand.cs" />
     <Compile Include="Model\UnitConfig.cs" />

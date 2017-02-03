@@ -45,7 +45,6 @@ namespace Slevyr.WebAppHost.Middleware
                     context.Authentication.Challenge();
                     return;
                 }
-               
 
                 bool autorizationActive = Globals.Users != null;
                 if (autorizationActive && context.Request.Path.HasValue)

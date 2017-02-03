@@ -79,31 +79,39 @@
 
             <div class="params--section">
                 <div class="params--item params--item-2">
-                    <div class="label">Výstupní soubor</div>
-                    <input id="exportFilename"
-                           class="input"
-                           name="fileName"
-                           type="text"
-                           value="c:\temp\export.csv"
-                           placeholder="export.csv" />
-                </div>
-                <div class="params--item params--item-2">
                     <div class="label">Identifikátor linky</div>
-                    <input id="linkaId" class="input" name="linkaId" type="number" value="100" />
+                    <input id="linkaId" class="input" name="linkaId" type="number" value="100"/>
                 </div>
-                <div class="params--item params--item-2">
-                    <input id="exportAll" type="checkbox" checked="checked">
-                    <label for="exportAll" class="checkbox">Exportovat za všechny linky</label>
-                </div>
-                <div class="params--item params--item-2 params--item-2-last">
-                    <input id="exportAllSeparated" type="checkbox">
-                    <label for="exportAllSeparated" class="checkbox">Po linkách do samostatných souborů</label>
+
+                <input id="radioDownloadId" type="radio" name="transferType" value="download" checked="checked"> Stáhnout<br>
+                <input id="radioSaveId" type="radio" name="transferType" value="save"> Uložit na serveru<br>
+
+                <div id="saveParams" style="display:none">
+                    <div class="params--item params--item-2">
+                        <div class="label">Výstupní soubor</div>
+                        <input id="exportFilename" 
+                               class="input"
+                               name="fileName"
+                               type="text"
+                               value="c:\temp\export.csv"
+                               placeholder="export.csv"/>
+                    </div>
+                    <div class="params--item params--item-2-last">
+                        <input id="exportAll" type="checkbox" checked="checked" >
+                        <label for="exportAll" class="checkbox" >Exportovat za všechny linky</label>
+                    </div>
+                    <div class="params--item params--item-2-last">
+                        <input id="exportAllSeparated" type="checkbox">
+                        <label for="exportAllSeparated" class="checkbox">Po linkách do samostatných souborů</label>
+                    </div>
                 </div>
             </div>
 
         </section>
 
     </main>
+
+    <iframe id="my_iframe" style="display:none;"></iframe>
 
     <script src="scripts\jquery.min.js"></script>
     <script src="scripts\main.js"></script>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Data.SqlTypes;
 using System.Globalization;
 using NLog;
 using Slevyr.DataAccess.Services;
@@ -108,7 +109,6 @@ namespace Slevyr.DataAccess.Model
         public float Defektivita { get; set; }
         public DateTime DefektivitaTime { get; set; }
         public bool IsDefektivita { get; set; }
-        public bool IsPrestavkaTabule { get; set; }
        
         /// <summary>
         /// cas v sec. ktery uz aktualni smene ubehl
@@ -195,7 +195,7 @@ namespace Slevyr.DataAccess.Model
 
                 //int odZacatkuSmenySec = 0;
 
-                IsPrestavkaTabule = false;
+                Tabule.IsPrestavkaTabule = false;
 
                 Logger.Debug($"actual time is {dateTimeNow}");
 
@@ -206,19 +206,19 @@ namespace Slevyr.DataAccess.Model
                     string o;
                     if (secondsFromMidn < zacatekPrestavkySmeny1Sec)
                     {
-                        IsPrestavkaTabule = false;
+                        Tabule.IsPrestavkaTabule = false;
                         UbehlyCasSmenySec = secondsFromMidn - zacatekSmeny1Sec;
                         o = "c1";
                     }
                     else if (secondsFromMidn > zacatekPrestavkySmeny1Sec && secondsFromMidn < konecPrestavkySmeny1Sec)
                     {
-                        IsPrestavkaTabule = true;
+                        Tabule.IsPrestavkaTabule = true;
                         UbehlyCasSmenySec = 0;
                         o = "pr";
                     }
                     else
                     {
-                        IsPrestavkaTabule = false;
+                        Tabule.IsPrestavkaTabule = false;
                         UbehlyCasSmenySec = zacatekPrestavkySmeny1Sec - zacatekSmeny1Sec + secondsFromMidn - konecPrestavkySmeny1Sec;
                         o = "c2";
                     }
@@ -232,19 +232,19 @@ namespace Slevyr.DataAccess.Model
                     string o;
                     if (secondsFromMidn < zacatekPrestavkySmeny2Sec)
                     {
-                        IsPrestavkaTabule = false;
+                        Tabule.IsPrestavkaTabule = false;
                         UbehlyCasSmenySec = secondsFromMidn - zacatekSmeny2Sec;
                         o = "c1";
                     }
                     else if (secondsFromMidn > zacatekPrestavkySmeny2Sec && secondsFromMidn < konecPrestavkySmeny2Sec)
                     {
-                        IsPrestavkaTabule = true;
+                        Tabule.IsPrestavkaTabule = true;
                         UbehlyCasSmenySec = 0;
                         o = "pr";
                     }
                     else
                     {
-                        IsPrestavkaTabule = false;
+                        Tabule.IsPrestavkaTabule = false;
                         UbehlyCasSmenySec = zacatekPrestavkySmeny2Sec - zacatekSmeny2Sec + secondsFromMidn - konecPrestavkySmeny2Sec;
                         o = "c2";
                     }
@@ -258,25 +258,25 @@ namespace Slevyr.DataAccess.Model
                     string o;
                     if (secondsFromMidn > zacatekSmeny3Sec)
                     {
-                        IsPrestavkaTabule = false;
+                        Tabule.IsPrestavkaTabule = false;
                         UbehlyCasSmenySec = secondsFromMidn - zacatekSmeny3Sec;
                         o = "c1";
                     }
                     else if (secondsFromMidn < zacatekPrestavkySmeny3Sec)
                     {
-                        IsPrestavkaTabule = false;
+                        Tabule.IsPrestavkaTabule = false;
                         UbehlyCasSmenySec = 86400 - zacatekSmeny3Sec + secondsFromMidn;
                         o = "c2 (po pulnoci)";
                     }
                     else if (secondsFromMidn >= zacatekPrestavkySmeny3Sec && secondsFromMidn < konecPrestavkySmeny3Sec)
                     {
-                        IsPrestavkaTabule = true;
+                        Tabule.IsPrestavkaTabule = true;
                         UbehlyCasSmenySec = 0;
                         o = "pr";
                     }
                     else
                     {
-                        IsPrestavkaTabule = false;
+                        Tabule.IsPrestavkaTabule = false;
                         UbehlyCasSmenySec = 86400 - zacatekSmeny3Sec + zacatekPrestavkySmeny3Sec + secondsFromMidn - konecPrestavkySmeny3Sec;
                         o = "c3";
                     }

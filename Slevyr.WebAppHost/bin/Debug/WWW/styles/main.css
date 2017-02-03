@@ -651,10 +651,26 @@ aside {
     color: teal;
 }
 
+.tabule--rowCenter {
+    margin-bottom: 6px;
+    border-bottom: 1px solid #EEE;
+    text-align: center;
+    color: teal;
+}
+
+.tabule--rowCenterEnhanced {
+    margin-bottom: 6px;
+    border-bottom: 1px solid #EEE;
+    text-align: center;
+    background-color: #fffa4f;
+    color: #222;
+}
+
 .tabule--row::before {
     content: attr(data-title);
     float: left;
     font-size: .8em;
     color: black;
 }
+
 
