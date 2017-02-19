@@ -1,4 +1,7 @@
-var uri = 'api/slevyr';
+var uriBase = 'api/slevyr';
+var uriExport = 'api/export';
+var uriSys = 'api/sys';
+
 var isTimerEnabled = false;
 var refreshTimer;
 var addr = null;
@@ -26,7 +29,7 @@ $(document).ready(function () {
     function readRunConfig() {
         //alert('readConfig');
         $('#stav').text('');
-        $.getJSON(uri + '/getConfig?')
+        $.getJSON(uriSys + '/getRunConfig?')
             .done(function (data) {
 
                 if (data.IsMockupMode) {
@@ -62,7 +65,7 @@ $(document).ready(function () {
         //alert('readUnitConfig'+addr);
         //var addr = $('#addrId').val();
         if (typeof addr != 'undefined' && addr != null && addr.length > 1)
-        $.getJSON(uri + '/GetUnitConfig', {
+        $.getJSON(uriSys + '/GetUnitConfig', {
             addr: addr
             })
             .done(function (data) {
@@ -136,7 +139,7 @@ $(document).ready(function () {
         $.ajax({
             type: "POST",
             data: JSON.stringify(model),
-            url: uri + "/saveUnitConfig",
+            url: uriSys + "/saveUnitConfig",
             contentType: "application/json"
         }).done(function (res) {
             $('#stav').text('');
@@ -146,7 +149,6 @@ $(document).ready(function () {
         }).fail(function (jqXHR, textStatus, err) {
             window.slVyr.addNotification('error', 'SaveUnitConfig - error: ' + err);
             // $('#stav').text('Error: ' + err);
-            // alert("saveUnitConfig - error");
         });
     }
 

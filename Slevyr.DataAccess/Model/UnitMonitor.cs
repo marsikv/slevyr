@@ -26,22 +26,21 @@ namespace Slevyr.DataAccess.Model
 
         #region const pro prikazy
 
-        const byte CmdZaklNastaveni = 3	; //Zakladni nastaveni
-        const byte CmdSetHodnotyCitacu = 4	; //Zapise hodnoty do citacu
-        //const byte CmdSet = 5	; //Vyvola programovaci mod adresy
-        const byte CmdSetParamRf = 6	; //Nastavi parametry RF
-        const byte CmdResetJednotky = 7	; //Reset jednotky
-        const byte CmdZapsatEeprom= 15; //Zapise do eeprom od adresy 5 bytu
+        public const byte CmdZaklNastaveni = 3	; //Zakladni nastaveni
+        public const byte CmdSetHodnotyCitacu = 4	; //Zapise hodnoty do citacu
+        //public const byte CmdSet = 5	; //Vyvola programovaci mod adresy
+        public const byte CmdSetParamRf = 6	; //Nastavi parametry RF
+        public const byte CmdResetJednotky = 7	; //Reset jednotky
+        public const byte CmdZapsatEeprom= 15; //Zapise do eeprom od adresy 5 bytu         
+        public const byte CmdSetSmennost = 16; //nastavi variantu smeny
+        public const byte CmdSetDatumDen = 17; //nastavi cas datum a den
+        public const byte CmdSetCilSmen = 18;  //nastavi cile smen
+        public const byte CmdSetDefSmen = 19;  //nastavi cile defektivity smen
+        public const byte CmdSetJasLed = 20;   //nastavi jas LED panelu
+        public const byte CmdSetZacPrestav = 21;   //nastavi zacatky prestavek
 
-        const byte CmdSetSmennost = 16; //nastavi variantu smeny
-        const byte CmdSetDatumDen = 17; //nastavi cas datum a den
-        const byte CmdSetCilSmen = 18;  //nastavi cile smen
-        const byte CmdSetDefSmen = 19;  //nastavi cile defektivity smen
-        const byte CmdSetJasLed = 20;   //nastavi jas LED panelu
-        const byte CmdSetZacPrestav = 21;   //nastavi zacatky prestavek
-
-        const byte CmdReadVerSwRFT = 1; //vrati verzi sw RFT modulu + panel
-        const byte CmdReadZakSysNast = 9; //vrati zakladni systemove nastaveni
+        public const byte CmdReadVerSwRFT = 1; //vrati verzi sw RFT modulu + panel
+        public const byte CmdReadZakSysNast = 9; //vrati zakladni systemove nastaveni
         //const byte Get = 10	; //vrati sadu A systemovych nastaveni
         //const byte Get = 11	; //vrati sadu B systemovych nastaveni
         //const byte Get = 12	; //vrati sadu C systemovych nastaveni
@@ -141,16 +140,15 @@ namespace Slevyr.DataAccess.Model
             return SendCommand(CmdSetCilSmen, (byte)varianta, cil1, cil2, cil3); 
         }
 
-        public bool SendSetDefektivita(char varianta, short def1, short def2, short def3)
+        public bool SendSetDefektivita(char varianta, float def1, float def2, float def3)
         {
             Logger.Info($"+ unit {Address}");
            
-            UnitConfig.Def1Smeny = def1;
-            UnitConfig.Def2Smeny = def2;
-            UnitConfig.Def3Smeny = def3;
+            UnitConfig.Def1Smeny = def1 ;  
+            UnitConfig.Def2Smeny = def2 ;
+            UnitConfig.Def3Smeny = def3 ;
 
-            //return SendCommand(CmdSetDefSmen, (byte)varianta, (short)(def1 * 10.0), (short)(def2 * 10.0), (short)(def3 * 10.0));
-            return SendCommand(CmdSetDefSmen, (byte)varianta, def1, def2, def3);
+            return SendCommand(CmdSetDefSmen, (byte)varianta, (short)(def1 * 100.0), (short)(def2 * 100.0), (short)(def3 * 100.0));
         }
 
         //TODO - v jakych jednotkach se zadavaji prestavky ?
@@ -287,6 +285,7 @@ namespace Slevyr.DataAccess.Model
             short machineStatusInt = buff[10];
 
             MachineStateEnum machineStatus = (MachineStateEnum)machineStatusInt;
+            //MachineStateEnum machineStatus =MachineStateEnum.Porucha;
 
             UnitStatus.SetStopTime(machineStatus);
             
@@ -475,6 +474,9 @@ namespace Slevyr.DataAccess.Model
                 TplLogger.Debug(s);
                 ErrorsLogger.Error(s);
                 _errorRecordedCnt++;
+
+                //poslat testovaci paket pomoci SendCommand, pokud neprojde tak vime ze je zaseknuty RF modul a je potreba provest reset
+
             }
 
             Thread.Sleep(RunConfig.RelaxTime);

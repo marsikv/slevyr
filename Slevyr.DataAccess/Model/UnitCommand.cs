@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NLog;
+using Slevyr.DataAccess.Services;
 
 namespace Slevyr.DataAccess.Model
 {
@@ -28,6 +29,7 @@ namespace Slevyr.DataAccess.Model
         private readonly Func<bool> _func;
         private readonly string _description;
         private readonly int _unitAddr;
+        private readonly int _cmdId;
 
         #region properties
 
@@ -37,35 +39,43 @@ namespace Slevyr.DataAccess.Model
 
         public string Description => _description;
 
+        public int Cmd => _cmdId;
+
         #endregion
 
- 
-        public UnitCommand(Func<bool> func,string description, int unitAddr)
+
+        public UnitCommand(Func<bool> func,string description, int unitAddr, int cmd)
         {
             CommandStatus = CommandStatus.Created;
             _func = func;
             _description = description;
             _unitAddr = unitAddr;
+            _cmdId = cmd;
         }
 
 
-        public void Run()
+        public bool Run()
         {
             CommandStatus =CommandStatus.Running;
-            Logger.Info($"InvokeCmd {_description} on {_unitAddr}");
+            Logger.Info($"+ InvokeCmd {_cmdId} {_description} on {_unitAddr}");
 
             try
             {
                 Result = _func.Invoke();
                 CommandStatus = CommandStatus.Completed;
-                Logger.Info($"InvokeCmd OK {_description} on {_unitAddr}");
+                Logger.Info($"- InvokeCmd: OK {_description} on {_unitAddr}");
+
+                if (_cmdId != -1)  //tzn. ResetRF
+                   SlevyrService.WaitEventPriorityCommandResult.Set();
             }
             catch (Exception ex)
             {
                 CommandStatus = CommandStatus.Faulted;
                 ExceptionMessage = ex.Message;
-                Logger.Error($"InvokeCmd {_description} on {_unitAddr}");
+                Logger.Error(ex, $"- InvokeCmd {_description} on {_unitAddr}");
             }
+
+            return Result;
         }
     }
 }

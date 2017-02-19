@@ -152,6 +152,14 @@ namespace Slevyr.DataAccess.Model
 
         #region methods
 
+        //pocet sekund celého dne
+        private const int AllDaySec = 24 * 60 * 60;  //86400
+        //pocet sec. prestavky, nyni prestavka 30min - udelat jako parametr ?
+        private const int PrestavkaSec = 30 * 60;
+        //8hod - 0.5hod. prestavka
+        private const int DelkaSmenySec = 27000;
+
+
         /// <summary>
         /// zjistit jaka je prave ted smena a nastavit cil a defektivitu podle toho
         /// </summary>
@@ -171,16 +179,8 @@ namespace Slevyr.DataAccess.Model
                     return;
                 }
 
-                //pocet sekund od zacátku dne
-                int secondsFromMidn = dateTimeNow.Second + dateTimeNow.Minute * 60 + dateTimeNow.Hour * 3600;
-
-                //pocet sekund celého dne
-                //int allDaySec = 24 * 60 * 60;
-
-                //pocet sec. prestavky, nyni prestavka 30min - udelat jako parametr ?
-                int prestavkaSec = 30 * 60;
-                //8hod - 0.5hod. prestavka
-                int delkaSmenySec = 27000;
+                //pocet sekund od zacátku dne (sekundy od pulnoci)
+                int timeSec = dateTimeNow.Second + dateTimeNow.Minute * 60 + dateTimeNow.Hour * 3600;
 
                 int zacatekSmeny1Sec = (int)unitConfig.Zacatek1SmenyTime.TotalSeconds;
                 int zacatekSmeny2Sec = (int)unitConfig.Zacatek2SmenyTime.TotalSeconds;
@@ -189,9 +189,9 @@ namespace Slevyr.DataAccess.Model
                 int zacatekPrestavkySmeny1Sec = (int)unitConfig.Prestavka1SmenyTime.TotalSeconds;
                 int zacatekPrestavkySmeny2Sec = (int)unitConfig.Prestavka2SmenyTime.TotalSeconds;
                 int zacatekPrestavkySmeny3Sec = (int)unitConfig.Prestavka3SmenyTime.TotalSeconds;
-                int konecPrestavkySmeny1Sec = zacatekPrestavkySmeny1Sec + prestavkaSec;
-                int konecPrestavkySmeny2Sec = zacatekPrestavkySmeny2Sec + prestavkaSec;
-                int konecPrestavkySmeny3Sec = zacatekPrestavkySmeny3Sec + prestavkaSec;
+                int konecPrestavkySmeny1Sec = zacatekPrestavkySmeny1Sec + PrestavkaSec;
+                int konecPrestavkySmeny2Sec = zacatekPrestavkySmeny2Sec + PrestavkaSec;
+                int konecPrestavkySmeny3Sec = zacatekPrestavkySmeny3Sec + PrestavkaSec;
 
                 //int odZacatkuSmenySec = 0;
 
@@ -201,84 +201,82 @@ namespace Slevyr.DataAccess.Model
 
                 SmenyEnum smena = SmenyEnum.Nedef;
 
-                if (secondsFromMidn > zacatekSmeny1Sec && secondsFromMidn < zacatekSmeny2Sec)  //smena1
+                if (timeSec > zacatekSmeny1Sec && timeSec < zacatekSmeny2Sec)  //smena1 = ranni 6-14h
                 {
-                    string o;
-                    if (secondsFromMidn < zacatekPrestavkySmeny1Sec)
+                    if (timeSec < zacatekPrestavkySmeny1Sec)
                     {
+                        //C1
                         Tabule.IsPrestavkaTabule = false;
-                        UbehlyCasSmenySec = secondsFromMidn - zacatekSmeny1Sec;
-                        o = "c1";
+                        UbehlyCasSmenySec = timeSec - zacatekSmeny1Sec;
                     }
-                    else if (secondsFromMidn > zacatekPrestavkySmeny1Sec && secondsFromMidn < konecPrestavkySmeny1Sec)
+                    else if (timeSec > zacatekPrestavkySmeny1Sec && timeSec < konecPrestavkySmeny1Sec)
                     {
+                        //prestavka
                         Tabule.IsPrestavkaTabule = true;
-                        UbehlyCasSmenySec = 0;
-                        o = "pr";
+                        UbehlyCasSmenySec = zacatekPrestavkySmeny1Sec - zacatekSmeny1Sec;  //cas se zastavil na zacatku prestavky
                     }
                     else
                     {
+                        //C2
                         Tabule.IsPrestavkaTabule = false;
-                        UbehlyCasSmenySec = zacatekPrestavkySmeny1Sec - zacatekSmeny1Sec + secondsFromMidn - konecPrestavkySmeny1Sec;
-                        o = "c2";
+                        UbehlyCasSmenySec = timeSec - zacatekSmeny1Sec + (zacatekPrestavkySmeny1Sec - konecPrestavkySmeny1Sec);
+                        //UbehlyCasSmenySec = zacatekPrestavkySmeny1Sec - zacatekSmeny1Sec + secondsFromMidn - konecPrestavkySmeny1Sec;
                     }
                     Tabule.CilKusuTabule = unitConfig.Cil1Smeny;
                     Tabule.CilDefectTabule = unitConfig.Def1Smeny;
                     smena = SmenyEnum.Smena1;
 
                 }                
-                else if (secondsFromMidn > zacatekSmeny2Sec && secondsFromMidn < zacatekSmeny3Sec) //smena 2
+                else if (timeSec > zacatekSmeny2Sec && timeSec < zacatekSmeny3Sec) //smena 2 = odpoledni 14-22h
                 {
-                    string o;
-                    if (secondsFromMidn < zacatekPrestavkySmeny2Sec)
+                    if (timeSec < zacatekPrestavkySmeny2Sec)
                     {
+                        //C1
                         Tabule.IsPrestavkaTabule = false;
-                        UbehlyCasSmenySec = secondsFromMidn - zacatekSmeny2Sec;
-                        o = "c1";
+                        UbehlyCasSmenySec = timeSec - zacatekSmeny2Sec;
                     }
-                    else if (secondsFromMidn > zacatekPrestavkySmeny2Sec && secondsFromMidn < konecPrestavkySmeny2Sec)
+                    else if (timeSec > zacatekPrestavkySmeny2Sec && timeSec < konecPrestavkySmeny2Sec)
                     {
+                        //prestavka
                         Tabule.IsPrestavkaTabule = true;
-                        UbehlyCasSmenySec = 0;
-                        o = "pr";
+                        UbehlyCasSmenySec = zacatekPrestavkySmeny2Sec - zacatekSmeny2Sec;  //cas se zastavil na zacatku prestavky
                     }
                     else
                     {
+                        //C2
                         Tabule.IsPrestavkaTabule = false;
-                        UbehlyCasSmenySec = zacatekPrestavkySmeny2Sec - zacatekSmeny2Sec + secondsFromMidn - konecPrestavkySmeny2Sec;
-                        o = "c2";
+                        UbehlyCasSmenySec = zacatekPrestavkySmeny2Sec - zacatekSmeny2Sec + timeSec - konecPrestavkySmeny2Sec;
                     }
                     Tabule.CilKusuTabule = unitConfig.Cil2Smeny;
                     Tabule.CilDefectTabule = unitConfig.Def2Smeny;
                     smena = SmenyEnum.Smena2;
 
                 }
-                else if (secondsFromMidn > zacatekSmeny3Sec || secondsFromMidn < zacatekSmeny1Sec) //smena 3
+                else if (timeSec > zacatekSmeny3Sec || timeSec < zacatekSmeny1Sec) //smena 3 = nocni 22-6h
                 {
-                    string o;
-                    if (secondsFromMidn > zacatekSmeny3Sec)
+                    if (timeSec > zacatekSmeny3Sec)
                     {
+                        //C1
                         Tabule.IsPrestavkaTabule = false;
-                        UbehlyCasSmenySec = secondsFromMidn - zacatekSmeny3Sec;
-                        o = "c1";
+                        UbehlyCasSmenySec = timeSec - zacatekSmeny3Sec;
                     }
-                    else if (secondsFromMidn < zacatekPrestavkySmeny3Sec)
+                    else if (timeSec < zacatekPrestavkySmeny3Sec)
                     {
+                        //C2 po pulnoci
                         Tabule.IsPrestavkaTabule = false;
-                        UbehlyCasSmenySec = 86400 - zacatekSmeny3Sec + secondsFromMidn;
-                        o = "c2 (po pulnoci)";
+                        UbehlyCasSmenySec = (AllDaySec - zacatekSmeny3Sec) + timeSec;  //tzn. pripocteme sekundy z min. dne
                     }
-                    else if (secondsFromMidn >= zacatekPrestavkySmeny3Sec && secondsFromMidn < konecPrestavkySmeny3Sec)
+                    else if (timeSec >= zacatekPrestavkySmeny3Sec && timeSec < konecPrestavkySmeny3Sec)
                     {
+                        //prestavka
                         Tabule.IsPrestavkaTabule = true;
                         UbehlyCasSmenySec = 0;
-                        o = "pr";
                     }
                     else
                     {
+                        //C3
                         Tabule.IsPrestavkaTabule = false;
-                        UbehlyCasSmenySec = 86400 - zacatekSmeny3Sec + zacatekPrestavkySmeny3Sec + secondsFromMidn - konecPrestavkySmeny3Sec;
-                        o = "c3";
+                        UbehlyCasSmenySec = 86400 - zacatekSmeny3Sec + zacatekPrestavkySmeny3Sec + timeSec - konecPrestavkySmeny3Sec;
                     }
                     Tabule.CilKusuTabule = unitConfig.Cil3Smeny;
                     Tabule.CilDefectTabule = unitConfig.Def3Smeny;
@@ -303,7 +301,7 @@ namespace Slevyr.DataAccess.Model
                 {
                     try
                     {
-                        double casNa1Kus = (double)delkaSmenySec / (double)Tabule.CilKusuTabule;
+                        double casNa1Kus = (double)DelkaSmenySec / (double)Tabule.CilKusuTabule;
                         var aktualniCil = UbehlyCasSmenySec / casNa1Kus;
                         Tabule.RozdilTabule = (int)Math.Round(Ok - aktualniCil);
                     }

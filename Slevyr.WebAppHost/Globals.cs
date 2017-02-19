@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Configuration;
+using System.IO.Ports;
 using Newtonsoft.Json;
 using SledovaniVyroby.SerialPortWraper;
 using Slevyr.DataAccess.Model;
@@ -9,8 +10,13 @@ using Slevyr.WebAppHost.Model;
 
 namespace Slevyr.WebAppHost
 {
+    /// <summary>
+    /// Globalne dostupne parametry a pole
+    /// </summary>
     public static class Globals
     {
+        public static readonly string ApiVersion = "1.1.2";
+
         public static RunConfig RunConfig { get; private set; }
         public static SerialPortConfig PortConfig { get; private set; }
 
@@ -26,7 +32,7 @@ namespace Slevyr.WebAppHost
 
         //public static IEnumerable<string> PowerUsers;
 
-        public static List<Model.User> Users;
+        public static List<User> Users;
 
         static Globals()
         {
@@ -37,43 +43,50 @@ namespace Slevyr.WebAppHost
            
             RunConfig = new RunConfig
             {
-                IsMockupMode = bool.Parse(ConfigurationManager.AppSettings["MockupMode"]),
-                IsRefreshTimerOn = bool.Parse(ConfigurationManager.AppSettings["IsRefreshTimerOn"]),
-                IsReadOkNgTime = bool.Parse(ConfigurationManager.AppSettings["IsReadOkNgTime"]),
+                IsMockupMode = Boolean.Parse(ConfigurationManager.AppSettings["MockupMode"]),
+                IsRefreshTimerOn = Boolean.Parse(ConfigurationManager.AppSettings["IsRefreshTimerOn"]),
+                IsReadOkNgTime = Boolean.Parse(ConfigurationManager.AppSettings["IsReadOkNgTime"]),
                 //IsWriteEmptyToLog = bool.Parse(ConfigurationManager.AppSettings["IsWriteEmptyToLog"]),
-                RefreshTimerPeriod = int.Parse(ConfigurationManager.AppSettings["RefreshTimerPeriod"]),
+                RefreshTimerPeriod = Int32.Parse(ConfigurationManager.AppSettings["RefreshTimerPeriod"]),
                 //WorkerSleepPeriod = int.Parse(ConfigurationManager.AppSettings["WorkerSleepPeriod"]),
-                RelaxTime = int.Parse(ConfigurationManager.AppSettings["RelaxTime"]),
-                ReadResultTimeOut = int.Parse(ConfigurationManager.AppSettings["ReadResultTimeOut"]),
-                SendCommandTimeOut = int.Parse(ConfigurationManager.AppSettings["SendCommandTimeOut"]),
-                MinCmdDelay = int.Parse(ConfigurationManager.AppSettings["MinCmdDelay"]),
-                UnitAddrs = ConfigurationManager.AppSettings["UnitAddrs"].Split(';').Select(int.Parse),
+                RelaxTime = Int32.Parse(ConfigurationManager.AppSettings["RelaxTime"]),
+                ReadResultTimeOut = Int32.Parse(ConfigurationManager.AppSettings["ReadResultTimeOut"]),
+                SendCommandTimeOut = Int32.Parse(ConfigurationManager.AppSettings["SendCommandTimeOut"]),
+                MinCmdDelay = Int32.Parse(ConfigurationManager.AppSettings["MinCmdDelay"]),
+                UnitAddrs = ConfigurationManager.AppSettings["UnitAddrs"].Split(';').Select(Int32.Parse),
                 JsonDataFilePath = ConfigurationManager.AppSettings["JsonFilePath"],
                 DbFilePath = ConfigurationManager.AppSettings["DbFilePath"],
-                SendAttempts = int.Parse(ConfigurationManager.AppSettings["SendAttempts"]),
+                SendAttempts = Int32.Parse(ConfigurationManager.AppSettings["SendAttempts"]),
                 DefaultExportFileName = ConfigurationManager.AppSettings["DefaultExportFileName"],                
             };
 
             bool b;
-            bool.TryParse(ConfigurationManager.AppSettings["IsWaitCommandResult"], out b); RunConfig.IsWaitCommandResult = b;
-            bool.TryParse(ConfigurationManager.AppSettings["UseDataReceivedEvent"], out b); RunConfig.UseDataReceivedEvent = b;
+            int i;
+            if (Boolean.TryParse(ConfigurationManager.AppSettings["IsWaitCommandResult"], out b)) RunConfig.IsWaitCommandResult = b;
+            if (Boolean.TryParse(ConfigurationManager.AppSettings["UseDataReceivedEvent"], out b)) RunConfig.UseDataReceivedEvent = b;
             var s = ConfigurationManager.AppSettings["DecimalSeparator"];
             if (!String.IsNullOrEmpty(s)) RunConfig.DecimalSeparator = s[0];
+
+            if (Int32.TryParse(ConfigurationManager.AppSettings["CycleForScheduledResetRf"], out i)) RunConfig.CycleForScheduledResetRf = i;
+            if (Boolean.TryParse(ConfigurationManager.AppSettings["AutoResetRF"], out b)) RunConfig.IsAutoResetRF = b;
+
+            Boolean.TryParse(ConfigurationManager.AppSettings["IsWaitCommandResult"], out b); RunConfig.IsWaitCommandResult = b;
+
 
             PortConfig = new SerialPortConfig
             {
                 Port = ConfigurationManager.AppSettings["Port"],
-                BaudRate = int.Parse(ConfigurationManager.AppSettings["BaudRate"]),
-                ReceivedBytesThreshold = int.Parse(ConfigurationManager.AppSettings["ReceivedBytesThreshold"]),
-                Parity = System.IO.Ports.Parity.None,
+                BaudRate = Int32.Parse(ConfigurationManager.AppSettings["BaudRate"]),
+                ReceivedBytesThreshold = Int32.Parse(ConfigurationManager.AppSettings["ReceivedBytesThreshold"]),
+                Parity = Parity.None,
                 DataBits = 8,
-                StopBits = System.IO.Ports.StopBits.One,
+                StopBits = StopBits.One,
             };           
 
-            bool.TryParse(ConfigurationManager.AppSettings["StartWebApi"], out StartWebApi);
-            bool.TryParse(ConfigurationManager.AppSettings["StartSwagger"], out StartSwagger);
-            bool.TryParse(ConfigurationManager.AppSettings["UseLocalHost"], out UseLocalHost);
-            int.TryParse(ConfigurationManager.AppSettings["WebAppPort"], out WebAppPort);
+            Boolean.TryParse(ConfigurationManager.AppSettings["StartWebApi"], out StartWebApi);
+            Boolean.TryParse(ConfigurationManager.AppSettings["StartSwagger"], out StartSwagger);
+            Boolean.TryParse(ConfigurationManager.AppSettings["UseLocalHost"], out UseLocalHost);
+            Int32.TryParse(ConfigurationManager.AppSettings["WebAppPort"], out WebAppPort);
             WwwRootDir = ConfigurationManager.AppSettings["www.rootDir"];
 
             var usersDef = ConfigurationManager.AppSettings["Users"]?.Split(';');

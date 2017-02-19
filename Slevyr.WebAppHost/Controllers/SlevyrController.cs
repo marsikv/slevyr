@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Web.Http;
 using NLog;
-using Slevyr.DataAccess.DAO;
 using Slevyr.DataAccess.Model;
 using Slevyr.DataAccess.Services;
 
@@ -21,8 +19,6 @@ namespace Slevyr.WebAppHost.Controllers
     {
         #region Fields
 
-        static readonly string ApiVersion = "1.2";
-
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         #endregion
@@ -32,90 +28,6 @@ namespace Slevyr.WebAppHost.Controllers
         static SlevyrController()
         {
             Logger.Info("+");     
-        }
-
-        #endregion
-
-        #region RunConfig
-
-        /// <summary>
-        /// Vrací verzi API
-        /// </summary>
-        /// <returns></returns>
-        [AllowAnonymous]
-        [HttpGet]
-        public String GetApiVersion()
-        {
-            Logger.Info("+");
-            
-            return ApiVersion;
-        }
-
-        /// <summary>
-        /// Vrací parametry běhové konfigurace, jako je umístění databáze, hodnoty timout parametrů apod.
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet]
-        public RunConfig GetConfig()
-        {
-            Logger.Info("+");
- 
-            return Globals.RunConfig;
-        }
-
-
-        [HttpGet]
-        public bool SetRunConfig([FromUri] bool isMockupMode,[FromUri] bool isTimerOn, [FromUri] int refreshTimerPeriod, [FromUri] bool readCasOkNg)
-        {
-            Logger.Info($"isMockupMode: {isMockupMode}, isTimerOn: {isTimerOn},timerPeriod: {refreshTimerPeriod}");
-            Globals.RunConfig.IsMockupMode = isMockupMode;
-            Globals.RunConfig.IsRefreshTimerOn = isTimerOn;
-            Globals.RunConfig.RefreshTimerPeriod = refreshTimerPeriod;
-            Globals.RunConfig.IsReadOkNgTime = readCasOkNg;
-            //RunConfig.PortReadTimeout = portReadTimeout;
-            //RunConfig.RelaxTime = relaxTime;
-
-            if (isTimerOn)
-                SlevyrService.StartSendReceiveWorkers();
-            else
-                SlevyrService.StopSendReceiveWorker();
-
-            SlevyrService.StartPacketWorker();
-
-            return true;
-        }
-
-        #endregion
-
-        #region open close port
-
-        [HttpGet]
-        public bool OpenPort()
-        {
-            Logger.Info("+");
-            try
-            {
-                if (Globals.RunConfig.IsMockupMode) return true;
-                SlevyrService.OpenPort();
-
-                Logger.Info($"Port name:{Globals.PortConfig.Port} isOpen:{SlevyrService.SerialPortIsOpen}");
-                return SlevyrService.SerialPortIsOpen;
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex);
-                throw;
-            }
-        }
-
-        [HttpGet]
-        public bool ClosePort()
-        {
-            Logger.Info("+");
-
-            SlevyrService.ClosePort();
-
-            return !SlevyrService.SerialPortIsOpen;
         }
 
         #endregion
@@ -301,21 +213,20 @@ namespace Slevyr.WebAppHost.Controllers
 
             if (Globals.RunConfig.IsMockupMode) return true;
 
-            double def1Val; 
-            double def2Val;
-            double def3Val;
+            float def1Val; 
+            float def2Val;
+            float def3Val;
 
-            if (!(double.TryParse(def1, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out def1Val) && 
-                double.TryParse(def2, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out def2Val) && 
-                double.TryParse(def3, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out def3Val)))
+            if (!(float.TryParse(def1, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out def1Val) &&
+                float.TryParse(def2, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out def2Val) &&
+                float.TryParse(def3, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out def3Val)))
             {
                 throw new ArgumentException("Neplatná hodnota pro cíl");
             }
 
             try
             {
-                Logger.Info($"cil1:{def1Val}");
-                return SlevyrService.NastavDefektivitu(addr, varianta, (short)(def1Val*10), (short)(def2Val*10), (short)(def3Val*10));
+                return SlevyrService.NastavDefektivitu(addr, varianta, def1Val, def2Val, def3Val);
             }
             catch (KeyNotFoundException)
             {
@@ -388,38 +299,6 @@ namespace Slevyr.WebAppHost.Controllers
         }
 
         #endregion
-
-        [HttpPost]
-        public void SaveUnitConfig([FromBody] UnitConfig unitCfg)
-        {
-            Logger.Info($"Addr:{unitCfg.Addr}");
-
-            try
-            {
-                SlevyrService.SaveUnitConfig(unitCfg);
-
-            }
-            catch (KeyNotFoundException)
-            {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
-            }
-        }
-
-        [HttpGet]
-        public UnitConfig GetUnitConfig([FromUri] byte addr)
-        {
-            Logger.Info($"Addr:{addr}");
-
-            try
-            {
-                var res = SlevyrService.GetUnitConfig(addr);
-                return res;
-            }
-            catch (KeyNotFoundException)
-            {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
-            }
-        }       
 
     }
 }

@@ -35,7 +35,7 @@
             <param name="exportVariant"></param>
             <returns></returns>
         </member>
-        <member name="M:Slevyr.WebAppHost.Controllers.ExportController.ExportPredefDownload(System.Int32,System.Int32)">
+        <member name="M:Slevyr.WebAppHost.Controllers.ExportController.ExportPredefDownload(System.Int32,System.Boolean,System.Int32)">
             <summary>
             Operace provádí download preddefinovaneho exportu z databáze
             </summary>
@@ -46,17 +46,55 @@
             <param name="exportVariant"></param>
             <returns>CSV soubor</returns>
         </member>
-        <member name="M:Slevyr.WebAppHost.Controllers.SlevyrController.GetApiVersion">
+        <member name="T:Slevyr.WebAppHost.Controllers.SysController">
+            <summary>
+            Controler pro systemove operace
+            </summary>
+        </member>
+        <member name="M:Slevyr.WebAppHost.Controllers.SysController.GetApiVersion">
             <summary>
             Vrací verzi API
             </summary>
             <returns></returns>
         </member>
-        <member name="M:Slevyr.WebAppHost.Controllers.SlevyrController.GetConfig">
+        <member name="M:Slevyr.WebAppHost.Controllers.SysController.GetRunConfig">
             <summary>
             Vrací parametry běhové konfigurace, jako je umístění databáze, hodnoty timout parametrů apod.
             </summary>
             <returns></returns>
+        </member>
+        <member name="M:Slevyr.WebAppHost.Controllers.SysController.SetRunConfig(System.Boolean,System.Boolean,System.Int32,System.Boolean)">
+            <summary>
+            Nastavuje parametry běhové konfigurace
+            </summary>
+            <param name="isMockupMode"></param>
+            <param name="isTimerOn"></param>
+            <param name="refreshTimerPeriod"></param>
+            <param name="readCasOkNg"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Slevyr.WebAppHost.Controllers.SysController.OpenPort">
+            <summary>
+            otevre COM port dany konfiguraci
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Slevyr.WebAppHost.Controllers.SysController.ClosePort">
+            <summary>
+            zavre COM port
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Slevyr.WebAppHost.Controllers.SysController.ResetRf">
+            <summary>
+            resetuje RF modul
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Slevyr.WebAppHost.Globals">
+            <summary>
+            Globalne dostupne parametry a pole
+            </summary>
         </member>
         <member name="F:Slevyr.WebAppHost.Service.components">
             <summary> 

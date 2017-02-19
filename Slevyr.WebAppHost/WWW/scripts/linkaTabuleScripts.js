@@ -1,4 +1,6 @@
-var uri = 'api/slevyr';
+﻿var uri = 'api/slevyr';
+var uriSys = 'api/sys';
+
 var isTimerEnabled = false;
 var refreshTimer;
 var addr = null;
@@ -14,18 +16,18 @@ var startAddr = null;
     $(document).ready(function () {
         readRunConfig();
 
-        $("#RefreshStatus").click(refreshStatus);
+        //$("#RefreshStatus").click(refreshStatus);     
 
         $("#GetStatus").click(getStatus);
 
         $("#AddrIdDropDown").change(onAddrIdChange);
 
         jQuery.ajaxSetup({ cache: false });
-
+ 
     });
 
     function readRunConfig() {
-        $.getJSON(uri + '/getConfig?')
+        $.getJSON(uriSys + '/getRunConfig?')
             .done(function (data) {
                 isTimerEnabled = data.IsRefreshTimerOn;
                 timerRefreshPeriod = data.RefreshTimerPeriod;
@@ -90,7 +92,7 @@ var startAddr = null;
     function readUnitConfig() {
         clearStatus();
         if (typeof addr != 'undefined' &&  addr != null && addr.length > 1)
-        $.getJSON(uri + '/GetUnitConfig?', {addr: addr})
+        $.getJSON(uriSys + '/GetUnitConfig?', {addr: addr})
             .done(function (data) {
                 $('#LinkaName').text(data.UnitName);
                 window.slVyr.addNotification('success', 'Sucessfully read unit config.');
@@ -110,16 +112,16 @@ var startAddr = null;
         $('#stav').text('...');
     }
 
-    function refreshStatus() {
-        clearStatus();
-        $.getJSON(uri + '/refreshStatus?Addr=' + addr)
-            .done(function (data) {
-                updateTableElements(data);
-            })
-            .fail(function (jqXHR, textStatus, err) {
-                window.slVyr.addNotification('error', 'RefreshStatus - error: ' + err);
-            });
-    }
+    //function refreshStatus() {
+    //    clearStatus();
+    //    $.getJSON(uri + '/refreshStatus?Addr=' + addr)
+    //        .done(function (data) {
+    //            updateTableElements(data);
+    //        })
+    //        .fail(function (jqXHR, textStatus, err) {
+    //            window.slVyr.addNotification('error', 'RefreshStatus - error: ' + err);
+    //        });
+    //}
 
     function getStatus() {
         $.getJSON(uri + '/getStatus?Addr=' + addr)
@@ -137,7 +139,7 @@ var startAddr = null;
             $('#ngNumValue').text(data.Ng);
             $('#okNgRefreshTime').text(data.OkNgTimeTxt);
         } else {
-            window.slVyr.addNotification('error', 'Chyba jednotky - error: ' + err);
+            window.slVyr.addNotification('error', 'Chyba jednotky - error: ');   //lepsi hlasku
         }
 
         if (data.Tabule.IsPrestavkaTabule) {
@@ -155,7 +157,9 @@ var startAddr = null;
         $('#cilDefTabule').text(data.Tabule.CilDefectTabule);
         $('#aktualniDefTabule').text(data.Tabule.AktualDefectTabuleTxt);
 
-        //$('#stav').text('');
+        $("#rozdilTabuleDiv").toggleClass('num--ok', data.Tabule.RozdilTabule >= 0);
+        $("#rozdilTabuleDiv").toggleClass('num--bad', data.Tabule.RozdilTabule < 0);
+
         if (data.MachineStatus == 0)
             $('#stav').text('Vyroba');
         else

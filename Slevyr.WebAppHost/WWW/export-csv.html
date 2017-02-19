@@ -83,22 +83,26 @@
                     <input id="linkaId" class="input" name="linkaId" type="number" value="100"/>
                 </div>
 
-                <input id="radioDownloadId" type="radio" name="transferType" value="download" checked="checked"> Stáhnout<br>
-                <input id="radioSaveId" type="radio" name="transferType" value="save"> Uložit na serveru<br>
+                <div class="params--item">
+                    <input id="exportAll" type="checkbox" checked="checked">
+                    <label for="exportAll" class="checkbox">Exportovat za všechny linky </label>
+                </div>
 
-                <div id="saveParams" style="display:none">
+                <div class="params--item">
+                    <input id="radioDownloadId" type="radio" name="transferType" value="download" checked="checked"> Stáhnout<br>
+                    <input id="radioSaveId" type="radio" name="transferType" value="save"> Uložit na serveru<br>
+                </div>
+
+                <div id="saveParams" style="display: none">
+                    <h3>Nastavení výstupu na server</h3>
                     <div class="params--item params--item-2">
                         <div class="label">Výstupní soubor</div>
-                        <input id="exportFilename" 
+                        <input id="exportFilename"
                                class="input"
                                name="fileName"
                                type="text"
                                value="c:\temp\export.csv"
                                placeholder="export.csv"/>
-                    </div>
-                    <div class="params--item params--item-2-last">
-                        <input id="exportAll" type="checkbox" checked="checked" >
-                        <label for="exportAll" class="checkbox" >Exportovat za všechny linky</label>
                     </div>
                     <div class="params--item params--item-2-last">
                         <input id="exportAllSeparated" type="checkbox">

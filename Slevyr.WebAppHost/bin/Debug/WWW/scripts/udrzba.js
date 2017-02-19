@@ -1,6 +1,8 @@
-﻿var tabule = $('#udrzba');
-var uriUdrzba = 'api/udrzba';
+﻿var uriUdrzba = 'api/udrzba';
 var uriSlevyr = 'api/slevyr';
+var uriSys = 'api/sys';
+
+var tabule = $('#udrzba');
 var isTimerEnabled = false;
 var refreshTimer;
 
@@ -29,7 +31,8 @@ function formatTable(data) {
 
     if (data.length <= 0) {
         var html = '<div class="tabule">' +
-            '<div class="tabule--NameBig">Žádná porucha nebo servis stroje</div>' +
+            //'<div class="tabule--NameBig">Žádná porucha nebo servis stroje</div>' +
+            '<div> <h1>Žádná porucha nebo servis stroje</h1></div>' +
             '<div class=""> <img src="images/steam.png" title="Žádná porucha nebo servis" alt=""></div>' +
         '</div>';
 
@@ -50,7 +53,7 @@ function formatTable(data) {
 }
 
 function readRunConfig() {
-    $.getJSON(uriSlevyr + '/getConfig?')
+    $.getJSON(uriSys + '/getRunConfig?')
         .done(function (data) {
             isTimerEnabled = data.IsRefreshTimerOn;
             var timerRefreshPeriod = data.RefreshTimerPeriod;

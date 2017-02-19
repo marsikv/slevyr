@@ -17,6 +17,9 @@ namespace Slevyr.DataAccess.DAO
 
         const string DbFileName = @"slevyr.sqlite";
         const string DefaultDbFolder = @"Sqlite";
+
+        //SQL CREATE TABLE
+
         const string SqlCreateUnitstatusTable = @"CREATE TABLE `observations` (
     `id` INTEGER PRIMARY KEY AUTOINCREMENT,
 	`obTime`	TIMESTAMP  DEFAULT CURRENT_TIMESTAMP,
@@ -25,28 +28,41 @@ namespace Slevyr.DataAccess.DAO
 	`isPrestavka`	bool,
 	`cilOk`	INTEGER,
 	`pocetOk`	INTEGER,
-	`casPoslednihoOk`	INTEGER,
+	`casPoslednihoOk`	REAL,
 	`prumCasVyrobyOk`	REAL,
 	`cilNg`	INTEGER,
 	`pocetNg`	INTEGER,
-	`casPoslednihoNg`	INTEGER,
+	`casPoslednihoNg`	REAL,
 	`prumCasVyrobyNg`	REAL,
 	`rozdil`	INTEGER,
 	`atualniDefectivita`	REAL,
-	`stavLinky`	INTEGER
+	`stavLinky`	INTEGER,
+    `operator`	TEXT,
+    `rezerva`	INTEGER,
+    `isFinal`	bool DEFAULT false
 );";
+
+        const string SqlCreateStavLinkyTable = @"CREATE TABLE `ProductionLineStatus` 
+                (`id`	INTEGER,	`name`	TEXT);";
+
+        const string SqlCreateMetaTable = @"CREATE TABLE `SchemaVersion` 
+                (`version`	TEXT ,
+                 `createTime`	TIMESTAMP  DEFAULT CURRENT_TIMESTAMP
+                );";
+
+        //SQL update
+
+        const string SqlInsertIntoMeta = @"insert into SchemaVersion (version) values ('1.1');";
 
         const string SqlInsertStatusIntoObservation = @"insert into observations 
                 (cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
 
         const string SqlInsertLastStatusIntoObservations = @"insert into observations 
-                (obTime,cmd,unitId,pocetOk,casPoslednihoOk,pocetNg,casPoslednihoNg,rozdil,atualniDefectivita,stavLinky) values ";
+                (obTime,cmd,unitId,pocetOk,casPoslednihoOk,pocetNg,casPoslednihoNg,rozdil,atualniDefectivita,stavLinky,isFinal) values ";
 
         const string SqlUpdateStatusIntoObservations =
                 @"update observations set casPoslednihoOk=@casOk, casPoslednihoNg=@casNg where id=@id";
 
-        const string SqlCreateStavLinkyTable = @"CREATE TABLE `ProductionLineStatus` 
-                (`id`	INTEGER,	`name`	TEXT);";
 
         //const string SqlExportToCsv = "select datetime(obTime,'localtime') as time,cmd,unitId,isPrestavka,cilOk,pocetOk,printf(\"%.2f\", casPoslednihoOk),"+
         //                              "printf(\"%.2f\", prumCasVyrobyOk),cilNg,pocetNg,printf(\"%.2f\", casPoslednihoNg),printf(\"%.2f\", prumCasVyrobyNg)," +
@@ -87,7 +103,7 @@ namespace Slevyr.DataAccess.DAO
 
         private static void CreateDatabase(string dbFolder)
         {
-            Logger.Info($"Db folder:{dbFolder}");
+            Logger.Info($"*** Create Db - folder:{dbFolder} ***");
 
             MakeDbFilePath(dbFolder);
 
@@ -104,22 +120,36 @@ namespace Slevyr.DataAccess.DAO
                 }
             }
 
-            SQLiteConnection.CreateFile(_dbFilePath);
-
-            using (var connection = new SQLiteConnection($"Data Source={_dbFilePath};Version=3;"))
+            try
             {
-                connection.Open();
+                SQLiteConnection.CreateFile(_dbFilePath);
 
-                var command = new SQLiteCommand(SqlCreateUnitstatusTable, connection);
-                command.ExecuteNonQuery();
+                using (var connection = new SQLiteConnection($"Data Source={_dbFilePath};Version=3;"))
+                {
+                    connection.Open();
 
-                command = new SQLiteCommand(SqlCreateStavLinkyTable, connection);
-                command.ExecuteNonQuery();
+                    var command = new SQLiteCommand(SqlCreateUnitstatusTable, connection);
+                    command.ExecuteNonQuery();
 
-                command = new SQLiteCommand(SqlCreateIndex, connection);
-                command.ExecuteNonQuery();
+                    command = new SQLiteCommand(SqlCreateStavLinkyTable, connection);
+                    command.ExecuteNonQuery();
 
-                connection.Close();
+                    command = new SQLiteCommand(SqlCreateMetaTable, connection);
+                    command.ExecuteNonQuery();
+
+                    command = new SQLiteCommand(SqlInsertIntoMeta, connection);
+                    command.ExecuteNonQuery();
+
+                    command = new SQLiteCommand(SqlCreateIndex, connection);
+                    command.ExecuteNonQuery();
+
+                    connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex);
+                throw;
             }
             
         }
@@ -148,9 +178,9 @@ namespace Slevyr.DataAccess.DAO
         {
             //(cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
             string sql = SqlInsertStatusIntoObservation +
-                         $"(4,{addr},{(u.Tabule.IsPrestavkaTabule ? 1 : 0)},{u.Tabule.CilKusuTabule},{u.Ok},{u.CasOkStr}," +
+                         $"(4,{addr},{(u.Tabule.IsPrestavkaTabule ? 1 : 0)},{u.Tabule.CilKusuTabule},{u.Ok},{u.CasOk}," +
                          $"{u.PrumCasVyrobyOkStr},{u.Tabule.CilDefectTabuleStr}," +
-                         $"{u.Ng},{u.CasNgStr},{u.PrumCasVyrobyNgStr}," +
+                         $"{u.Ng},{u.CasNg},{u.PrumCasVyrobyNgStr}," +
                          $"{u.Tabule.RozdilTabule},{u.Tabule.AktualDefectTabuleStr},{(int)u.Tabule.MachineStatus})";
 
 
@@ -182,7 +212,8 @@ namespace Slevyr.DataAccess.DAO
                        $"{u.LastOk},null," +  //posledni cas ok neznam
                        $"{u.LastNg},null," +  //posledni cas ng neznam
                        $"{rozdil},{defectivitaStr}," +  
-                       $"{(int)u.Tabule.MachineStatus})";
+                       $"{(int)u.Tabule.MachineStatus}," +
+                       "true)";   //isFinal = posledni hodnota pred ukoncenim smeny
 
             Logger.Info(sql);
 

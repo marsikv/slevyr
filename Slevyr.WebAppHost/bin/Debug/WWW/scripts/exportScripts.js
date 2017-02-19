@@ -1,6 +1,7 @@
 
 var uriBase = 'api/slevyr';
 var uriExport = 'api/export';
+var uriSys = 'api/export';
 
 $(document).ready(function () {
     readRunConfig();
@@ -32,7 +33,7 @@ $(document).ready(function () {
 });
 
 function readRunConfig() {
-    $.getJSON(uriBase + '/getConfig?')
+    $.getJSON(uriSys + '/getRunConfig?')
         .done(function (data) {
             $('#exportFilename').val(data.DefaultExportFileName);
         })
@@ -100,8 +101,8 @@ function exportIntervalDownload() {
     var expAll = $('#exportAll').prop('checked');
     var expAllSepar = $('#exportAllSeparated').prop('checked');
 
-    Download('api/export/ExportIntervalDownload?fileName=' + fileName + '&timeFrom=' + timeFrom +'&timeTo=' + timeFrom+'&timeTo=' + timeTo +
-        '&unitId=' + unitId + '&expAll=' + expAll + '&expAllSepar=' + expAllSepar);
+    Download('api/export/ExportIntervalDownload?fileName=' + fileName + '&timeFrom=' + timeFrom +
+        '&timeTo=' + timeTo + '&unitId=' + unitId + '&expAll=' + expAll + '&expAllSepar=' + expAllSepar);
 }
 
 function exportPredefSave() {
@@ -139,6 +140,8 @@ function exportPredefSave() {
 function exportPredefDownload() {
     var targetid = event.target.id;
     var expVar = 0;
+    var expAll = $('#exportAll').prop('checked');
+    var unitId = $('#linkaId').val();
     //alert('exportInterval id:' + tid);
 
     if (targetid == "ExportCsv1")
@@ -148,7 +151,7 @@ function exportPredefDownload() {
     else if (targetid == "ExportCsv3")
         expVar = 3;
 
-    Download('api/export/ExportPredefDownload?unitId=' + $('#linkaId').val() + '&exportVariant=' + expVar);
+    Download('api/export/ExportPredefDownload?unitId=' + unitId + '&expAll=' + expAll + '&exportVariant=' + expVar);
 }
 
 

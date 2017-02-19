@@ -32,7 +32,7 @@ namespace Slevyr.WebAppHost.Middleware
                     claimsIdentity = context.Authentication.User?.Identity as System.Security.Claims.ClaimsIdentity;
                     if (claimsIdentity != null) userName = claimsIdentity.Name;
 
-                    Logger.Info($"user:{userName} ip:{ipAddress}");
+                    Logger.Debug($"user:{userName} ip:{ipAddress}");
                 }
                 catch (Exception ex)
                 {

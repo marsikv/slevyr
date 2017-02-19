@@ -27,7 +27,7 @@ namespace UnitTest
                 Parity = System.IO.Ports.Parity.None,
                 DataBits = 8,
                 StopBits = System.IO.Ports.StopBits.One,
-                ReceiveLength = 11
+                //ReceiveLength = 11
             };
         }
 

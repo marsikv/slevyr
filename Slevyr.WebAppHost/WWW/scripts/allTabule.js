@@ -1,5 +1,8 @@
-﻿var tabule = $('#tabule');
-var uri = 'api/slevyr';
+﻿var uri = 'api/slevyr';
+var uriBase = 'api/slevyr';
+var uriSys = 'api/sys';
+
+var tabule = $('#tabule');
 var isTimerEnabled = false;
 var refreshTimer;
 
@@ -26,11 +29,15 @@ function getAllTabule() {
 function formatTable(data) {
     $('#tabule').empty();
 
-
-    //<a href="index.html">Home</a>
-
     data.forEach(function (unitTabule) {
-        var html = '<div class="tabule">' +
+        var html;
+
+        if (unitTabule.MachineStatus <= 1)
+            html = '<div class="tabuleGood">';
+        else
+            html = '<div class="tabuleBad">';
+
+        html = html +
             //'<div class="tabule--Name">' + unitTabule.LinkaName + '</div>' +
             '<div class="tabule--Name">' + '<a href="linka-tabule.html#'+unitTabule.Addr+'">'+unitTabule.LinkaName+'</a>' + '</div>' +
             '<div class="tabule--row" data-title="Cíl">' + unitTabule.CilKusuTabule + '</div>' +
@@ -51,7 +58,7 @@ function formatTable(data) {
 }
 
 function readRunConfig() {
-    $.getJSON(uri + '/getConfig?')
+    $.getJSON(uriSys + '/getRunConfig?')
         .done(function (data) {
             isTimerEnabled = data.IsRefreshTimerOn;
             var timerRefreshPeriod = data.RefreshTimerPeriod;

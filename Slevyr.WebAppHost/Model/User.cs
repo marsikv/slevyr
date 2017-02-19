@@ -14,7 +14,7 @@ namespace Slevyr.WebAppHost.Model
 
         private readonly string Pswdhash;
 
-        private static readonly MD5CryptoServiceProvider Md5Provider = new MD5CryptoServiceProvider();
+        //private static readonly MD5CryptoServiceProvider Md5Provider = new MD5CryptoServiceProvider();
 
         #endregion
 
@@ -85,6 +85,8 @@ namespace Slevyr.WebAppHost.Model
         public string MD5Hash(string input)
         {
             StringBuilder hash = new StringBuilder();
+            MD5CryptoServiceProvider Md5Provider = new MD5CryptoServiceProvider();
+
             byte[] bytes = Md5Provider.ComputeHash(new UTF8Encoding().GetBytes(input));
 
             for (int i = 0; i < bytes.Length; i++)

@@ -1,15 +1,17 @@
 var uri = 'api/slevyr';
+var uriSys = 'api/sys';
 
     $(document).ready(function () {
         readRunConfig();
         $("#Apply").click(applySettings);
         $("#SyncTime").click(nastavAktualniCas);
+        $("#ResetRf").click(resetRf);
         jQuery.ajaxSetup({ cache: false });
     });
 
     function readRunConfig() {
         //alert('readConfig');
-        $.getJSON(uri + '/getConfig?')
+        $.getJSON(uriSys + '/getRunConfig?')
             .done(function (data) {
                 //$('#isMockupMode').prop('checked',data.IsMockupMode);
                 $('#isTimerOn').prop('checked', data.IsRefreshTimerOn);
@@ -23,14 +25,13 @@ var uri = 'api/slevyr';
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'Load Configuration Error: ' + err);
                 //$('#error').text('Error: ' + err);
-                //alert("getConfig - error");
             });
     }
 
 
     function applySettings() {
         //alert('applySettings');
-        $.getJSON(uri + '/setRunConfig',
+        $.getJSON(uriSys + '/setRunConfig',
             {
                 //isMockupMode: $('#isMockupMode').prop('checked'),
                 isMockupMode: false,
@@ -46,7 +47,6 @@ var uri = 'api/slevyr';
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'Set Configuration Error: ' + err);
                 // $('#error').text('Error: ' + err);
-                // alert("setRunConfig - error");
             });
     }
 
@@ -60,7 +60,17 @@ var uri = 'api/slevyr';
             })
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'Synchronization Error: ' + err);
-                // $('#stav').text('Error: ' + err);
-                // alert("'); - error");
+            });
+    }
+
+    function resetRf() {
+        $.getJSON(uriSys + '/ResetRf',
+            {
+            })
+            .done(function (data) {
+                window.slVyr.addNotification('success', 'Požadavek na reset RF');
+            })
+            .fail(function (jqXHR, textStatus, err) {
+                window.slVyr.addNotification('error', 'Reset RF Error: ' + err);
             });
     }

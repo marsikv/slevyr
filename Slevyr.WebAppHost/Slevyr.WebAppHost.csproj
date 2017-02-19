@@ -170,6 +170,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\ExportController.cs" />
+    <Compile Include="Controllers\SysController.cs" />
     <Compile Include="Controllers\UdrzbaController.cs" />
     <Compile Include="Middleware\AuthMiddleware.cs" />
     <Compile Include="SwaggerConfig.cs" />
@@ -217,6 +218,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="WWW\images\menu-params.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="WWW\images\menu-maintenance.svg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="WWW\images\menu-settings.svg">

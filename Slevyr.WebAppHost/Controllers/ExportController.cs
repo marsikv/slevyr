@@ -185,12 +185,12 @@ namespace Slevyr.WebAppHost.Controllers
         /// <param name="exportVariant"></param>
         /// <returns>CSV soubor</returns>
         [HttpGet]
-        public IHttpActionResult ExportPredefDownload( [FromUri]int unitId, [FromUri]int exportVariant)
+        public IHttpActionResult ExportPredefDownload( [FromUri]int unitId, [FromUri]bool expAll, [FromUri]int exportVariant)
         {
 
             var exportDef = new IntervalExportDef()
             {
-                ExportAll = false,
+                ExportAll = expAll,
                 UnitId = unitId,
                 ExportAllSeparated = false
             };

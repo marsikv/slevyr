@@ -92,7 +92,7 @@ namespace Slevyr.WebAppHost
         {
             HttpClient client = new HttpClient();
 
-            var response = client.GetAsync(baseAddress + "api/slevyr/getApiVersion").Result;
+            var response = client.GetAsync(baseAddress + "api/sys/getApiVersion").Result;
 
             if (response != null)
             {

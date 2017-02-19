@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO.Ports;
+using System.Threading;
 using System.Threading.Tasks;
 
 
@@ -40,30 +41,42 @@ namespace SledovaniVyroby.SerialPortWraper
 
         #region Public Methods
 
+        public void Write(byte[] inBuff, int buffLength)
+        {
+            base.Write(inBuff, 0, buffLength);
+        }
+
         public async Task WriteAsync(byte[] buffer, int count)
         {
             await this.BaseStream.WriteAsync(buffer, 0, count);
         }
 
-        private async Task ReadAsync( byte[] buffer, int offset, int count)
+        private async Task ReadAsync( byte[] buffer, int offset, int count, CancellationToken token)
         {
             int bytesToRead = count;
             var temp = new byte[count];
 
             while (bytesToRead > 0)
             {
-                int readed = await this.BaseStream.ReadAsync(temp, 0, bytesToRead);
+                if (token.IsCancellationRequested)
+                {
+                    //clear buffer ?                    
+                    return;
+                }
+                int readed = await this.BaseStream.ReadAsync(temp, 0, bytesToRead, token);
                 Array.Copy(temp, 0, buffer, offset + count - bytesToRead, readed);
                 bytesToRead -= readed;
             }
         }
 
-        public async Task<byte[]> ReadAsync(int count)
+        public async Task<byte[]> ReadAsync(int count, CancellationToken token)
         {
             var data = new byte[count];
-            await this.ReadAsync(data, 0, count);
+            await this.ReadAsync(data, 0, count, token);
             return data;
         }
+
+
 
         //public new void Open()
         //{
@@ -122,6 +135,7 @@ namespace SledovaniVyroby.SerialPortWraper
 
             base.Dispose(disposing);
         }
+
 
         #endregion
     }

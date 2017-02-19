@@ -8,6 +8,8 @@ namespace Slevyr.DataAccess.Model
         public bool IsRefreshTimerOn;         //predava se do HTML strance "LinkaTabule" a aktivuje timer nacitani stavu
         public int RefreshTimerPeriod = 3000; //perioda [ms] predavana pro timer nacitani stavu pomoci JS v HTML strance "LinkaTabule"
 
+        public int PriorityCommandTimeOut = 10000; //timeout pro prioritni prikazy, jako je treba nastaveni jednotek nebo ResetRF
+
         //public int WorkerSleepPeriod = 100;   //doba [ms] po kterou spi worker pred tim nez nacte stav dalsi jednotky
         public int RelaxTime = 300;           //cekame [ms] nez se posle dalsi pozadavek 
         public int SendCommandTimeOut = 350;  //timeout [ms] pro nacitani potvrzeni odeslaneho prikazu
@@ -37,5 +39,14 @@ namespace Slevyr.DataAccess.Model
 
         /// <summary>  znak pro separator desetinne casti v CSV exportu  </summary>
         public char DecimalSeparator = ',';
+
+        /// <summary>pocet cyklu pro kterych se provede planovany reset RF - nepovinny</summary>
+        public int? CycleForScheduledResetRf;
+
+        /// <summary>vraci zda se provede planovany reset RF </summary>
+        public bool IsScheduledResetRF => CycleForScheduledResetRf.HasValue && CycleForScheduledResetRf > 0;
+
+        /// <summary> Provede reset RF kdyz je detekovane vetsi mnozstvi chyb a testovaci paket neni potrzen </summary>
+        public bool IsAutoResetRF;
     }
 }

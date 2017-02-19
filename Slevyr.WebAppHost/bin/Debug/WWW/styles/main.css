@@ -111,6 +111,10 @@ a {
     background-image: url(../images/menu-tabule.svg);
 }
 
+.menu--item-maintenance:before {
+    background-image: url(../images/menu-maintenance.svg);
+}
+
 .menu--item-params:before {
     background-image: url(../images/menu-params.svg);
 }
@@ -216,6 +220,14 @@ a {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
+.linka--num-bad {
+   border-color : red;
+}
+
+.linka--num-good {
+   border-color : greenyellow;
+}
+
 @media screen and (max-width: 480px) {
     .linka--num {
         margin: 0 1em 1em 0;
@@ -248,9 +260,27 @@ a {
     font-size: 1em;
 }
 
-.num span {
+.num-ok {
+    font-size: 1em;
+}
+
+.num--bad {
+    font-size: 1em;
+}
+
+.num--bad span {
+    font-size: 3em;
+    color: red;
+}
+
+.num--ok span {
     font-size: 3em;
     color: teal;
+}
+
+.num span {
+    font-size: 3em;
+    color: teal;\
 }
 
 @media screen and (max-width: 480px) {
@@ -617,6 +647,7 @@ aside {
     flex-wrap: wrap;
 }
 
+
 .tabule {
     min-width: 234px;
     margin-right: 1em;
@@ -624,6 +655,35 @@ aside {
     padding: .5em 1em;
     background-color: #fff;
     border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    flex: 1;
+}
+
+
+.tabuleGood {
+    min-width: 234px;
+    margin-right: 1em;
+    margin-bottom: 1em;
+    padding: .5em 1em;
+    background-color: #fff;
+    border-radius: 4px;
+    border-color: green;
+    border-width: 2px;
+    border-style: solid;
+    box-shadow: 0 1px 3px rgba(100, 0, 0, 0.15);
+    flex: 1;
+}
+
+.tabuleBad {
+    min-width: 234px;
+    margin-right: 1em;
+    margin-bottom: 1em;
+    padding: .5em 1em;
+    background-color: #fff;
+    border-radius: 4px;
+    border-color: red;
+    border-width: 2px;
+    border-style: solid;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
     flex: 1;
 }
