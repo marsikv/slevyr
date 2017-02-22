@@ -112,17 +112,6 @@ var startAddr = null;
         $('#stav').text('...');
     }
 
-    //function refreshStatus() {
-    //    clearStatus();
-    //    $.getJSON(uri + '/refreshStatus?Addr=' + addr)
-    //        .done(function (data) {
-    //            updateTableElements(data);
-    //        })
-    //        .fail(function (jqXHR, textStatus, err) {
-    //            window.slVyr.addNotification('error', 'RefreshStatus - error: ' + err);
-    //        });
-    //}
-
     function getStatus() {
         $.getJSON(uri + '/getStatus?Addr=' + addr)
             .done(function (data) {
@@ -154,11 +143,16 @@ var startAddr = null;
 
         $('#cilTabule').text(data.Tabule.CilKusuTabule);
         $('#rozdilTabule').text(data.Tabule.RozdilTabuleTxt);
-        $('#cilDefTabule').text(data.Tabule.CilDefectTabule);
+        $('#cilDefTabule').text(data.Tabule.CilDefectTabuleTxt);
         $('#aktualniDefTabule').text(data.Tabule.AktualDefectTabuleTxt);
 
         $("#rozdilTabuleDiv").toggleClass('num--ok', data.Tabule.RozdilTabule >= 0);
         $("#rozdilTabuleDiv").toggleClass('num--bad', data.Tabule.RozdilTabule < 0);
+
+        if (!isNaN(data.Tabule.AktualDefectTabule)) {
+            $("#aktualniDefDiv").toggleClass('num--ok', data.Tabule.AktualDefectTabule <= data.Tabule.CilDefectTabule);
+            $("#aktualniDefDiv").toggleClass('num--bad', data.Tabule.AktualDefectTabule > data.Tabule.CilDefectTabule);
+        }
 
         if (data.MachineStatus == 0)
             $('#stav').text('Vyroba');

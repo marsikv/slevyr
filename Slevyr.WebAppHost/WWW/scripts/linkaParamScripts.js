@@ -1,4 +1,4 @@
-var uriBase = 'api/slevyr';
+var uri = 'api/slevyr';
 var uriExport = 'api/export';
 var uriSys = 'api/sys';
 

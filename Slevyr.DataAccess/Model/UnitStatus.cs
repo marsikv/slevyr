@@ -73,6 +73,8 @@ namespace Slevyr.DataAccess.Model
         /// </summary>
         public float CasOk { get; set; }
 
+        public string CasOkStr => CasOk.ToString(CultureInfo.InvariantCulture);
+
         /// <summary>
         /// Průměrný čas OK kusu, sekundy na desetiny
         /// </summary>
@@ -82,8 +84,6 @@ namespace Slevyr.DataAccess.Model
         /// Průměrný čas NG kusu, sekundy na desetiny
         /// </summary>
         public float AvgCasNg { get; set; }
-
-        public string CasOkStr => CasOk.ToString(CultureInfo.InvariantCulture);
 
         public float PrumCasVyrobyOk => (Ok != 0) ? UbehlyCasSmenySec /(float) Ok:float.NaN;
 
@@ -101,6 +101,7 @@ namespace Slevyr.DataAccess.Model
         /// </summary>
         public float CasNg { get; set; }
         public string CasNgStr => CasNg.ToString(CultureInfo.InvariantCulture);
+
         //public DateTime CasNgTime { get; set; }
         //public bool IsCasNg { get; set; }
         public int RozdilKusu { get; set; }  
@@ -313,7 +314,7 @@ namespace Slevyr.DataAccess.Model
 
                     try
                     {
-                        Tabule.AktualDefectTabule = (float)Ng / (float)Ok;
+                        Tabule.AktualDefectTabule = (float)Ng / (float)Ok * 100;
                     }
                     catch (Exception)
                     {

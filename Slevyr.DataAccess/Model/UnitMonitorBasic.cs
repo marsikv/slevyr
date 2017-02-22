@@ -142,6 +142,17 @@ namespace Slevyr.DataAccess.Model
             }, checkSendConfirmation);
         }
 
+        public bool TestCommand()
+        {
+            ClearSendBuffer();
+
+            _sendBuff[0] = (byte)1;
+
+            var res = SendCommandCore(UnitMonitor.CmdTestPacket, true);
+
+            return res;
+        }
+
 
         public bool SendCommand(byte cmd, bool checkSendConfirmation = true)
         {
@@ -181,7 +192,7 @@ namespace Slevyr.DataAccess.Model
             bool res = false;
             Logger.Debug($"+ cmd:{cmd}");
 
-            PrepareCommand(cmd);
+            if (cmd != 0) PrepareCommand(cmd);
 
             if (!SlevyrService.CheckIsPortOpen()) return false;
 

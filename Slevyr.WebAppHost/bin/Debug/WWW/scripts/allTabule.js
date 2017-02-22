@@ -37,13 +37,15 @@ function formatTable(data) {
         else
             html = '<div class="tabuleBad">';
 
+        var rozdilClass = (unitTabule.RozdilTabule < 0) ? 'class="num--bad"' : '';
+        var actDefectClass = (unitTabule.AktualDefectTabule > unitTabule.CilDefectTabule) ? 'class="num--bad"' : '';
+
         html = html +
-            //'<div class="tabule--Name">' + unitTabule.LinkaName + '</div>' +
             '<div class="tabule--Name">' + '<a href="linka-tabule.html#'+unitTabule.Addr+'">'+unitTabule.LinkaName+'</a>' + '</div>' +
             '<div class="tabule--row" data-title="Cíl">' + unitTabule.CilKusuTabule + '</div>' +
-            '<div class="tabule--row" data-title="Rozdíl">' + unitTabule.RozdilTabuleTxt + '</div>' +
+            '<div class="tabule--row" data-title="Rozdíl"><span ' + rozdilClass + '>' + unitTabule.RozdilTabuleTxt + '</span></div>' +
             '<div class="tabule--row" data-title="Cíl defektivita">' + unitTabule.CilDefectTabule + '</div>' +
-            '<div class="tabule--row" data-title="Aktualni defektivita">' + unitTabule.AktualDefectTabuleTxt + '</div>';
+            '<div class="tabule--row" data-title="Aktualni defektivita"><span ' + actDefectClass + '>' + unitTabule.AktualDefectTabuleTxt + '</span></div>';
        
         if (unitTabule.IsPrestavkaTabule) {
             html = html + '<div class="tabule--rowCenterEnhanced"> Přestávka </div>';

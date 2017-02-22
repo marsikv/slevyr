@@ -178,20 +178,30 @@ namespace Slevyr.DataAccess.DAO
         {
             //(cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
             string sql = SqlInsertStatusIntoObservation +
-                         $"(4,{addr},{(u.Tabule.IsPrestavkaTabule ? 1 : 0)},{u.Tabule.CilKusuTabule},{u.Ok},{u.CasOk}," +
+                         $"(4,{addr},{(u.Tabule.IsPrestavkaTabule ? 1 : 0)},{u.Tabule.CilKusuTabule},{u.Ok},{u.CasOkStr}," +
                          $"{u.PrumCasVyrobyOkStr},{u.Tabule.CilDefectTabuleStr}," +
-                         $"{u.Ng},{u.CasNg},{u.PrumCasVyrobyNgStr}," +
+                         $"{u.Ng},{u.CasNgStr},{u.PrumCasVyrobyNgStr}," +
                          $"{u.Tabule.RozdilTabule},{u.Tabule.AktualDefectTabuleStr},{(int)u.Tabule.MachineStatus})";
 
 
-            Logger.Info(sql);
+            Logger.Debug(sql);
 
-            SQLiteCommand command = new SQLiteCommand(sql, _dbConnection);
-            command.ExecuteNonQuery();
+            try
+            {
+                SQLiteCommand command = new SQLiteCommand(sql, _dbConnection);
+                command.ExecuteNonQuery();
 
-            sql = @"select last_insert_rowid()";
-            command = new SQLiteCommand(sql, _dbConnection);
-            return (long) command.ExecuteScalar();
+                sql = @"select last_insert_rowid()";
+                command = new SQLiteCommand(sql, _dbConnection);
+
+                return (long)command.ExecuteScalar();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex);
+                throw;
+            }
+
         }
 
         public static void AddUnitKonecSmenyState(byte addr, byte cmd, UnitStatus u, TimeSpan zacatekNoveSmeny, int cilSmeny )
@@ -215,27 +225,44 @@ namespace Slevyr.DataAccess.DAO
                        $"{(int)u.Tabule.MachineStatus}," +
                        "true)";   //isFinal = posledni hodnota pred ukoncenim smeny
 
-            Logger.Info(sql);
+            Logger.Debug(sql);
+            Logger.Info($"konec smeny adr:{addr}");
 
-            SQLiteCommand command = new SQLiteCommand(sql, _dbConnection);
-            command.ExecuteNonQuery();
+            try
+            {
+                SQLiteCommand command = new SQLiteCommand(sql, _dbConnection);
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex);
+                throw;
+            }
 
         }
 
         public static void UpdateUnitStateCasOk(byte addr, long lastId, UnitStatus u)
         {
-            SQLiteCommand command = new SQLiteCommand(SqlUpdateStatusIntoObservations, _dbConnection)
+            try
             {
-                CommandType = CommandType.Text
-            };
+                SQLiteCommand command = new SQLiteCommand(SqlUpdateStatusIntoObservations, _dbConnection)
+                {
+                    CommandType = CommandType.Text
+                };
 
-            command.Parameters.Add(new SQLiteParameter("@casOk", u.CasOk));
-            command.Parameters.Add(new SQLiteParameter("@casNg", u.CasNg));
-            command.Parameters.Add(new SQLiteParameter("@id", lastId));
+                command.Parameters.Add(new SQLiteParameter("@casOk", u.CasOk));
+                command.Parameters.Add(new SQLiteParameter("@casNg", u.CasNg));
+                command.Parameters.Add(new SQLiteParameter("@id", lastId));
 
-            //Logger.Info(sql);
+                //Logger.Info(sql);
 
-            command.ExecuteNonQuery();
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex);
+                throw;
+            }
         }
 
         //takto lze vypsat cas v lokalnim formatovani:

@@ -266,6 +266,7 @@ a {
 
 .num--bad {
     font-size: 1em;
+    color: red;
 }
 
 .num--bad span {
@@ -506,7 +507,7 @@ table tr td {
     }
 }
 
-/* NOTIFOCATION */
+/* NOTIFICATION */
 
 aside {
     width: 100%;
@@ -627,7 +628,7 @@ aside {
     }
 }
 
-/* ANIAMTION */
+/* ANIMATION */
 
 @keyframes notificationUp {
     from {
@@ -679,7 +680,7 @@ aside {
     margin-right: 1em;
     margin-bottom: 1em;
     padding: .5em 1em;
-    background-color: #fff;
+    background-color: Cornsilk ;
     border-radius: 4px;
     border-color: red;
     border-width: 2px;
@@ -709,6 +710,13 @@ aside {
     border-bottom: 1px solid #EEE;
     text-align: right;
     color: teal;
+}
+
+.tabule--row-bad {
+    margin-bottom: 6px;
+    border-bottom: 1px solid #EEE;
+    text-align: right;
+    color: red;
 }
 
 .tabule--rowCenter {

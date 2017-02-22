@@ -16,6 +16,8 @@ namespace Slevyr.DataAccess.Model
 
         public string CilDefectTabuleStr => CilDefectTabule.ToString(CultureInfo.InvariantCulture);
 
+        public string CilDefectTabuleTxt => CilDefectTabule.ToString(CultureInfo.CurrentCulture);
+
         public float AktualDefectTabule { get; set; }
 
         public string AktualDefectTabuleTxt { get; set; }

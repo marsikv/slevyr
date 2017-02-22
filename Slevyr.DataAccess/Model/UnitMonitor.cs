@@ -65,6 +65,8 @@ namespace Slevyr.DataAccess.Model
         public const byte CmdReadStavCitacuOdpoledniSmena = 0x6d; //
         public const byte CmdReadStavCitacuNocniSmena = 0x6e;     //
 
+        public const byte CmdTestPacket = 0;     //specialni prikaz pro odeslani testovaciho packetu
+
         readonly byte[] _obtainStatusSequence;
         int _obtainStatusIndex = 0;
 

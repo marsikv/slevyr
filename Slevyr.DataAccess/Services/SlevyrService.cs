@@ -248,6 +248,7 @@ namespace Slevyr.DataAccess.Services
         }
 
         static CancellationTokenSource _readAsyncCancellationTokenSource;
+        private static bool _resetRfInProgress;
 
         private static async void DatareadWorkerDoWork(object sender, DoWorkEventArgs e)
         {
@@ -307,6 +308,14 @@ namespace Slevyr.DataAccess.Services
                     if (packet[0] == 0 && packet[1] == 0 && packet[2] == 0 && packet[3] == 0)
                     {
                         Logger.Error($"Null packet");
+                        continue;
+                    }
+
+
+                    if (packet[0] == 4 && packet[1] == 0 && packet[2] == 0 && packet[3] == 0 && packet[4] == 0)  //testovaci packet
+                    {
+                        TplLogger.Debug($"test packet");
+                        _unitDictionary.FirstOrDefault().Value.WaitEventSendConfirm.Set();
                         continue;
                     }
 
@@ -414,6 +423,7 @@ namespace Slevyr.DataAccess.Services
 
         public static void SendResetRf()
         {
+            _resetRfInProgress = true;
             var uc = new UnitCommand(ResetRf, "ResetRF", -1, -1);
             UnitCommandsQueue.Enqueue(uc);
         }
@@ -453,6 +463,7 @@ namespace Slevyr.DataAccess.Services
                 Task.Delay(2000).ContinueWith(t =>
                 {
                     _dataReaderBw.RunWorkerAsync();
+                    _resetRfInProgress = false;
                 });                
             }
 
@@ -748,6 +759,22 @@ namespace Slevyr.DataAccess.Services
             while (true)
             {
                 Logger.Info($"worker cycle {++_sendWorkerCycleCnt}");
+
+                if (_resetRfInProgress)
+                {
+                    Thread.Sleep(1000);
+                    continue;
+                }
+               
+                if (_runConfig.IsAutoResetRF)
+                {
+                    var rfOk = _unitDictionary.FirstOrDefault().Value.TestCommand();   //provedu test odesláním testovacího paketu
+                    if (!rfOk)
+                    {
+                        Logger.Info($"*** Reset RF ***");
+                        SendResetRf();
+                    }
+                }
 
                 if (_runConfig.IsScheduledResetRF && cycleForResetRf++ >= _runConfig.CycleForScheduledResetRf)
                 {
