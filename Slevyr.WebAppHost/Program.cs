@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Configuration.Internal;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.ServiceProcess;
 using Microsoft.Owin.Hosting;
 using NLog;
@@ -23,7 +25,8 @@ namespace Slevyr.WebAppHost
         {
             Globals.LoadSettings();
 
-            Logger.Info("");
+            Logger.Info("start");
+            Logger.Info("Assembly: " + Assembly.GetExecutingAssembly().FullName); 
             Logger.Info(Globals.RunConfigToJson());
 
             int port = Globals.WebAppPort;
@@ -74,7 +77,7 @@ namespace Slevyr.WebAppHost
 
                 SlevyrService.Stop();
 
-                Console.WriteLine("Ukonceno - stiskni libovolnou klavesu...");
+                Console.WriteLine("\n\n\nUkonceno - stiskni libovolnou klavesu...");
                 Console.ReadKey();
             }
             else

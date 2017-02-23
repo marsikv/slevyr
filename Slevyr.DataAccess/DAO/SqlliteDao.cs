@@ -9,8 +9,6 @@ using Slevyr.DataAccess.Model;
 
 namespace Slevyr.DataAccess.DAO
 {
-    //TODO predelat na EF6 - code first
-
     public static class SqlliteDao
     {
         #region consts
@@ -20,7 +18,7 @@ namespace Slevyr.DataAccess.DAO
 
         //SQL CREATE TABLE
 
-        const string SqlCreateUnitstatusTable = @"CREATE TABLE `observations` (
+        const string SqlCreateObservationsTable = @"CREATE TABLE `observations` (
     `id` INTEGER PRIMARY KEY AUTOINCREMENT,
 	`obTime`	TIMESTAMP  DEFAULT CURRENT_TIMESTAMP,
 	`cmd`	INTEGER  NOT NULL,
@@ -30,7 +28,7 @@ namespace Slevyr.DataAccess.DAO
 	`pocetOk`	INTEGER,
 	`casPoslednihoOk`	REAL,
 	`prumCasVyrobyOk`	REAL,
-	`cilNg`	INTEGER,
+	`cilDefect`	REAL,
 	`pocetNg`	INTEGER,
 	`casPoslednihoNg`	REAL,
 	`prumCasVyrobyNg`	REAL,
@@ -52,10 +50,10 @@ namespace Slevyr.DataAccess.DAO
 
         //SQL update
 
-        const string SqlInsertIntoMeta = @"insert into SchemaVersion (version) values ('1.1');";
+        const string SqlInsertIntoMeta = @"insert into SchemaVersion (version) values ('1.2');";
 
         const string SqlInsertStatusIntoObservation = @"insert into observations 
-                (cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
+                (cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilDefect,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
 
         const string SqlInsertLastStatusIntoObservations = @"insert into observations 
                 (obTime,cmd,unitId,pocetOk,casPoslednihoOk,pocetNg,casPoslednihoNg,rozdil,atualniDefectivita,stavLinky,isFinal) values ";
@@ -63,21 +61,17 @@ namespace Slevyr.DataAccess.DAO
         const string SqlUpdateStatusIntoObservations =
                 @"update observations set casPoslednihoOk=@casOk, casPoslednihoNg=@casNg where id=@id";
 
-
-        //const string SqlExportToCsv = "select datetime(obTime,'localtime') as time,cmd,unitId,isPrestavka,cilOk,pocetOk,printf(\"%.2f\", casPoslednihoOk),"+
-        //                              "printf(\"%.2f\", prumCasVyrobyOk),cilNg,pocetNg,printf(\"%.2f\", casPoslednihoNg),printf(\"%.2f\", prumCasVyrobyNg)," +
-        //                              "rozdil,printf(\"%.2f\", atualniDefectivita),stavLinky from observations "+
-        //        "where obTime between @timeFrom and @timeTo";
+        //SQL select 
 
         const string SqlExportToCsv = "select datetime(obTime,'localtime') as time,cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk," +
-                              "prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg," +
+                              "prumCasVyrobyOk,cilDefect,pocetNg,casPoslednihoNg,prumCasVyrobyNg," +
                               "rozdil,atualniDefectivita,stavLinky from observations " +
         "where obTime between @timeFrom and @timeTo";
 
 
         static readonly string[] SqlExportToCsvFieldNames =
         {
-            "Čas","Cmd","UnitId","Přestávka","Cíl OK","Počet OK","Čas posl OK","Prům čas OK","Cíl NG","Počet NG",
+            "Čas","Cmd","UnitId","Přestávka","Cíl OK","Počet OK","Čas posl OK","Prům čas OK","Cíl defektivity","Počet NG",
             "Čas posl NG","Prům čas NG","Rozdíl","Atuální defectivita","Stav linky"
         };
 
@@ -128,7 +122,7 @@ namespace Slevyr.DataAccess.DAO
                 {
                     connection.Open();
 
-                    var command = new SQLiteCommand(SqlCreateUnitstatusTable, connection);
+                    var command = new SQLiteCommand(SqlCreateObservationsTable, connection);
                     command.ExecuteNonQuery();
 
                     command = new SQLiteCommand(SqlCreateStavLinkyTable, connection);
@@ -176,7 +170,7 @@ namespace Slevyr.DataAccess.DAO
 
         public static long AddUnitState(int addr, UnitStatus u)
         {
-            //(cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilNg,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) values ";
+            //(cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk,prumCasVyrobyOk,cilDefect,pocetNg,casPoslednihoNg,prumCasVyrobyNg,rozdil,atualniDefectivita,stavLinky) 
             string sql = SqlInsertStatusIntoObservation +
                          $"(4,{addr},{(u.Tabule.IsPrestavkaTabule ? 1 : 0)},{u.Tabule.CilKusuTabule},{u.Ok},{u.CasOkStr}," +
                          $"{u.PrumCasVyrobyOkStr},{u.Tabule.CilDefectTabuleStr}," +

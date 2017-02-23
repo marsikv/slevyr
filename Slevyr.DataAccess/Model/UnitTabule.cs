@@ -46,5 +46,10 @@ namespace Slevyr.DataAccess.Model
 
         public bool IsPrestavkaTabule { get; set; }
 
+        public UnitTabule()
+        {
+            AktualDefectTabuleTxt = "-";
+        }
+
     }
 }
