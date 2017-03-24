@@ -66,7 +66,7 @@
                     <div class="label">Cíl 2. směny</div>
                     <input id="Cil2Smeny" class="input" type="number" value="1000" />
                 </div>
-                <div class="params--item params--item-3 params--item-3-last">
+                <div id="Cil3SmenyDiv" class="params--item params--item-3 params--item-3-last">
                     <div class="label">Cíl 3. směny</div>
                     <input id="Cil3Smeny" class="input" type="number" value="1000" />
                 </div>
@@ -84,7 +84,7 @@
                     <div class="label">Cíl defektivity 2. směny</div>
                     <input id="Def2Smeny" class="input" type="number" value="1.5" />
                 </div>
-                <div class="params--item params--item-3 params--item-3-last">
+                <div id="Def3SmenyDiv" class="params--item params--item-3 params--item-3-last">
                     <div class="label">Cíl defektivity 3. směny</div>
                     <input id="Def3Smeny" class="input" type="number" value="1.5" />
                 </div>
@@ -93,24 +93,44 @@
                 </div>
             </div>
 
-            <h3>Přestávky - (Nastaví 30 minutové přestávky každé směny a aktualizuje párovaný LED panel)</h3>
-            <div class="params--section">
+            <h3>Přestávky - (Nastaví přestávky každé směny a aktualizuje párovaný LED panel)</h3>
+            <div id="PrestavkyA" class="params--section">
                 <div class="params--item params--item-3">
                     <div class="label">Přestávka 1. směny</div>
-                    <input id="Prestavka1Smeny" class="input" type="time" step="1" value="10:00" />
+                    <input id="Prestavka1Smeny" class="input" type="time" step="1" value="10:00"/>
                 </div>
                 <div class="params--item params--item-3">
                     <div class="label">Přestávka 2. směny</div>
-                    <input id="Prestavka2Smeny" class="input" type="time" step="1" value="10:00" />
+                    <input id="Prestavka2Smeny" class="input" type="time" step="1" value="10:00"/>
                 </div>
                 <div class="params--item params--item-3 params--item-3-last">
                     <div class="label">Přestávka 3. směny</div>
-                    <input id="Prestavka3Smeny" class="input" type="time" step="1" value="10:00" />
+                    <input id="Prestavka3Smeny" class="input" type="time" step="1" value="10:00"/>
                 </div>
                 <div class="params--action">
-                    <button class="btn btn-fill" type="button" id="NastavPrestavky">Nastav přestávky směn</button>
+                    <button class="btn btn-fill" type="button" id="NastavPrestavkyA">Nastav přestávky směn</button>
                 </div>
             </div>
+
+            <div id="PrestavkyB" class="params--section">
+                <div class="params--item params--item-3">
+                    <div class="label">1. Přestávka 1. směny</div>
+                    <input id="Prestavka1Smeny1" class="input" type="time" step="1" value="10:00" />
+                </div>
+                <div class="params--item params--item-3">
+                    <div class="label">1. Přestávka 2. směny</div>
+                    <input id="Prestavka1Smeny2" class="input" type="time" step="1" value="10:00" />
+                </div>
+                <div class="params--item params--item-3 params--item-3-last">
+                    <div class="label">2. Přestávka Po </div>
+                    <input id="Prestavka2Po" class="input" type="time" step="60" value="2:00:00" />
+                </div>
+                <div class="params--action">
+                    <button class="btn btn-fill" type="button" id="NastavPrestavkyB">Nastav přestávky směn</button>
+                </div>
+            </div>
+
+
 
             <h3>Začátek směny - (důležité pro správnou funkci výpočtů)</h3>
             <div class="params--section">
@@ -122,7 +142,7 @@
                     <div class="label">Začátek 2. směny</div>
                     <input id="Zacatek2Smeny" class="input" type="time" step="1" />
                 </div>
-                <div class="params--item params--item-3 params--item-3-last">
+                <div id="Zacatek3SmenyDiv" class="params--item params--item-3 params--item-3-last">
                     <div class="label">Začátek 3. směny</div>
                     <input id="Zacatek3Smeny" class="input" type="time" step="1"/>
                 </div>

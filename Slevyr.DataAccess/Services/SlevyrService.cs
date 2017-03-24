@@ -569,14 +569,25 @@ namespace Slevyr.DataAccess.Services
             return true;
         }
 
-        public static bool NastavPrestavky(byte addr, char varianta, TimeSpan prest1, TimeSpan prest2, TimeSpan prest3)
+        public static bool NastavPrestavkyA(byte addr, TimeSpan prest1, TimeSpan prest2, TimeSpan prest3)
         {
-            Logger.Debug($"addr:{addr} var:{varianta} prest1:{prest1} prest2:{prest2} prest3:{prest3}");
+            Logger.Debug($"addr:{addr} prest1:{prest1} prest2:{prest2} prest3:{prest3}");
 
             if (_runConfig.IsMockupMode) return true;
 
-            //return _unitDictionary[addr].SendSetPrestavky(varianta, prest1, prest2, prest3);
-            var uc = new UnitCommand(() => _unitDictionary[addr].SendSetPrestavky(varianta, prest1, prest2, prest3), "SendSetPrestavky", addr, UnitMonitor.CmdSetZacPrestav);
+            var uc = new UnitCommand(() => _unitDictionary[addr].SendSetPrestavkyA(prest1, prest2, prest3), "SendSetPrestavky", addr, UnitMonitor.CmdSetZacPrestav);
+            UnitCommandsQueue.Enqueue(uc);
+
+            return true;
+        }
+
+        public static bool NastavPrestavkyB(byte addr, TimeSpan p1s1, TimeSpan p1s2, TimeSpan p2po)
+        {
+            Logger.Debug($"addr:{addr} p1s1:{p1s1} p1s2:{p1s2} p2po:{p2po}");
+
+            if (_runConfig.IsMockupMode) return true;
+
+            var uc = new UnitCommand(() => _unitDictionary[addr].SendSetPrestavkyB(p1s1, p1s2, p2po), "SendSetPrestavky", addr, UnitMonitor.CmdSetZacPrestav);
             UnitCommandsQueue.Enqueue(uc);
 
             return true;

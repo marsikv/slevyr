@@ -111,7 +111,7 @@ namespace Slevyr.WebAppHost.Controllers
         }
 
         [HttpGet]
-        public bool NastavPrestavkySmen([FromUri] byte addr, [FromUri] char varianta, [FromUri] string prest1, [FromUri] string prest2, [FromUri] string prest3)
+        public bool NastavPrestavkySmenA([FromUri] byte addr, [FromUri] string prest1, [FromUri] string prest2, [FromUri] string prest3)
         {
             Logger.Info($"addr:{addr}  prest1:{prest1} prest2:{prest2} prest2:{prest2}");
 
@@ -123,7 +123,28 @@ namespace Slevyr.WebAppHost.Controllers
 
             try
             {
-                return SlevyrService.NastavPrestavky(addr,varianta, p1, p2, p3);
+                return SlevyrService.NastavPrestavkyA(addr, p1, p2, p3);
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+        }
+
+        [HttpGet]
+        public bool NastavPrestavkySmenB([FromUri] byte addr, [FromUri] string prest1smena1, [FromUri] string prest1smeny2, [FromUri] string prestavka2Po)
+        {
+            Logger.Info($"addr:{addr}  1.prest smena1:{prest1smena1}  1.prest smena 2:{prest1smeny2} 2.prest po:{prestavka2Po}");
+
+            if (Globals.RunConfig.IsMockupMode) return true;
+
+            var p1s1 = TimeSpan.Parse(prest1smena1);
+            var p1s2 = TimeSpan.Parse(prest1smeny2);
+            var p2po = TimeSpan.Parse(prestavka2Po);
+
+            try
+            {
+                return SlevyrService.NastavPrestavkyB(addr, p1s1, p1s2, p2po);
             }
             catch (KeyNotFoundException)
             {

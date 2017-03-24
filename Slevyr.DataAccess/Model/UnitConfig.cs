@@ -37,10 +37,16 @@ namespace Slevyr.DataAccess.Model
         public TimeSpan Prestavka2SmenyTime => string.IsNullOrWhiteSpace(Prestavka2Smeny) ? TimeSpan.Zero : TimeSpan.Parse(Prestavka2Smeny);
         public TimeSpan Prestavka3SmenyTime => string.IsNullOrWhiteSpace(Prestavka3Smeny) ? TimeSpan.Zero : TimeSpan.Parse(Prestavka3Smeny);
 
+        public TimeSpan Prestavka1Smeny1 { get; set; }
+        public TimeSpan Prestavka1Smeny2 { get; set; }
+        public TimeSpan Prestavka2Smeny1 { get; set; }
+        public TimeSpan Prestavka2Smeny2 { get; set; }
+
         public TimeSpan Zacatek1SmenyTime => string.IsNullOrWhiteSpace(Zacatek1Smeny) ? TimeSpan.Zero : TimeSpan.Parse(Zacatek1Smeny);
         public TimeSpan Zacatek2SmenyTime => string.IsNullOrWhiteSpace(Zacatek2Smeny) ? TimeSpan.Zero : TimeSpan.Parse(Zacatek2Smeny);
         public TimeSpan Zacatek3SmenyTime => string.IsNullOrWhiteSpace(Zacatek3Smeny) ? TimeSpan.Zero : TimeSpan.Parse(Zacatek3Smeny);
 
+        public bool IsTypSmennostiA => TypSmennosti.Equals("A");
 
         public void SaveToFile(string dataFilePath)
         {

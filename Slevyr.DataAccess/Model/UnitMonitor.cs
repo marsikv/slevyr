@@ -12,6 +12,7 @@ namespace Slevyr.DataAccess.Model
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly Logger ErrorsLogger = LogManager.GetLogger("Errors");
         private static readonly Logger TplLogger = LogManager.GetLogger("Tpl");
+        private static readonly Logger MaintenanceLogger = LogManager.GetLogger("Maintenance");
 
         public UnitStatus UnitStatus { get; set; }
 
@@ -154,16 +155,38 @@ namespace Slevyr.DataAccess.Model
         }
 
         //TODO - v jakych jednotkach se zadavaji prestavky ?
-        public bool SendSetPrestavky(char varianta, TimeSpan prest1, TimeSpan prest2, TimeSpan prest3)
+        public bool SendSetPrestavkyA(TimeSpan prest1, TimeSpan prest2, TimeSpan prest3)
         {
             Logger.Info($"+ unit {Address}");
-          
+
+            UnitConfig.TypSmennosti = "A"; 
             UnitConfig.Prestavka1Smeny = prest1.ToString();  //TODO ukladat TimeSpan, ne string
             UnitConfig.Prestavka2Smeny = prest2.ToString();
             UnitConfig.Prestavka3Smeny = prest3.ToString();
-            
-            return SendCommand(CmdSetZacPrestav, (byte)varianta, prest1, prest2, prest3);
-        }       
+
+            UnitConfig.Prestavka1Smeny1 = TimeSpan.Zero;
+            UnitConfig.Prestavka1Smeny2 = TimeSpan.Zero;
+            UnitConfig.Prestavka2Smeny1 = TimeSpan.Zero;
+            UnitConfig.Prestavka2Smeny2 = TimeSpan.Zero;
+
+            return SendCommand(CmdSetZacPrestav, (byte)'A', prest1, prest2, prest3);
+        }
+
+        public bool SendSetPrestavkyB(TimeSpan p1s1, TimeSpan p1s2, TimeSpan p2po)
+        {
+            Logger.Info($"+ unit {Address}");
+
+            UnitConfig.TypSmennosti = "B";
+            UnitConfig.Prestavka1Smeny = null;  
+            UnitConfig.Prestavka2Smeny = null;
+            UnitConfig.Prestavka3Smeny = null;
+            UnitConfig.Prestavka1Smeny1 = p1s1;
+            UnitConfig.Prestavka1Smeny2 = p1s2;
+            UnitConfig.Prestavka2Smeny1 = p1s1 + p2po;
+            UnitConfig.Prestavka2Smeny2 = p1s2 + p2po; 
+
+            return SendCommand(CmdSetZacPrestav, (byte)'B', p1s1, p1s2, p2po);
+        }
 
         public bool SendSetCas(DateTime dt)
         {
@@ -287,10 +310,11 @@ namespace Slevyr.DataAccess.Model
             short machineStatusInt = buff[10];
 
             MachineStateEnum machineStatus = (MachineStateEnum)machineStatusInt;
-            //MachineStateEnum machineStatus =MachineStateEnum.Porucha;
+
+            LogMachineStatusForMaintenance(machineStatus);
 
             UnitStatus.SetStopTime(machineStatus);
-            
+
             UnitStatus.Ok = okVal;
             UnitStatus.Ng = ngVal;
             UnitStatus.Tabule.MachineStatus = machineStatus;
@@ -386,7 +410,10 @@ namespace Slevyr.DataAccess.Model
             var ngVal = Helper.ToShort(buff[6], buff[7]);
             var stopDuration = Helper.ToShort(buff[8], buff[9]);
             short machineStatusInt = buff[10];
+
             MachineStateEnum machineStatus = (MachineStateEnum)machineStatusInt;
+
+            LogMachineStatusForMaintenance(machineStatus);
 
             UnitStatus.SetStopTime(machineStatus);
 
@@ -399,6 +426,21 @@ namespace Slevyr.DataAccess.Model
         }
 
         #endregion
+
+        private void LogMachineStatusForMaintenance(MachineStateEnum machineStatus)
+        {
+             if (machineStatus != UnitStatus.Tabule.MachineStatus)
+            {
+                string duration = string.Empty;
+                if (UnitStatus.Tabule.MachineStopTime.HasValue)
+                {
+                    TimeSpan diff = (DateTime.Now - UnitStatus.Tabule.MachineStopTime.Value);
+                    duration = $"({diff})";
+                }
+                MaintenanceLogger.Info($"linka {Address}: {UnitStatus.Tabule.MachineStatus} => {machineStatus} {duration}");
+            }
+        }
+
 
         #region public methods - Obtain unit status
 
@@ -524,7 +566,14 @@ namespace Slevyr.DataAccess.Model
 
         public void RecalcTabule()
         {
-            UnitStatus.RecalcTabule(UnitConfig);
+            if (UnitConfig.IsTypSmennostiA)
+            {
+                UnitStatus.RecalcTabuleA(UnitConfig);                
+            }
+            else
+            {
+                UnitStatus.RecalcTabuleB(UnitConfig);
+            }
         }
 
         #endregion

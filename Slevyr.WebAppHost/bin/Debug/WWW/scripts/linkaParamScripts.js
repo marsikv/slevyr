@@ -5,6 +5,7 @@ var uriSys = 'api/sys';
 var isTimerEnabled = false;
 var refreshTimer;
 var addr = null;
+var typSmennostiIsA = true;
 
 $(document).ready(function () {
         readRunConfig();
@@ -16,7 +17,8 @@ $(document).ready(function () {
 
         $("#NastavCileSmen").click(nastavCileSmen);
         $("#NastavPocOkNg").click(nastavPocOkNg);
-        $("#NastavPrestavky").click(nastavPrestavkySmen);
+        $("#NastavPrestavkyA").click(nastavPrestavkySmenA);
+        $("#NastavPrestavkyB").click(nastavPrestavkySmenB);
         $("#NastavDefektivitu").click(nastavDefektivitu);
         $("#NastavJednotku").click(nastavJednotku);
         $("#NastavTypSmennosti").click(nastavVariantuSmeny);
@@ -24,9 +26,26 @@ $(document).ready(function () {
         $("#SyncTime").click(nastavAktualniCas);
 
         jQuery.ajaxSetup({ cache: false });
-    });
+});
 
-    function readRunConfig() {
+
+function updateElementsForTypSmennosti(typSmennostiIsA) {
+    if (typSmennostiIsA) {
+        $('#Cil3SmenyDiv').show();
+        $('#Def3SmenyDiv').show();
+        $('#Zacatek3SmenyDiv').show();
+        $('#PrestavkyA').show();
+        $('#PrestavkyB').hide();
+    } else {
+        $('#Cil3SmenyDiv').hide();
+        $('#Def3SmenyDiv').hide();
+        $('#Zacatek3SmenyDiv').hide();
+        $('#PrestavkyA').hide();
+        $('#PrestavkyB').show();
+    }
+}
+
+function readRunConfig() {
         //alert('readConfig');
         $('#stav').text('');
         $.getJSON(uriSys + '/getRunConfig?')
@@ -69,7 +88,7 @@ $(document).ready(function () {
             addr: addr
             })
             .done(function (data) {
-
+                typSmennostiIsA = data.TypSmennosti === 'A';
                 $('#TypSmennosti').val(data.TypSmennosti);
                 $('#LinkaName').text(data.UnitName);
                 $('#LinkaNameEdit').val(data.UnitName);
@@ -98,6 +117,8 @@ $(document).ready(function () {
                 $('#RozliseniCidelTeploty').val(data.RozliseniCidel);
                 $('#PracovniJasLed').val(data.PracovniJasLed);
                 $('#AddrParovanyLed').val(data.ParovanyLED);
+
+                updateElementsForTypSmennosti(typSmennostiIsA);
 
                 window.slVyr.addNotification('success', 'ReadUnitConfig Successufully done.');
             })
@@ -136,6 +157,10 @@ $(document).ready(function () {
             PracovniJasLed: $('#PracovniJasLed').val()
         };
 
+        typSmennostiIsA = model.TypSmennosti === 'A';
+
+        updateElementsForTypSmennosti(typSmennostiIsA);
+
         $.ajax({
             type: "POST",
             data: JSON.stringify(model),
@@ -173,15 +198,17 @@ $(document).ready(function () {
     }
 
     function nastavVariantuSmeny() {
-        alert('NastavVariantuSmeny');
-        var varianta = $('#TypSmennosti').val();
+        //alert('NastavVariantuSmeny');
+        var typSmennosti = $('#TypSmennosti').val();
         $.getJSON(uri + '/nastavVariantuSmeny',
             {
                 addr: addr,
-                varianta: varianta,
+                varianta: typSmennosti
             })
             .done(function (data) {
                 window.slVyr.addNotification('success', 'Sucessfully set.');
+                typSmennostiIsA = typSmennosti === 'A';
+                updateElementsForTypSmennosti(typSmennostiIsA);
                 // $('#stav').text('');
             })
             .fail(function (jqXHR, textStatus, err) {
@@ -193,21 +220,23 @@ $(document).ready(function () {
 
     function nastavCileSmen() {
         //alert('nastavCileSmen');
-        var varianta  = $('#TypSmennosti').val();
+        var typSmennosti  = $('#TypSmennosti').val();
         var cil1Smeny = $('#Cil1Smeny').val();
         var cil2Smeny = $('#Cil2Smeny').val();
         var cil3Smeny = $('#Cil3Smeny').val();
         $.getJSON(uri + '/nastavCileSmen',
             {
                 addr: addr,
-                varianta: varianta,
+                varianta: typSmennosti,
                 cil1: cil1Smeny,
                 cil2: cil2Smeny,
                 cil3: cil3Smeny
             })
             .done(function (data) {
                 window.slVyr.addNotification('success', 'Sucessfully set.');
-                // $('#stav').text('');
+                typSmennostiIsA = typSmennosti === 'A';
+
+                updateElementsForTypSmennosti(typSmennostiIsA);
             })
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'NastavCileSmen - error: ' + err);
@@ -216,23 +245,52 @@ $(document).ready(function () {
             });
     }
 
-    function nastavPrestavkySmen() {
+    function nastavPrestavkySmenA() {
         //alert('nastavPrestavkySmen');
-        var varianta = $('#TypSmennosti').val();
+        var typSmennosti = $('#TypSmennosti').val();
         var p1Smeny = $('#Prestavka1Smeny').val();
         var p2Smeny = $('#Prestavka2Smeny').val();
         var p3Smeny = $('#Prestavka3Smeny').val();
-        $.getJSON(uri + '/nastavPrestavkySmen',
+        $.getJSON(uri + '/nastavPrestavkySmenA',
             {
                 addr: addr,
-                varianta: varianta,
+                varianta: typSmennosti,
                 prest1: p1Smeny,
                 prest2: p2Smeny,
                 prest3: p3Smeny
             })
             .done(function (data) {
                 window.slVyr.addNotification('success', 'Sucessfully set.');
-                // $('#stav').text('');
+                typSmennostiIsA = typSmennosti === 'A';
+
+                updateElementsForTypSmennosti(typSmennostiIsA);
+            })
+            .fail(function (jqXHR, textStatus, err) {
+                window.slVyr.addNotification('error', 'NastavCileSmen - error: ' + err);
+                // $('#stav').text('Error: ' + err);
+                // alert("nastavPrestavkySmen - error");
+            });
+    }
+
+    function nastavPrestavkySmenB() {
+        //alert('nastavPrestavkySmen');
+        var typSmennosti = $('#TypSmennosti').val();
+        var p1s1 = $('#Prestavka1Smeny1').val();
+        var p1s2 = $('#Prestavka1Smeny2').val();
+        var p2po = $('#Prestavka2Po').val();
+        $.getJSON(uri + '/nastavPrestavkySmenB',
+            {
+                addr: addr,
+                varianta: typSmennosti,
+                prest1smena1: p1s1,
+                prest1smena2: p1s2,
+                prestavka2Po: p2po
+            })
+            .done(function (data) {
+                window.slVyr.addNotification('success', 'Sucessfully set.');
+                typSmennostiIsA = typSmennosti === 'A';
+
+                updateElementsForTypSmennosti(typSmennostiIsA);
             })
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'NastavCileSmen - error: ' + err);
