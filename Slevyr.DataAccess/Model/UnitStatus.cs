@@ -49,7 +49,7 @@ namespace Slevyr.DataAccess.Model
         {
             Ok = unitStatus.Ok;
             Ng = unitStatus.Ng;
-            Defektivita = unitStatus.Defektivita;
+            Defektivita = unitStatus.Tabule.AktualDefectTabule;
             PrumCyklusOk = unitStatus.PrumCasVyrobyOk;
             RozdilKusu = unitStatus.Tabule.RozdilTabule;
             StopTime = (int)stopTimeSec;
@@ -465,11 +465,11 @@ namespace Slevyr.DataAccess.Model
                 int zacatekSmeny1Sec = (int)unitConfig.Zacatek1SmenyTime.TotalSeconds;
                 int zacatekSmeny2Sec = (int)unitConfig.Zacatek2SmenyTime.TotalSeconds;
 
-                int zacatek1PrestavkySmeny1Sec = (int)unitConfig.Prestavka1Smeny1.TotalSeconds;
-                int zacatek1PrestavkySmeny2Sec = (int)unitConfig.Prestavka1Smeny2.TotalSeconds;
+                int zacatek1PrestavkySmeny1Sec = (int)unitConfig.Prestavka1Smeny1Time.TotalSeconds;
+                int zacatek1PrestavkySmeny2Sec = (int)unitConfig.Prestavka1Smeny2Time.TotalSeconds;
 
-                int zacatek2PrestavkySmeny1Sec = (int)unitConfig.Prestavka2Smeny1.TotalSeconds;
-                int zacatek2PrestavkySmeny2Sec = (int)unitConfig.Prestavka2Smeny2.TotalSeconds;
+                int zacatek2PrestavkySmeny1Sec = (int)unitConfig.Prestavka2Smeny1Time.TotalSeconds;
+                int zacatek2PrestavkySmeny2Sec = (int)unitConfig.Prestavka2Smeny2Time.TotalSeconds;
 
                 int konec1PrestavkySmeny1Sec = zacatek1PrestavkySmeny1Sec + Prestavka1Sec;
                 int konec1PrestavkySmeny2Sec = zacatek1PrestavkySmeny2Sec + Prestavka1Sec;

@@ -131,8 +131,9 @@ var startAddr = null;
         if (data == null) return;
 
         var s = '<td>' + smenaNum + '</td>' + '<td>' + data.Ok + '</td>' + '<td>' + data.Ng + '</td>'
-            + '<td>' + data.PrumCyklusOk + '</td>'
+            + '<td>' + Math.round(data.PrumCyklusOk * 100) / 100 + '</td>'
             + '<td>' + data.RozdilKusu + '</td>'
+            + '<td>' + Math.round(data.Defektivita * 100) / 100 + '</td>'
             + '<td>' + data.StopTime + '</td>';
 
         $(rowid).append(s);

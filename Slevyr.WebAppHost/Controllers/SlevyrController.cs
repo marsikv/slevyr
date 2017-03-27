@@ -56,9 +56,9 @@ namespace Slevyr.WebAppHost.Controllers
             {
                 return SlevyrService.GetUnitStatus(addr);
             }
-            catch (KeyNotFoundException)
+            catch (Exception)
             {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
             }
         }
 
@@ -79,9 +79,9 @@ namespace Slevyr.WebAppHost.Controllers
 
                 return SlevyrService.NastavStatus(addr, writeProtectEEprom, minOK, minNG, bootloaderOn, parovanyLED, rozliseniCidel, pracovniJasLed);
             }
-            catch (KeyNotFoundException)
+            catch (Exception)
             {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
             }
         }
 
@@ -104,16 +104,16 @@ namespace Slevyr.WebAppHost.Controllers
             {
                 return SlevyrService.NastavVariantuSmeny(addr, asciiBytes[0]);
             }
-            catch (KeyNotFoundException)
+            catch (Exception)
             {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
             }
         }
 
         [HttpGet]
         public bool NastavPrestavkySmenA([FromUri] byte addr, [FromUri] string prest1, [FromUri] string prest2, [FromUri] string prest3)
         {
-            Logger.Info($"addr:{addr}  prest1:{prest1} prest2:{prest2} prest2:{prest2}");
+            Logger.Info($"addr:{addr}  prest1:{prest1} prest2:{prest2} prest3:{prest3}");
 
             if (Globals.RunConfig.IsMockupMode) return true;
 
@@ -125,30 +125,30 @@ namespace Slevyr.WebAppHost.Controllers
             {
                 return SlevyrService.NastavPrestavkyA(addr, p1, p2, p3);
             }
-            catch (KeyNotFoundException)
+            catch (Exception)
             {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
             }
         }
 
         [HttpGet]
-        public bool NastavPrestavkySmenB([FromUri] byte addr, [FromUri] string prest1smena1, [FromUri] string prest1smeny2, [FromUri] string prestavka2Po)
+        public bool NastavPrestavkySmenB([FromUri] byte addr, [FromUri] string prest1S1, [FromUri] string prest1S2, [FromUri] string prest2Po)
         {
-            Logger.Info($"addr:{addr}  1.prest smena1:{prest1smena1}  1.prest smena 2:{prest1smeny2} 2.prest po:{prestavka2Po}");
+            Logger.Info($"addr:{addr}  1.prest smena1:{prest1S1}  1.prest smena 2:{prest1S2} 2.prest po:{prest2Po}");
 
             if (Globals.RunConfig.IsMockupMode) return true;
 
-            var p1s1 = TimeSpan.Parse(prest1smena1);
-            var p1s2 = TimeSpan.Parse(prest1smeny2);
-            var p2po = TimeSpan.Parse(prestavka2Po);
+            var p1S1 = TimeSpan.Parse(prest1S1);
+            var p1S2 = TimeSpan.Parse(prest1S2);
+            var p2Po = TimeSpan.Parse(prest2Po);
 
             try
             {
-                return SlevyrService.NastavPrestavkyB(addr, p1s1, p1s2, p2po);
+                return SlevyrService.NastavPrestavkyB(addr, p1S1, p1S2, p2Po);
             }
-            catch (KeyNotFoundException)
+            catch (Exception)
             {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
             }
         }
 
@@ -164,9 +164,9 @@ namespace Slevyr.WebAppHost.Controllers
             {
                 return SlevyrService.NastavCileSmen(addr, varianta, cil1, cil2, cil3);
             }
-            catch (KeyNotFoundException)
+            catch (Exception)
             {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
             }
         }
 
@@ -181,9 +181,9 @@ namespace Slevyr.WebAppHost.Controllers
             {
                 return SlevyrService.NastavOkNg(addr, ok, ng);
             }
-            catch (KeyNotFoundException)
+            catch (Exception)
             {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
             }
         }
 
@@ -200,9 +200,9 @@ namespace Slevyr.WebAppHost.Controllers
                 SlevyrService.NastavAktualniCas(addr);
                 return true;
             }
-            catch (KeyNotFoundException)
+            catch (Exception)
             {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
             }
         }
 
@@ -221,9 +221,9 @@ namespace Slevyr.WebAppHost.Controllers
                 }
                 return true;
             }
-            catch (KeyNotFoundException)
+            catch (Exception)
             {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
             }
         }
 
@@ -249,9 +249,9 @@ namespace Slevyr.WebAppHost.Controllers
             {
                 return SlevyrService.NastavDefektivitu(addr, varianta, def1Val, def2Val, def3Val);
             }
-            catch (KeyNotFoundException)
+            catch (Exception)
             {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
             }
         }
 
@@ -267,9 +267,9 @@ namespace Slevyr.WebAppHost.Controllers
 
                 return SlevyrService.NastavHandshake(addr, value);
             }
-            catch (KeyNotFoundException)
+            catch (Exception)
             {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
             }
 
         }
@@ -290,9 +290,9 @@ namespace Slevyr.WebAppHost.Controllers
             {
                 return SlevyrService.SendCtiStavCitacu(addr);
             }
-            catch (KeyNotFoundException)
+            catch (Exception)
             {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
             }
 
         }
@@ -312,9 +312,9 @@ namespace Slevyr.WebAppHost.Controllers
             {
                 return SlevyrService.SendCtiCyklusOkNg(addr);
             }
-            catch (KeyNotFoundException)
+            catch (Exception)
             {
-                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
             }
 
         }

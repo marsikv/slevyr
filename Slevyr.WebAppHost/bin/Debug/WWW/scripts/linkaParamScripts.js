@@ -118,6 +118,10 @@ function readRunConfig() {
                 $('#PracovniJasLed').val(data.PracovniJasLed);
                 $('#AddrParovanyLed').val(data.ParovanyLED);
 
+                $('#Prestavka1Smeny1').val(data.Prestavka1Smeny1);
+                $('#Prestavka1Smeny2').val(data.Prestavka1Smeny2);
+                $('#Prestavka2Po').val(data.Prestavka2Po);
+
                 updateElementsForTypSmennosti(typSmennostiIsA);
 
                 window.slVyr.addNotification('success', 'ReadUnitConfig Successufully done.');
@@ -154,7 +158,10 @@ function readRunConfig() {
             BootloaderOn: $('#BootloaderOn').prop('checked'),
             ParovanyLED: $('#AddrParovanyLed').val(),
             RozliseniCidel: $('#RozliseniCidelTeploty').val(),
-            PracovniJasLed: $('#PracovniJasLed').val()
+            PracovniJasLed: $('#PracovniJasLed').val(),
+            Prestavka1Smeny1: $('#Prestavka1Smeny1').val(),
+            Prestavka1Smeny2: $('#Prestavka1Smeny2').val(),
+            Prestavka2Po: $('#Prestavka2Po').val()
         };
 
         typSmennostiIsA = model.TypSmennosti === 'A';
@@ -254,7 +261,6 @@ function readRunConfig() {
         $.getJSON(uri + '/nastavPrestavkySmenA',
             {
                 addr: addr,
-                varianta: typSmennosti,
                 prest1: p1Smeny,
                 prest2: p2Smeny,
                 prest3: p3Smeny
@@ -266,7 +272,7 @@ function readRunConfig() {
                 updateElementsForTypSmennosti(typSmennostiIsA);
             })
             .fail(function (jqXHR, textStatus, err) {
-                window.slVyr.addNotification('error', 'NastavCileSmen - error: ' + err);
+                window.slVyr.addNotification('error', 'nastavPrestavkySmenA - error: ' + err);
                 // $('#stav').text('Error: ' + err);
                 // alert("nastavPrestavkySmen - error");
             });
@@ -281,10 +287,9 @@ function readRunConfig() {
         $.getJSON(uri + '/nastavPrestavkySmenB',
             {
                 addr: addr,
-                varianta: typSmennosti,
-                prest1smena1: p1s1,
-                prest1smena2: p1s2,
-                prestavka2Po: p2po
+                prest1S1: p1s1,
+                prest1S2: p1s2,
+                prest2Po: p2po
             })
             .done(function (data) {
                 window.slVyr.addNotification('success', 'Sucessfully set.');
@@ -293,7 +298,7 @@ function readRunConfig() {
                 updateElementsForTypSmennosti(typSmennostiIsA);
             })
             .fail(function (jqXHR, textStatus, err) {
-                window.slVyr.addNotification('error', 'NastavCileSmen - error: ' + err);
+                window.slVyr.addNotification('error', 'nastavPrestavkySmenB - error: ' + err);
                 // $('#stav').text('Error: ' + err);
                 // alert("nastavPrestavkySmen - error");
             });

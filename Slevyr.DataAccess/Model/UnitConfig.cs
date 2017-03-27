@@ -37,10 +37,15 @@ namespace Slevyr.DataAccess.Model
         public TimeSpan Prestavka2SmenyTime => string.IsNullOrWhiteSpace(Prestavka2Smeny) ? TimeSpan.Zero : TimeSpan.Parse(Prestavka2Smeny);
         public TimeSpan Prestavka3SmenyTime => string.IsNullOrWhiteSpace(Prestavka3Smeny) ? TimeSpan.Zero : TimeSpan.Parse(Prestavka3Smeny);
 
-        public TimeSpan Prestavka1Smeny1 { get; set; }
-        public TimeSpan Prestavka1Smeny2 { get; set; }
-        public TimeSpan Prestavka2Smeny1 { get; set; }
-        public TimeSpan Prestavka2Smeny2 { get; set; }
+        public string Prestavka1Smeny1 { get; set; }
+        public string Prestavka1Smeny2 { get; set; }
+        public string Prestavka2Po { get; set; }
+
+        public TimeSpan Prestavka1Smeny1Time => string.IsNullOrWhiteSpace(Prestavka1Smeny1) ? TimeSpan.Zero : TimeSpan.Parse(Prestavka1Smeny1);
+        public TimeSpan Prestavka1Smeny2Time => string.IsNullOrWhiteSpace(Prestavka1Smeny2) ? TimeSpan.Zero : TimeSpan.Parse(Prestavka1Smeny2);
+        public TimeSpan Prestavka2Smeny1Time { get; set; }
+        public TimeSpan Prestavka2Smeny2Time { get; set; }
+        public TimeSpan Prestavka2PoTime => string.IsNullOrWhiteSpace(Prestavka2Po) ? TimeSpan.Zero : TimeSpan.Parse(Prestavka2Po);
 
         public TimeSpan Zacatek1SmenyTime => string.IsNullOrWhiteSpace(Zacatek1Smeny) ? TimeSpan.Zero : TimeSpan.Parse(Zacatek1Smeny);
         public TimeSpan Zacatek2SmenyTime => string.IsNullOrWhiteSpace(Zacatek2Smeny) ? TimeSpan.Zero : TimeSpan.Parse(Zacatek2Smeny);
@@ -99,6 +104,11 @@ namespace Slevyr.DataAccess.Model
                 RozliseniCidel = res.RozliseniCidel;
                 PracovniJasLed = res.PracovniJasLed;
 
+                Prestavka1Smeny1 = res.Prestavka1Smeny1;
+                Prestavka1Smeny2 = res.Prestavka1Smeny2;
+                Prestavka2Po = res.Prestavka2Po;
+                Prestavka2Smeny1Time = res.Prestavka2Smeny2Time;
+                Prestavka2Smeny2Time = res.Prestavka2Smeny2Time;
             }
         }
     }

@@ -280,21 +280,7 @@ namespace Slevyr.DataAccess.Services
                         continue;
                     }
 
-                    packet = task.Result;
-
-                    //packet = await SerialPort.ReadAsync(UnitMonitorBasic.BuffLength);
-
-                    //if (await Task.WhenAny(task, Task.Delay(ReadAsyncTimeout)) == task)
-                    //{
-                    //    //success();
-                    //    packet = task.Result;
-                    //}
-                    //else
-                    //{
-                    //    //error();
-                    //    Logger.Info("read async timeout");
-                    //    continue;
-                    //}
+                    packet = task.Result;                  
                 }
                 catch (Exception ex)
                 {
@@ -575,7 +561,7 @@ namespace Slevyr.DataAccess.Services
 
             if (_runConfig.IsMockupMode) return true;
 
-            var uc = new UnitCommand(() => _unitDictionary[addr].SendSetPrestavkyA(prest1, prest2, prest3), "SendSetPrestavky", addr, UnitMonitor.CmdSetZacPrestav);
+            var uc = new UnitCommand(() => _unitDictionary[addr].SendSetPrestavkyA(prest1, prest2, prest3), "SendSetPrestavkyA", addr, UnitMonitor.CmdSetZacPrestav);
             UnitCommandsQueue.Enqueue(uc);
 
             return true;
@@ -587,7 +573,7 @@ namespace Slevyr.DataAccess.Services
 
             if (_runConfig.IsMockupMode) return true;
 
-            var uc = new UnitCommand(() => _unitDictionary[addr].SendSetPrestavkyB(p1s1, p1s2, p2po), "SendSetPrestavky", addr, UnitMonitor.CmdSetZacPrestav);
+            var uc = new UnitCommand(() => _unitDictionary[addr].SendSetPrestavkyB(p1s1, p1s2, p2po), "SendSetPrestavkyB", addr, UnitMonitor.CmdSetZacPrestav);
             UnitCommandsQueue.Enqueue(uc);
 
             return true;

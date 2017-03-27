@@ -164,10 +164,11 @@ namespace Slevyr.DataAccess.Model
             UnitConfig.Prestavka2Smeny = prest2.ToString();
             UnitConfig.Prestavka3Smeny = prest3.ToString();
 
-            UnitConfig.Prestavka1Smeny1 = TimeSpan.Zero;
-            UnitConfig.Prestavka1Smeny2 = TimeSpan.Zero;
-            UnitConfig.Prestavka2Smeny1 = TimeSpan.Zero;
-            UnitConfig.Prestavka2Smeny2 = TimeSpan.Zero;
+            UnitConfig.Prestavka1Smeny1 = null;
+            UnitConfig.Prestavka1Smeny2 = null;
+            UnitConfig.Prestavka2Po = null;
+            UnitConfig.Prestavka2Smeny1Time = TimeSpan.Zero;
+            UnitConfig.Prestavka2Smeny2Time = TimeSpan.Zero;
 
             return SendCommand(CmdSetZacPrestav, (byte)'A', prest1, prest2, prest3);
         }
@@ -180,10 +181,11 @@ namespace Slevyr.DataAccess.Model
             UnitConfig.Prestavka1Smeny = null;  
             UnitConfig.Prestavka2Smeny = null;
             UnitConfig.Prestavka3Smeny = null;
-            UnitConfig.Prestavka1Smeny1 = p1s1;
-            UnitConfig.Prestavka1Smeny2 = p1s2;
-            UnitConfig.Prestavka2Smeny1 = p1s1 + p2po;
-            UnitConfig.Prestavka2Smeny2 = p1s2 + p2po; 
+            UnitConfig.Prestavka1Smeny1 = p1s1.ToString();  //TODO ukladat TimeSpan, ne string;
+            UnitConfig.Prestavka1Smeny2 = p1s2.ToString();
+            UnitConfig.Prestavka2Po = p2po.ToString();
+            UnitConfig.Prestavka2Smeny1Time = p1s1 + p2po;
+            UnitConfig.Prestavka2Smeny2Time = p1s2 + p2po; 
 
             return SendCommand(CmdSetZacPrestav, (byte)'B', p1s1, p1s2, p2po);
         }
