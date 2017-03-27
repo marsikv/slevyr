@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Data.SqlTypes;
+using System.Diagnostics;
 using System.Globalization;
 using NLog;
 using Slevyr.DataAccess.Services;
@@ -42,17 +43,90 @@ namespace Slevyr.DataAccess.Model
         Nedef = 0,
     }
 
+    public class SmenaResult
+    {
+        public SmenaResult(UnitStatus unitStatus, double stopTimeSec)
+        {
+            Ok = unitStatus.Ok;
+            Ng = unitStatus.Ng;
+            Defektivita = unitStatus.Defektivita;
+            PrumCyklusOk = unitStatus.PrumCasVyrobyOk;
+            RozdilKusu = unitStatus.Tabule.RozdilTabule;
+            StopTime = (int)stopTimeSec;
+        }
+
+        public int Ok { get; set; }
+
+        public int Ng { get; set; }
+
+        public float PrumCyklusOk { get; set; }
+    
+        public int RozdilKusu { get; set; }
+
+        public float Defektivita { get; set; }
+
+        public int StopTime { get; set; }
+    }
+
     public class UnitStatus
     {
+        #region consts
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+        //pocet sekund celého dne
+        private const int AllDaySec = 24 * 60 * 60;  //86400
+        //pocet sec. prestavky, nyni prestavka 30min - udelat jako parametr ?
+        private const int PrestavkaSec = 30 * 60;
+
+        private const int Prestavka1Sec = 30 * 60;  //prvni prestavka smennost B
+        private const int Prestavka2Sec = 20 * 60;  //druha prestavka smennost B
+
+        //8hod - 0.5hod. prestavka
+        private const int DelkaSmenySec = 27000;
+
+        private const int DelkaSmenyBSec = 27000;
+
+        #endregion
+
+        #region private fields
+
+        private Stopwatch _stopwatch;
+
+        #endregion
 
         #region properties
 
         public UnitTabule Tabule { get; private set; }
 
+        public SmenaResult[] LastSmenaResults 
+        {
+            get; private set;
+        }
+
         public int Addr { get; set; }
 
         private SmenyEnum CurrentSmena { get; set; }
+
+        /// <summary>
+        /// cislo smeny: 1,2,3
+        /// </summary>
+        private int CurrentSmenaAsNum
+        {
+            get
+            {
+                switch (CurrentSmena)
+                {
+                    case SmenyEnum.Smena1:
+                        return 1;
+                    case SmenyEnum.Smena2:
+                        return 2;
+                    case SmenyEnum.Smena3:
+                        return 3;
+                    default:
+                        return 0;
+                }
+            }
+        }
 
         public int Ok { get; set; }
 
@@ -114,7 +188,7 @@ namespace Slevyr.DataAccess.Model
         /// <summary>
         /// cas v sec. ktery uz aktualni smene ubehl
         /// </summary>
-        public int UbehlyCasSmenySec { get; set; }
+        private int UbehlyCasSmenySec { get; set; }
 
         public bool IsTabuleOk { get; set; }
         public byte MinOk { get; set; }
@@ -145,29 +219,26 @@ namespace Slevyr.DataAccess.Model
 
         #endregion
 
+        #region ctor
+
         public UnitStatus()
         {
             CurrentSmena = SmenyEnum.Nedef;
             Tabule = new UnitTabule();
+            LastSmenaResults = new SmenaResult[3];
+            PrepareSmena();
         }
+
+        #endregion
 
         #region methods
 
-        //pocet sekund celého dne
-        private const int AllDaySec = 24 * 60 * 60;  //86400
-        //pocet sec. prestavky, nyni prestavka 30min - udelat jako parametr ?
-        private const int PrestavkaSec = 30 * 60;
+        private void PrepareSmena()
+        {
+            _stopwatch = new Stopwatch();            
+        }
 
-        private const int Prestavka1Sec = 30 * 60;  //prvni prestavka smennost B
-        private const int Prestavka2Sec = 20 * 60;  //druha prestavka smennost B
-
-        //8hod - 0.5hod. prestavka
-        private const int DelkaSmenySec = 27000;
-
-        private const int DelkaSmenyBSec = 27000;
-
-
-        private void PrepocetTabule(UnitConfig unitConfig, SmenyEnum smena)
+        private void PrepocetTabule(SmenyEnum smena)
         {
             Logger.Debug(smena);
 
@@ -175,6 +246,10 @@ namespace Slevyr.DataAccess.Model
             {
                 if (CurrentSmena != SmenyEnum.Nedef)  //aby bylo zajisteno ze se opravdu jedna o prechod z jedne smeny do druhe 
                 {
+                    //Ulozim vysledek smeny a vynuluju pro dalsi smenu
+                    LastSmenaResults[CurrentSmenaAsNum-1] = new SmenaResult(this, _stopwatch.Elapsed.TotalSeconds);
+                    PrepareSmena();
+
                     //udalost oznamuje ze aktualni smena konci
                     //po odchyceni se po definovanem zpozdeni zaradi prikaz k nacteni stavu do fronty adhoc prikazu
                     PrechodSmeny?.Invoke(this, CurrentSmena);
@@ -211,6 +286,32 @@ namespace Slevyr.DataAccess.Model
 
             }
         }
+
+
+        public void SetStopTime(MachineStateEnum machineStatus)
+        {
+            if (machineStatus == MachineStateEnum.Vyroba)
+            {
+                _stopwatch.Stop();
+            }
+            else
+            {
+                _stopwatch.Start();
+            }
+
+            if (machineStatus == MachineStateEnum.Porucha && Tabule.MachineStatus != machineStatus)
+            {
+                //zaznamenam cas kdy jsme poruchu zaznamenali
+                Tabule.MachineStopTime = DateTime.Now;
+            }
+            else if (machineStatus == MachineStateEnum.Vyroba && Tabule.MachineStopTime.HasValue)
+            {
+               
+                //kdyz uz je normalni tak stop time resetuju
+                Tabule.MachineStopTime = null;
+            }
+        }
+
 
         /// <summary>
         /// zjistit jaka je prave ted smena a nastavit cil a defektivitu podle toho
@@ -331,7 +432,7 @@ namespace Slevyr.DataAccess.Model
                     smena = SmenyEnum.Smena3;
                 }
 
-                PrepocetTabule(unitConfig,smena);
+                PrepocetTabule(smena);
 
                 Logger.Debug($"- unit {unitConfig.Addr}");
 
@@ -430,9 +531,9 @@ namespace Slevyr.DataAccess.Model
                         //C1
                         UbehlyCasSmenySec = timeSec - zacatekSmeny2Sec;
                     }
-                    else if (timeSec >= zacatek1PrestavkySmeny2Sec && timeSec < konec1PrestavkySmeny2Sec)
+                    else if (timeSec >= zacatek1PrestavkySmeny2Sec && timeSec < konec1PrestavkySmeny2Sec)  
                     {
-                        //prestavka 1
+                        //prestavka 1, typicky 22:00 do 22:30
                         Tabule.IsPrestavkaTabule = true;
                         UbehlyCasSmenySec = zacatek1PrestavkySmeny2Sec - zacatekSmeny2Sec;  //cas se zastavil na zacatku 1. prestavky 2. smeny
                     }
@@ -448,7 +549,7 @@ namespace Slevyr.DataAccess.Model
                     }
                     else if (timeSec >= zacatek2PrestavkySmeny2Sec && timeSec < konec2PrestavkySmeny2Sec)
                     {
-                        //prestavka 2
+                        //prestavka 2, typicky 02:00 do 02:20
                         Tabule.IsPrestavkaTabule = true;
                         UbehlyCasSmenySec = (AllDaySec - zacatekSmeny2Sec - Prestavka1Sec) + zacatek2PrestavkySmeny2Sec;  //cas se zastavil na zacatku 2. prestavky 2. smeny + pripocteme sekundy z min. dne
                     }
@@ -468,7 +569,7 @@ namespace Slevyr.DataAccess.Model
                     smena = SmenyEnum.Smena2;
                 }
 
-                PrepocetTabule(unitConfig, smena);
+                PrepocetTabule(smena);
                 
                 Logger.Debug($"- unit {unitConfig.Addr}");
 
@@ -483,18 +584,5 @@ namespace Slevyr.DataAccess.Model
 
         #endregion
 
-        public void SetStopTime(MachineStateEnum machineStatus)
-        {
-            if (machineStatus == MachineStateEnum.Porucha && Tabule.MachineStatus != machineStatus)
-            {
-                //zaznamenam cas kdy jsme poruchu zaznamenali
-                Tabule.MachineStopTime = DateTime.Now;
-            }
-            else if (machineStatus == MachineStateEnum.Vyroba)
-            {
-                //kdyz uz je normalni tak stop time resetuju
-                Tabule.MachineStopTime = null;
-            }
-        }
     }
 }

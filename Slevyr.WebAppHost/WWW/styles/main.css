@@ -228,6 +228,15 @@ a {
    border-color : greenyellow;
 }
 
+.linka--data {
+   color : black;
+    font-weight: bold;
+}
+
+.linka--history {
+   color : black;
+}
+
 @media screen and (max-width: 480px) {
     .linka--num {
         margin: 0 1em 1em 0;

@@ -40,6 +40,9 @@ namespace Slevyr.DataAccess.Model
         /// </summary>
         public int MachineStopDuration { get; set; }
 
+        /// <summary>
+        /// Zaznamena cas kdu byla zjistena porucha
+        /// </summary>
         public DateTime? MachineStopTime { get; set; }
 
         public string MachineStopTimeTxt => MachineStopTime?.ToShortTimeString() ?? "-";

@@ -413,7 +413,7 @@ namespace Slevyr.DataAccess.Model
 
             MachineStateEnum machineStatus = (MachineStateEnum)machineStatusInt;
 
-            LogMachineStatusForMaintenance(machineStatus);
+            //LogMachineStatusForMaintenance(machineStatus); TODO overit u P.
 
             UnitStatus.SetStopTime(machineStatus);
 

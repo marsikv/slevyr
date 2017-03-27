@@ -116,10 +116,26 @@ var startAddr = null;
         $.getJSON(uri + '/getStatus?Addr=' + addr)
             .done(function (data) {
                 updateTableElements(data);
+                updateLastSmenaTable('#lastSmena1', 1, data.LastSmenaResults[0]);
+                updateLastSmenaTable('#lastSmena2', 2, data.LastSmenaResults[1]);
+                updateLastSmenaTable('#lastSmena3', 3, data.LastSmenaResults[2]);
             })
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'GetStatus - error: ' + err);
             });
+    }
+
+    function updateLastSmenaTable(rowid, smenaNum, data) {
+        $(rowid).empty();
+
+        if (data == null) return;
+
+        var s = '<td>' + smenaNum + '</td>' + '<td>' + data.Ok + '</td>' + '<td>' + data.Ng + '</td>'
+            + '<td>' + data.PrumCyklusOk + '</td>'
+            + '<td>' + data.RozdilKusu + '</td>'
+            + '<td>' + data.StopTime + '</td>';
+
+        $(rowid).append(s);
     }
 
     function updateTableElements(data) {

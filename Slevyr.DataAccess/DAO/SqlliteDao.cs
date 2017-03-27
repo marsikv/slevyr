@@ -217,7 +217,7 @@ namespace Slevyr.DataAccess.DAO
                        $"{u.LastNg},null," +  //posledni cas ng neznam
                        $"{rozdil},{defectivitaStr}," +  
                        $"{(int)u.Tabule.MachineStatus}," +
-                       "true)";   //isFinal = posledni hodnota pred ukoncenim smeny
+                       "'true')";   //isFinal = posledni hodnota pred ukoncenim smeny
 
             Logger.Debug(sql);
             Logger.Info($"konec smeny adr:{addr}");

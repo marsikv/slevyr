@@ -95,22 +95,34 @@
                         <td id="casNgLabel">Čas cyklu posledního NG kusu</td>
                         <td id="casNgValue">0 s</td>
                     </tr>
-                    
+
                     <tr>
                         <td id="okNgLabel">Čas posledního vyčtení</td>
                         <td id="okNgRefreshTime">??? s</td>
                     </tr>
-
                 </table>
             </div>
 
-            <!-- <div class="linka--action">
-                <button class="btn btn-fill" type="button" id="RefreshStatus" />Refresh</button>
-                <button class="btn btn-fill" type="button" id="GetStatus"/>Get</button>
-                <span id="isTimerOn">[timer on]</span>
-                <span id="isMockupMode"></span>
-                <span id="checkTime">12:00 AM</span>
-            </div> -->
+            <!-- vysledky predchozich smen-->
+            <div class="linka--history">
+                <table cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td>Směna</td>
+                        <td>OK&nbsp;kusy</td>
+                        <td>NG&nbsp;kusy</td>
+                        <td>Pr.&nbsp;cyklus</td>
+                        <td>Rozdíl</td>
+                        <td>Defektivita</td>
+                        <td>Stop&nbsp;time</td>
+                    </tr>
+                    <tr id="lastSmena1"></tr>
+                    <tr id="lastSmena2"></tr>
+                    <tr id="lastSmena3"></tr>
+                    <tr></tr>
+                    <tr></tr>
+                </table>
+            </div>
+
         </section>
 
     </main>
