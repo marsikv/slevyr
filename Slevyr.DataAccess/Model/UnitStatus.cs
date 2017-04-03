@@ -43,31 +43,6 @@ namespace Slevyr.DataAccess.Model
         Nedef = 0,
     }
 
-    public class SmenaResult
-    {
-        public SmenaResult(UnitStatus unitStatus, double stopTimeSec)
-        {
-            Ok = unitStatus.Ok;
-            Ng = unitStatus.Ng;
-            Defektivita = unitStatus.Tabule.AktualDefectTabule;
-            PrumCyklusOk = unitStatus.PrumCasVyrobyOk;
-            RozdilKusu = unitStatus.Tabule.RozdilTabule;
-            StopTime = (int)stopTimeSec;
-        }
-
-        public int Ok { get; set; }
-
-        public int Ng { get; set; }
-
-        public float PrumCyklusOk { get; set; }
-    
-        public int RozdilKusu { get; set; }
-
-        public float Defektivita { get; set; }
-
-        public int StopTime { get; set; }
-    }
-
     public class UnitStatus
     {
         #region consts
@@ -80,21 +55,25 @@ namespace Slevyr.DataAccess.Model
 
         private const int Prestavka1Sec = 30 * 60;  //prvni prestavka smennost B
         private const int Prestavka2Sec = 20 * 60;  //druha prestavka smennost B
-
-        //8hod - 0.5hod. prestavka
-        private const int DelkaSmenySec = 27000;
-
-        private const int DelkaSmenyBSec = 27000;
+        
+        public const int DelkaSmenyASec = 27000;  //8hod - 30min. prestavka 
+        public const int DelkaSmenyBSec = 40200;  //12h - 50min. prestavka
 
         #endregion
 
         #region private fields
 
-        private Stopwatch _stopwatch;
+        private TimeSpan _cumulativeStopTimeSpan = new TimeSpan();
+        private int _lastMachineStopDuration;
 
         #endregion
 
         #region properties
+
+        /// <summary>
+        /// celkovy stop time stroje za smenu
+        /// </summary>
+        public TimeSpan CumulativeStopTimeSpan => _cumulativeStopTimeSpan;
 
         public UnitTabule Tabule { get; private set; }
 
@@ -110,27 +89,17 @@ namespace Slevyr.DataAccess.Model
         /// <summary>
         /// cislo smeny: 1,2,3
         /// </summary>
-        private int CurrentSmenaAsNum
-        {
-            get
-            {
-                switch (CurrentSmena)
-                {
-                    case SmenyEnum.Smena1:
-                        return 1;
-                    case SmenyEnum.Smena2:
-                        return 2;
-                    case SmenyEnum.Smena3:
-                        return 3;
-                    default:
-                        return 0;
-                }
-            }
-        }
+        private int CurrentSmenaAsNum => GetSmenaNum(CurrentSmena);
 
         public int Ok { get; set; }
 
-        public int Ng { get; set; }             
+        public int Ng { get; set; }
+
+        public int FinalOk { get; set; }   //po nacteni stavu konce smeny
+
+        public int FinalNg { get; set; }   //po nacteni stavu konce smeny
+
+        public int FinalMachineStopDuration { get; set; }  // Jak dlouho stroj stoji v sec - po nacteni stavu konce smeny
 
         public DateTime LastCheckTime { get; set; }
         public string LastCheckTimeTxt => LastCheckTime.ToShortTimeString();
@@ -197,17 +166,6 @@ namespace Slevyr.DataAccess.Model
         public byte VerzeSw2 { get; set; }
         public byte VerzeSw3 { get; set; }
 
-        /// <summary>
-        /// Pocet OK ktery se zaznamena po konci smeny
-        /// </summary>
-        public short LastOk { get; set; }
-        /// <summary>
-        /// Pocet NG ktery se zaznamena po konci smeny
-        /// </summary>
-        public short LastNg { get; set; }
-        //public MachineStateEnum LastMachineStatus { get; set; }
-        //public short LastMachineStopTime { get; set; }
-
         #endregion
 
         #region events
@@ -226,19 +184,39 @@ namespace Slevyr.DataAccess.Model
             CurrentSmena = SmenyEnum.Nedef;
             Tabule = new UnitTabule();
             LastSmenaResults = new SmenaResult[3];
-            PrepareSmena();
+            PrepareNewSmena();
         }
 
         #endregion
 
         #region methods
 
-        private void PrepareSmena()
+        public static int GetSmenaNum(SmenyEnum smena)
         {
-            _stopwatch = new Stopwatch();            
+            switch (smena)
+            {
+                case SmenyEnum.Smena1:
+                    return 1;
+                case SmenyEnum.Smena2:
+                    return 2;
+                case SmenyEnum.Smena3:
+                    return 3;
+                default:
+                    return 0;
+            }
         }
 
-        private void PrepocetTabule(SmenyEnum smena)
+        /// <summary>
+        /// vola se vzdy pri zacatku nove smeny
+        /// zde je mozne inicializace nejaky stavovych property
+        /// </summary>
+        private void PrepareNewSmena()
+        {
+            _cumulativeStopTimeSpan = new TimeSpan();
+            _lastMachineStopDuration = 0;
+        }
+
+        private void PrepocetTabule(SmenyEnum smena, bool isTypSmennostiA)
         {
             Logger.Debug(smena);
 
@@ -246,9 +224,7 @@ namespace Slevyr.DataAccess.Model
             {
                 if (CurrentSmena != SmenyEnum.Nedef)  //aby bylo zajisteno ze se opravdu jedna o prechod z jedne smeny do druhe 
                 {
-                    //Ulozim vysledek smeny a vynuluju pro dalsi smenu
-                    LastSmenaResults[CurrentSmenaAsNum-1] = new SmenaResult(this, _stopwatch.Elapsed.TotalSeconds);
-                    PrepareSmena();
+                    PrepareNewSmena();
 
                     //udalost oznamuje ze aktualni smena konci
                     //po odchyceni se po definovanem zpozdeni zaradi prikaz k nacteni stavu do fronty adhoc prikazu
@@ -257,34 +233,31 @@ namespace Slevyr.DataAccess.Model
                 CurrentSmena = smena;
             }
 
-            //if (!IsPrestavkaTabule)   //issue https://github.com/marsikv/slevyr/issues/42
+            try
             {
-                try
-                {
-                    double casNa1Kus = (double)DelkaSmenySec / (double)Tabule.CilKusuTabule;
-                    var aktualniCil = UbehlyCasSmenySec / casNa1Kus;
-                    Tabule.RozdilTabule = (int)Math.Round(Ok - aktualniCil);
-                }
-                catch (Exception ex)
-                {
-                    Tabule.RozdilTabule = int.MinValue;
-                    Logger.Error(ex);
-                }
-
-                try
-                {
-                    Tabule.AktualDefectTabule = (float)Ng / (float)Ok * 100;
-                }
-                catch (Exception)
-                {
-                    Tabule.AktualDefectTabule = float.NaN;
-                }
-
-                Tabule.AktualDefectTabuleTxt = (float.IsNaN(Tabule.AktualDefectTabule) || Ok == 0) ? "-" : Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.CurrentCulture);
-
-                Tabule.AktualDefectTabuleStr = (float.IsNaN(Tabule.AktualDefectTabule) || Ok == 0) ? "null" : Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.InvariantCulture);
-
+                double delkaSmeny = isTypSmennostiA ? DelkaSmenyASec : DelkaSmenyBSec;
+                double casNa1Kus = delkaSmeny / (double)Tabule.CilKusuTabule;
+                var aktualniCil = UbehlyCasSmenySec / casNa1Kus;
+                Tabule.RozdilTabule = (int)Math.Round(Ok - aktualniCil);
             }
+            catch (Exception ex)
+            {
+                Tabule.RozdilTabule = int.MinValue;
+                Logger.Error(ex);
+            }
+
+            try
+            {
+                Tabule.AktualDefectTabule = (float)Ng / (float)Ok * 100;
+            }
+            catch (Exception)
+            {
+                Tabule.AktualDefectTabule = float.NaN;
+            }
+
+            Tabule.AktualDefectTabuleTxt = (float.IsNaN(Tabule.AktualDefectTabule) || Ok == 0) ? "-" : Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.CurrentCulture);
+
+            Tabule.AktualDefectTabuleStr = (float.IsNaN(Tabule.AktualDefectTabule) || Ok == 0) ? "null" : Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.InvariantCulture);
         }
 
 
@@ -292,11 +265,12 @@ namespace Slevyr.DataAccess.Model
         {
             if (machineStatus == MachineStateEnum.Vyroba)
             {
-                _stopwatch.Stop();
+                _cumulativeStopTimeSpan.Add(new TimeSpan(0, 0, _lastMachineStopDuration));
             }
             else
             {
-                _stopwatch.Start();
+                //uchovam si posledni zjistenou delku stop stavu 
+                _lastMachineStopDuration = Tabule.MachineStopDuration;
             }
 
             if (machineStatus == MachineStateEnum.Porucha && Tabule.MachineStatus != machineStatus)
@@ -432,7 +406,7 @@ namespace Slevyr.DataAccess.Model
                     smena = SmenyEnum.Smena3;
                 }
 
-                PrepocetTabule(smena);
+                PrepocetTabule(smena, unitConfig.IsTypSmennostiA);
 
                 Logger.Debug($"- unit {unitConfig.Addr}");
 
@@ -564,12 +538,12 @@ namespace Slevyr.DataAccess.Model
                         Logger.Error($"chybne vyhodnoceni intervalu smeny time:{timeSec}");
                     }
 
-                    Tabule.CilKusuTabule = unitConfig.Cil3Smeny;
-                    Tabule.CilDefectTabule = unitConfig.Def3Smeny;
+                    Tabule.CilKusuTabule = unitConfig.Cil2Smeny;
+                    Tabule.CilDefectTabule = unitConfig.Def2Smeny;
                     smena = SmenyEnum.Smena2;
                 }
 
-                PrepocetTabule(smena);
+                PrepocetTabule(smena, unitConfig.IsTypSmennostiA);
                 
                 Logger.Debug($"- unit {unitConfig.Addr}");
 

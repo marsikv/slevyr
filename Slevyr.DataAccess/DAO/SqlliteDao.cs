@@ -208,13 +208,13 @@ namespace Slevyr.DataAccess.DAO
             string timeDateStr = dt.ToString("yyyy-MM-dd HH':'mm':'ss");
 
             //spocitam i defektivitu a rozdil pro posledni ok a ng
-            var defectivitaStr = (u.LastOk == 0) ? "null" : Math.Round(((float)u.LastNg / (float)u.LastOk) * 100, 2).ToString(CultureInfo.InvariantCulture);
-            var rozdil = u.LastOk - cilSmeny;
+            var defectivitaStr = (u.FinalOk == 0) ? "null" : Math.Round(((float)u.FinalNg / (float)u.FinalOk) * 100, 2).ToString(CultureInfo.InvariantCulture);
+            var rozdil = u.FinalOk - cilSmeny;
 
             string sql = SqlInsertLastStatusIntoObservations +
                        $"('{timeDateStr}', {cmd},{addr}," +
-                       $"{u.LastOk},null," +  //posledni cas ok neznam
-                       $"{u.LastNg},null," +  //posledni cas ng neznam
+                       $"{u.FinalOk},null," +  //posledni cas ok neznam
+                       $"{u.FinalNg},null," +  //posledni cas ng neznam
                        $"{rozdil},{defectivitaStr}," +  
                        $"{(int)u.Tabule.MachineStatus}," +
                        "'true')";   //isFinal = posledni hodnota pred ukoncenim smeny

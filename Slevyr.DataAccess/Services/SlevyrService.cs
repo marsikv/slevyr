@@ -143,13 +143,28 @@ namespace Slevyr.DataAccess.Services
         {
             UnitStatus us = sender as UnitStatus;
 
-            int cmd = (int) smena;
+            int cmd;
+            if (_unitDictionary[us.Addr].UnitConfig.IsTypSmennostiA)
+            {
+                cmd = (int) smena;
+            }
+            else
+            {
+                if (smena == SmenyEnum.Smena1)
+                {
+                    cmd = (int) SmenyEnum.Smena1;
+                }
+                else
+                {
+                    cmd = (int)SmenyEnum.Smena3;  //pro druhou smenu typu B se musi poslat 0x6e 
+                }
+            }
 
             Logger.Info($"prechod smeny {smena} addr:{us.Addr} cmd:{cmd:x2}");
 
-            //prikaz na vycteni hodnoty se posila po zpozdeni 2sec 
+            //prikaz na vycteni hodnoty se posila po zpozdeni 2min 
             //TODO parametr do config
-            Task.Delay(2000).ContinueWith(t =>
+            Task.Delay(120000).ContinueWith(t =>
             {
                 var uc = new UnitCommand(() => _unitDictionary[us.Addr].SendReadStavCitacuKonecSmeny(cmd), "CmdReadStavCitacuKonecSmeny", us.Addr, cmd);
                 UnitCommandsQueue.Enqueue(uc);
@@ -939,16 +954,22 @@ namespace Slevyr.DataAccess.Services
                             //udalost prichazi kdyz dochazi ke zmene stavu a cmd urcuje ktera smena prace skoncila. 
                             //zacatek nasledujici smeny je zaroven koncem predchozi                           
                             _unitDictionary[addr].DoReadStavCitacuKonecSmeny(packet);
+                            _unitDictionary[addr].SetSmenaHistory(SmenyEnum.Smena3);  //aktualizuji podle poslednich znamych hodnot 
+                            //SqlliteDao.AddUnitSmenaHistory(addr, _unitDictionary[addr].UnitStatus);
                             SqlliteDao.AddUnitKonecSmenyState(addr, cmd, _unitDictionary[addr].UnitStatus,
                                 _unitDictionary[addr].UnitConfig.Zacatek1SmenyTime, _unitDictionary[addr].UnitConfig.Cil3Smeny);
                             break;
                         case UnitMonitor.CmdReadStavCitacuOdpoledniSmena:
                             _unitDictionary[addr].DoReadStavCitacuKonecSmeny(packet);
+                            _unitDictionary[addr].SetSmenaHistory(SmenyEnum.Smena2);
+                            //SqlliteDao.AddUnitSmenaHistory(addr, _unitDictionary[addr].UnitStatus);
                             SqlliteDao.AddUnitKonecSmenyState(addr, cmd, _unitDictionary[addr].UnitStatus,
                                 _unitDictionary[addr].UnitConfig.Zacatek3SmenyTime, _unitDictionary[addr].UnitConfig.Cil2Smeny);
                             break;
                         case UnitMonitor.CmdReadStavCitacuRanniSmena:
                             _unitDictionary[addr].DoReadStavCitacuKonecSmeny(packet);
+                            _unitDictionary[addr].SetSmenaHistory(SmenyEnum.Smena1);
+                            //SqlliteDao.AddUnitSmenaHistory(addr, _unitDictionary[addr].UnitStatus);
                             SqlliteDao.AddUnitKonecSmenyState(addr, cmd, _unitDictionary[addr].UnitStatus,
                                 _unitDictionary[addr].UnitConfig.Zacatek2SmenyTime, _unitDictionary[addr].UnitConfig.Cil1Smeny);
                             break;

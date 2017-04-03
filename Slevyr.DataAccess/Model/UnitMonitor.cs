@@ -62,9 +62,9 @@ namespace Slevyr.DataAccess.Model
         public const byte CmdReadTeplotu5Cidla = 105; //vrati teplotu z pateho cidla DS18B20
         public const byte CmdReadRozdilKusu = 106; //vraci rozdil kusu
         public const byte CmdReadDefektivita = 107; //vraci defektivitu
-        public const byte CmdReadStavCitacuRanniSmena = 0x6c;     //vraci konecny stav citacu, pracuje stejne jako 0x60 (96)
-        public const byte CmdReadStavCitacuOdpoledniSmena = 0x6d; //
-        public const byte CmdReadStavCitacuNocniSmena = 0x6e;     //
+        public const byte CmdReadStavCitacuRanniSmena = 0x6c;     //vraci konecny stav citacu smena 1A a smena 1B, pracuje stejne jako 0x60 (96)
+        public const byte CmdReadStavCitacuOdpoledniSmena = 0x6d; //vraci konecny stav citacu smena 2A
+        public const byte CmdReadStavCitacuNocniSmena = 0x6e;     //vraci konecny stav citacu smena 3A a 2B
 
         public const byte CmdTestPacket = 0;     //specialni prikaz pro odeslani testovaciho packetu
 
@@ -417,14 +417,13 @@ namespace Slevyr.DataAccess.Model
 
             //LogMachineStatusForMaintenance(machineStatus); TODO overit u P.
 
-            UnitStatus.SetStopTime(machineStatus);
+            //UnitStatus.SetStopTime(machineStatus);
 
-            UnitStatus.Ok = okVal;
-            UnitStatus.Ng = ngVal;
-            UnitStatus.Tabule.MachineStatus = machineStatus;
-            UnitStatus.Tabule.MachineStopDuration = stopDuration;
+            UnitStatus.FinalOk = okVal;
+            UnitStatus.FinalNg = ngVal;
+            UnitStatus.FinalMachineStopDuration = stopDuration;
 
-            Logger.Info($"okVal:{okVal} ngVal:{ngVal} machineStatus:{machineStatus} unit: {Address}");
+            Logger.Info($"final ok:{okVal} ng:{ngVal} stopDuration:{stopDuration} unit: {Address}");
         }
 
         #endregion
@@ -439,7 +438,7 @@ namespace Slevyr.DataAccess.Model
                     TimeSpan diff = (DateTime.Now - UnitStatus.Tabule.MachineStopTime.Value);
                     duration = $"({diff})";
                 }
-                MaintenanceLogger.Info($"linka {Address}: {UnitStatus.Tabule.MachineStatus} => {machineStatus} {duration}");
+                MaintenanceLogger.Info($"linka {Address}: {UnitStatus.Tabule.MachineStatus} => {machineStatus} stop: {duration} celk. stop: {UnitStatus.CumulativeStopTimeSpan}");
             }
         }
 
@@ -610,6 +609,11 @@ namespace Slevyr.DataAccess.Model
         }
 
         #endregion
-      
+
+        public void SetSmenaHistory(SmenyEnum smena)
+        {
+           UnitStatus.LastSmenaResults[UnitStatus.GetSmenaNum(smena) - 1] = 
+                new SmenaResult(UnitStatus, UnitConfig, smena);
+        }
     }
 }

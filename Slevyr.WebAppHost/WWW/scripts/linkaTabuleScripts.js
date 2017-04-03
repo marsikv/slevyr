@@ -134,7 +134,7 @@ var startAddr = null;
             + '<td>' + Math.round(data.PrumCyklusOk * 100) / 100 + '</td>'
             + '<td>' + data.RozdilKusu + '</td>'
             + '<td>' + Math.round(data.Defektivita * 100) / 100 + '</td>'
-            + '<td>' + data.StopTime + '</td>';
+            + '<td>' + data.StopTimeTxt + '</td>';
 
         $(rowid).append(s);
     }
@@ -144,7 +144,16 @@ var startAddr = null;
             $('#okNumValue').text(data.Ok);
             $('#ngNumValue').text(data.Ng);
             $('#okNgRefreshTime').text(data.OkNgTimeTxt);
+            $('#casOkValue').text(Number((data.CasOk).toFixed(1)) + 's');
+            $('#casNgValue').text(Number((data.CasNg).toFixed(1)) + 's');
+            $('#checkTime').text(data.LastCheckTimeTxt);
         } else {
+            $('#okNumValue').text('-');
+            $('#ngNumValue').text('-');
+            $('#okNgRefreshTime').text('-');
+            $('#casOkValue').text('-');
+            $('#casNgValue').text('-');
+            $('#checkTime').text('-');
             window.slVyr.addNotification('error', 'Chyba jednotky - error: ');   //lepsi hlasku
         }
 
@@ -153,10 +162,6 @@ var startAddr = null;
         } else {
             $('#isPrestavkaTabule').removeClass('linka--prestavka-visible');
         }
-
-        $('#casOkValue').text(Number((data.CasOk).toFixed(1)) + 's');
-        $('#casNgValue').text(Number((data.CasNg).toFixed(1)) + 's');
-        $('#checkTime').text(data.LastCheckTimeTxt);
 
         $('#cilTabule').text(data.Tabule.CilKusuTabule);
         $('#rozdilTabule').text(data.Tabule.RozdilTabuleTxt);

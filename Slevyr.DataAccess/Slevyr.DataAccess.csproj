@@ -81,6 +81,7 @@
     <Compile Include="DAO\SqlliteDao.cs" />
     <Compile Include="Model\IntervalExportDef.cs" />
     <Compile Include="Model\RunConfig.cs" />
+    <Compile Include="Model\SmenaResult.cs" />
     <Compile Include="Model\UnitCommand.cs" />
     <Compile Include="Model\UnitConfig.cs" />
     <Compile Include="Model\UnitMonitor.cs" />
