@@ -22,6 +22,10 @@ namespace Slevyr.DataAccess.Model
 
         private static bool _errorRecorded;
         private static int _errorRecordedCnt;
+        private int _cmdReadStavCitacuSmenaResponseCnt;  //pocita pocet odpovedi na prikaz pro zjisteni finalniho stavu smeny tzn. 6c,6d,6e
+
+        readonly byte[] _obtainStatusSequence;
+        int _obtainStatusIndex = 0;
 
         #endregion
 
@@ -66,10 +70,9 @@ namespace Slevyr.DataAccess.Model
         public const byte CmdReadStavCitacuOdpoledniSmena = 0x6d; //vraci konecny stav citacu smena 2A
         public const byte CmdReadStavCitacuNocniSmena = 0x6e;     //vraci konecny stav citacu smena 3A a 2B
 
-        public const byte CmdTestPacket = 0;     //specialni prikaz pro odeslani testovaciho packetu
+        public const byte CmdReadStavCitacuWithCumulativeStopTime = 0x6f;  //novy prikaz od 8.4. - viz wiki
 
-        readonly byte[] _obtainStatusSequence;
-        int _obtainStatusIndex = 0;
+        public const byte CmdTestPacket = 0;     //specialni prikaz pro odeslani testovaciho packetu
 
         #endregion
 
@@ -117,6 +120,8 @@ namespace Slevyr.DataAccess.Model
         public CancellationTokenSource UpdateStatusTokenSource { get; private set; }
         public long LastId { get; set; }
 
+        public bool IsInitialStavCitacuSmenDetection => _cmdReadStavCitacuSmenaResponseCnt <= 3; //ocekam odpoved na prikazy 6c,6d,6e
+
         #endregion
 
         #region public methods - send command
@@ -126,6 +131,7 @@ namespace Slevyr.DataAccess.Model
             Logger.Info($"+ unit {Address}");
 
             UnitConfig.TypSmennosti = char.ToString((char) varianta);
+            UnitStatus.IsTypSmennostiA = UnitConfig.IsTypSmennostiA;
 
             var res = SendCommand(CmdSetSmennost, varianta);
 
@@ -159,7 +165,8 @@ namespace Slevyr.DataAccess.Model
         {
             Logger.Info($"+ unit {Address}");
 
-            UnitConfig.TypSmennosti = "A"; 
+            UnitConfig.TypSmennosti = "A";
+            UnitStatus.IsTypSmennostiA = UnitConfig.IsTypSmennostiA;
             UnitConfig.Prestavka1Smeny = prest1.ToString();  //TODO ukladat TimeSpan, ne string
             UnitConfig.Prestavka2Smeny = prest2.ToString();
             UnitConfig.Prestavka3Smeny = prest3.ToString();
@@ -178,6 +185,7 @@ namespace Slevyr.DataAccess.Model
             Logger.Info($"+ unit {Address}");
 
             UnitConfig.TypSmennosti = "B";
+            UnitStatus.IsTypSmennostiA = UnitConfig.IsTypSmennostiA;
             UnitConfig.Prestavka1Smeny = null;  
             UnitConfig.Prestavka2Smeny = null;
             UnitConfig.Prestavka3Smeny = null;
@@ -215,7 +223,6 @@ namespace Slevyr.DataAccess.Model
             Logger.Info($"+ addr:{Address}");
             return SendCommand(CmdResetJednotky);
         }
-
 
         public bool SendSetHandshake(byte handshake, byte prumTyp)
         {
@@ -290,6 +297,12 @@ namespace Slevyr.DataAccess.Model
             return SendCommand((byte)cmd);  //to je specificke protoze prikaz se lisi podle smeny
         }
 
+        public bool SendStavCitacuWithCumulativeStopTime()
+        {
+            Logger.Info($"+ unit {Address}");
+
+            return SendCommand(CmdReadStavCitacuWithCumulativeStopTime);
+        }
 
         #endregion
 
@@ -372,6 +385,7 @@ namespace Slevyr.DataAccess.Model
             Logger.Debug($"unit {Address}");
         }
 
+        /* Nevyuzivame
         public void DoReadZaklNastaveni(byte[] buff)
         {
             UnitStatus.MinOk = buff[4];
@@ -380,6 +394,7 @@ namespace Slevyr.DataAccess.Model
             UnitStatus.VerzeSw2 = buff[8];
             UnitStatus.VerzeSw3 = buff[9];
         }
+        */
 
         public void DoReadRozdilKusu(byte[] buff)
         {
@@ -406,25 +421,45 @@ namespace Slevyr.DataAccess.Model
             Logger.Debug("");
 
             //byte addr = buff[2];
-            //byte cmd = buff[3];
+            byte cmd = buff[3];
 
             var okVal = Helper.ToShort(buff[4], buff[5]);
             var ngVal = Helper.ToShort(buff[6], buff[7]);
-            var stopDuration = Helper.ToShort(buff[8], buff[9]);
-            short machineStatusInt = buff[10];
-
-            MachineStateEnum machineStatus = (MachineStateEnum)machineStatusInt;
-
-            //LogMachineStatusForMaintenance(machineStatus); TODO overit u P.
-
-            //UnitStatus.SetStopTime(machineStatus);
+            var stopDuration = Helper.ToShort(buff[8], buff[9]);  //celkovy stop cas v sekundach (nově od 8.4.)
+           
+            //short machineStatusInt = buff[10];  //to uz asi neplati - vzdy jen 0
+            //MachineStateEnum machineStatus = (MachineStateEnum)machineStatusInt;
 
             UnitStatus.FinalOk = okVal;
             UnitStatus.FinalNg = ngVal;
             UnitStatus.FinalMachineStopDuration = stopDuration;
 
-            Logger.Info($"final ok:{okVal} ng:{ngVal} stopDuration:{stopDuration} unit: {Address}");
+            _cmdReadStavCitacuSmenaResponseCnt++;
+
+            Logger.Info($"final OK:{okVal} NG:{ngVal} stop duration:{stopDuration} unit:{Address} cmd:{cmd}");
         }
+
+        public void DoReadStavCitacuWithCumulativeStopTime(byte[] buff)
+        {
+            Logger.Debug("");
+
+            //byte addr = buff[2];
+            byte cmd = buff[3];
+
+            var zmenaModeluDuration = Helper.ToShort(buff[4], buff[5]);
+            var poruchaDuration = Helper.ToShort(buff[6], buff[7]);
+            var servisDuration = Helper.ToShort(buff[8], buff[9]);
+
+            //short machineStatusInt = buff[10];  //to uz asi neplati - vzdy jen 0
+            //MachineStateEnum machineStatus = (MachineStateEnum)machineStatusInt;
+
+            UnitStatus.ZmenaModeluDuration = zmenaModeluDuration;
+            UnitStatus.PoruchaDuration = poruchaDuration;
+            UnitStatus.ServisDuration = servisDuration;
+
+            Logger.Info($"cumulative time zmena modelu:{zmenaModeluDuration} porucha:{poruchaDuration} servis:{servisDuration} unit:{Address}");
+        }
+
 
         #endregion
 
@@ -438,7 +473,8 @@ namespace Slevyr.DataAccess.Model
                     TimeSpan diff = (DateTime.Now - UnitStatus.Tabule.MachineStopTime.Value);
                     duration = $"({diff})";
                 }
-                MaintenanceLogger.Info($"linka {Address}: {UnitStatus.Tabule.MachineStatus} => {machineStatus} stop: {duration} celk. stop: {UnitStatus.CumulativeStopTimeSpan}");
+                MaintenanceLogger.Info(
+                    $"linka {Address}: {UnitStatus.Tabule.MachineStatus} => {machineStatus} stop duration: {duration}"); // celk. stop: {UnitStatus.CumulativeStopTimeSpan}");
             }
         }
 
@@ -585,6 +621,7 @@ namespace Slevyr.DataAccess.Model
         {
             UnitConfig = new UnitConfig();
             UnitConfig.LoadFromFile(addr, dataFilePath);
+            UnitStatus.IsTypSmennostiA = UnitConfig.IsTypSmennostiA;
             UnitStatus.Tabule.LinkaName = UnitConfig.UnitName;
             UnitStatus.Tabule.Addr = addr;
         }

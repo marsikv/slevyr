@@ -1,10 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Data.SqlTypes;
-using System.Diagnostics;
 using System.Globalization;
 using NLog;
-using Slevyr.DataAccess.Services;
 
 namespace Slevyr.DataAccess.Model
 {
@@ -63,8 +60,8 @@ namespace Slevyr.DataAccess.Model
 
         #region private fields
 
-        private TimeSpan _cumulativeStopTimeSpan = new TimeSpan();
-        private int _lastMachineStopDuration;
+        //private TimeSpan _cumulativeStopTimeSpan = new TimeSpan();
+        //private int _lastMachineStopDuration;
 
         #endregion
 
@@ -73,7 +70,7 @@ namespace Slevyr.DataAccess.Model
         /// <summary>
         /// celkovy stop time stroje za smenu
         /// </summary>
-        public TimeSpan CumulativeStopTimeSpan => _cumulativeStopTimeSpan;
+        //public TimeSpan CumulativeStopTimeSpan => _cumulativeStopTimeSpan;  - tu uz nepotrebuji protoze prikazy 6c,6d,6e vraceji kumulovany stop time
 
         public UnitTabule Tabule { get; private set; }
 
@@ -116,7 +113,7 @@ namespace Slevyr.DataAccess.Model
         /// </summary>
         public float CasOk { get; set; }
 
-        public string CasOkStr => CasOk.ToString(CultureInfo.InvariantCulture);
+        public string CasOkStr => float.IsNaN(CasOk) ? "null" : CasOk.ToString(CultureInfo.InvariantCulture);
 
         /// <summary>
         /// Průměrný čas OK kusu, sekundy na desetiny
@@ -143,7 +140,7 @@ namespace Slevyr.DataAccess.Model
         /// čas posledního NG kusu, Sekundy na desetiny
         /// </summary>
         public float CasNg { get; set; }
-        public string CasNgStr => CasNg.ToString(CultureInfo.InvariantCulture);
+        public string CasNgStr => float.IsNaN(CasNg) ? "null" : CasNg.ToString(CultureInfo.InvariantCulture);
 
         //public DateTime CasNgTime { get; set; }
         //public bool IsCasNg { get; set; }
@@ -160,11 +157,20 @@ namespace Slevyr.DataAccess.Model
         private int UbehlyCasSmenySec { get; set; }
 
         public bool IsTabuleOk { get; set; }
+
+        public bool IsTypSmennostiA { get; set; }
+
+        public short ZmenaModeluDuration { get; set; }
+        public short PoruchaDuration { get; set; }
+        public short ServisDuration { get; set; }
+
+        /* -- nevyuzivame
         public byte MinOk { get; set; }
         public byte MinNg { get; set; }
         public byte VerzeSw1 { get; set; }
         public byte VerzeSw2 { get; set; }
         public byte VerzeSw3 { get; set; }
+        */
 
         #endregion
 
@@ -184,6 +190,7 @@ namespace Slevyr.DataAccess.Model
             CurrentSmena = SmenyEnum.Nedef;
             Tabule = new UnitTabule();
             LastSmenaResults = new SmenaResult[3];
+            
             PrepareNewSmena();
         }
 
@@ -212,8 +219,18 @@ namespace Slevyr.DataAccess.Model
         /// </summary>
         private void PrepareNewSmena()
         {
-            _cumulativeStopTimeSpan = new TimeSpan();
-            _lastMachineStopDuration = 0;
+            //Ok = 0;
+            //Ng = 0;
+            //CasOk = float.NaN;
+            //CasNg = float.NaN;
+            //Defektivita = float.NaN;
+            FinalMachineStopDuration = 0;
+            FinalOk = 0;
+            FinalNg = 0;
+            ZmenaModeluDuration = 0;
+            PoruchaDuration = 0;
+            ServisDuration = 0;
+            IsTabuleOk = false;
         }
 
         private void PrepocetTabule(SmenyEnum smena, bool isTypSmennostiA)
@@ -265,12 +282,12 @@ namespace Slevyr.DataAccess.Model
         {
             if (machineStatus == MachineStateEnum.Vyroba)
             {
-                _cumulativeStopTimeSpan.Add(new TimeSpan(0, 0, _lastMachineStopDuration));
+                //_cumulativeStopTimeSpan.Add(new TimeSpan(0, 0, _lastMachineStopDuration));
             }
             else
             {
                 //uchovam si posledni zjistenou delku stop stavu 
-                _lastMachineStopDuration = Tabule.MachineStopDuration;
+                //_lastMachineStopDuration = Tabule.MachineStopDuration;
             }
 
             if (machineStatus == MachineStateEnum.Porucha && Tabule.MachineStatus != machineStatus)

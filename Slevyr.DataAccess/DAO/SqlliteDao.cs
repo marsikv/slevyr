@@ -65,14 +65,14 @@ namespace Slevyr.DataAccess.DAO
 
         const string SqlExportToCsv = "select datetime(obTime,'localtime') as time,cmd,unitId,isPrestavka,cilOk,pocetOk,casPoslednihoOk," +
                               "prumCasVyrobyOk,cilDefect,pocetNg,casPoslednihoNg,prumCasVyrobyNg," +
-                              "rozdil,atualniDefectivita,stavLinky from observations " +
+                              "rozdil,atualniDefectivita,stavLinky,isFinal  from observations " +
         "where obTime between @timeFrom and @timeTo";
 
 
         static readonly string[] SqlExportToCsvFieldNames =
         {
             "Čas","Cmd","UnitId","Přestávka","Cíl OK","Počet OK","Čas posl OK","Prům čas OK","Cíl defektivity","Počet NG",
-            "Čas posl NG","Prům čas NG","Rozdíl","Atuální defectivita","Stav linky"
+            "Čas posl NG","Prům čas NG","Rozdíl","Atuální defectivita","Stav linky","Konec směny"
         };
 
         const string SqlCreateIndex = @"CREATE INDEX `observations_time_idx` ON `observations` (`obTime` ASC)";
@@ -206,6 +206,9 @@ namespace Slevyr.DataAccess.DAO
 
             //SQLite pozaduje format: yyyy - MM - dd HH: mm: ss
             string timeDateStr = dt.ToString("yyyy-MM-dd HH':'mm':'ss");
+
+            //TODO pouzit LastSmenaResults
+            //u.LastSmenaResults
 
             //spocitam i defektivitu a rozdil pro posledni ok a ng
             var defectivitaStr = (u.FinalOk == 0) ? "null" : Math.Round(((float)u.FinalNg / (float)u.FinalOk) * 100, 2).ToString(CultureInfo.InvariantCulture);

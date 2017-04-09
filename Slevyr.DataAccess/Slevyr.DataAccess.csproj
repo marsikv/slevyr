@@ -100,7 +100,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <TransformOnBuild>true</TransformOnBuild>
+    </None>
     <None Include="mykey.snk" />
     <None Include="packages.config" />
   </ItemGroup>

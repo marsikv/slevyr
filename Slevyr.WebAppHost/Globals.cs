@@ -57,7 +57,7 @@ namespace Slevyr.WebAppHost
                 JsonDataFilePath = ConfigurationManager.AppSettings["JsonFilePath"],
                 DbFilePath = ConfigurationManager.AppSettings["DbFilePath"],
                 SendAttempts = Int32.Parse(ConfigurationManager.AppSettings["SendAttempts"]),
-                DefaultExportFileName = ConfigurationManager.AppSettings["DefaultExportFileName"],                
+                DefaultExportFileName = ConfigurationManager.AppSettings["DefaultExportFileName"],
             };
 
             bool b;
@@ -72,6 +72,7 @@ namespace Slevyr.WebAppHost
 
             Boolean.TryParse(ConfigurationManager.AppSettings["IsWaitCommandResult"], out b); RunConfig.IsWaitCommandResult = b;
 
+            if (Int32.TryParse(ConfigurationManager.AppSettings["ReadStopDurationPeriod"], out i)) RunConfig.ReadStopDurationPeriod = i;
 
             PortConfig = new SerialPortConfig
             {

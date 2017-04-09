@@ -5,3 +5,7 @@ SledovaniVyrobyWebAppHost/obj/
 UnitTest/obj/
 TestConsoleApp/obj/
 Slevyr.WebAppHost/obj/
+Slevyr.WebAppHost/bin/
+/Slevyr.DataAccess/bin/Release/EntityFramework.SqlServer.xml
+Slevyr.DataAccess/bin/Release/
+Slevyr.DataAccess/obj/Release/

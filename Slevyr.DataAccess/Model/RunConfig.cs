@@ -15,6 +15,8 @@ namespace Slevyr.DataAccess.Model
         public int SendCommandTimeOut = 350;  //timeout [ms] pro nacitani potvrzeni odeslaneho prikazu
         public int ReadResultTimeOut = 5000;  //timeout [ms] pro nacitani dat ktere maji prijit po odeslanem prikazu
         public int MinCmdDelay = 600;         //příkazy na jednu adresu jednotky by nemyly jít častěji jak jednou za cca 600ms, poté dochází k zahlcení bufferu u 
+        
+        public int ReadStopDurationPeriod = 300; //perioda pro nacitani kumulativniho casu z jednotek prikaze 0x6f v sec 
 
         ///<summary>urcuje zda se nacita posledni cas OK a NG</summary>
         public bool IsReadOkNgTime = true; 
@@ -45,6 +47,8 @@ namespace Slevyr.DataAccess.Model
 
         /// <summary>vraci zda se provede planovany reset RF </summary>
         public bool IsScheduledResetRF => CycleForScheduledResetRf.HasValue && CycleForScheduledResetRf > 0;
+
+       
 
         /// <summary> Provede reset RF kdyz je detekovane vetsi mnozstvi chyb a testovaci paket neni potrzen </summary>
         public bool IsAutoResetRF;

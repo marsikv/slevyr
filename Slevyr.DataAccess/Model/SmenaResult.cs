@@ -6,8 +6,8 @@ namespace Slevyr.DataAccess.Model
     {
         public SmenaResult(UnitStatus unitStatus, UnitConfig unitConfig, SmenyEnum smena)
         {
-            Ok = unitStatus.Ok;
-            Ng = unitStatus.Ng;
+            Ok = unitStatus.FinalOk >= 0 ? unitStatus.FinalOk : -1;
+            Ng = unitStatus.FinalNg >= 0 ? unitStatus.FinalNg : -1; 
 
             Defektivita = (Ok != 0) ? (float)Ng / (float)Ok * 100 : float.NaN;
 
@@ -34,7 +34,8 @@ namespace Slevyr.DataAccess.Model
 
             RozdilKusu = (int)Math.Round(Ok - cilKusu);
 
-            StopTime = unitStatus.CumulativeStopTimeSpan;
+            StopTime = unitStatus.FinalMachineStopDuration >= 0 ? 
+                new TimeSpan(0,0,unitStatus.FinalMachineStopDuration) : TimeSpan.Zero;
         }
 
         public int Ok { get; set; }

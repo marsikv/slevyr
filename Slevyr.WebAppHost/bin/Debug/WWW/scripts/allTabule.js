@@ -32,7 +32,9 @@ function formatTable(data) {
     data.forEach(function (unitTabule) {
         var html;
 
-        if (unitTabule.MachineStatus <= 1)
+        if (unitTabule.MachineStatus == 90)
+            html = '<div class="tabuleNedef">';
+        else if (unitTabule.MachineStatus <= 1)
             html = '<div class="tabuleGood">';
         else
             html = '<div class="tabuleBad">';

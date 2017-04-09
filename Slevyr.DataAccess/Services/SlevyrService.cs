@@ -8,6 +8,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using NLog;
 using SledovaniVyroby.SerialPortWraper;
 using Slevyr.DataAccess.DAO;
@@ -47,6 +48,9 @@ namespace Slevyr.DataAccess.Services
 
         private static BackgroundWorker _dataReaderBw;
 
+        //timer pomoci nehoz posilame prikaz na zjisteni kumulativnich casu na jednotkach 0x6f
+        private static System.Timers.Timer _obtainCumulativeTimes;
+
         public static readonly AutoResetEvent WaitEventPriorityCommandResult = new AutoResetEvent(false);
 
         private static bool _isSendWorkerStarted;
@@ -83,6 +87,8 @@ namespace Slevyr.DataAccess.Services
 
             StopSendReceiveWorkers();
 
+            _obtainCumulativeTimes.Enabled = false;
+
             Thread.Sleep(ReadAsyncTimeout * 3);
 
             ClosePort();
@@ -94,11 +100,57 @@ namespace Slevyr.DataAccess.Services
 
             if (res)
             {
+                InitialRequests(); 
                 StartSendReceiveWorkers();
                 StartPacketWorker();
+
+                if (_obtainCumulativeTimes == null)
+                {
+                    _obtainCumulativeTimes = new System.Timers.Timer();
+                    _obtainCumulativeTimes.Interval = _runConfig.ReadStopDurationPeriod*1000;
+                    _obtainCumulativeTimes.Elapsed += ObtainCumulativeTimes_Elapsed;
+                }
+                _obtainCumulativeTimes.Enabled = true;
             }
 
             return res;
+        }
+
+        private static void ObtainCumulativeTimes_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            foreach (var u in UnitAddresses)
+            {
+                var uc = new UnitCommand(() => _unitDictionary[u].SendStavCitacuWithCumulativeStopTime(), "CmdReadStavCitacuWithCumulativeStopTime", u, UnitMonitor.CmdReadStavCitacuWithCumulativeStopTime);
+                UnitCommandsQueue.Enqueue(uc);
+            }
+        }
+
+        private static void InitialRequests()
+        {
+            //pripravim na odeslani prikazy pro zjisteni posledniho stavu smen vsech jednotek
+            //efektivnejsi postup je ze posílám příkazy po jednotkách
+            foreach (var u in UnitAddresses)
+            {
+                var uc = new UnitCommand(() => _unitDictionary[u].SendReadStavCitacuKonecSmeny(
+                    UnitMonitor.CmdReadStavCitacuRanniSmena), "CmdReadStavCitacuKonecSmeny", u, UnitMonitor.CmdReadStavCitacuRanniSmena);
+                UnitCommandsQueue.Enqueue(uc);
+            }
+
+            foreach (var u in UnitAddresses)
+            {
+                var uc = new UnitCommand(() => _unitDictionary[u].SendReadStavCitacuKonecSmeny(
+                    UnitMonitor.CmdReadStavCitacuOdpoledniSmena), "CmdReadStavCitacuKonecSmeny", u, UnitMonitor.CmdReadStavCitacuOdpoledniSmena);
+                UnitCommandsQueue.Enqueue(uc);
+
+            }
+
+            foreach (var u in UnitAddresses)
+            {
+                var uc = new UnitCommand(() => _unitDictionary[u].SendReadStavCitacuKonecSmeny(
+                    UnitMonitor.CmdReadStavCitacuNocniSmena), "CmdReadStavCitacuKonecSmeny", u, UnitMonitor.CmdReadStavCitacuNocniSmena);
+                UnitCommandsQueue.Enqueue(uc);
+
+            }
         }
 
 
@@ -255,6 +307,7 @@ namespace Slevyr.DataAccess.Services
                         case UnitMonitor.CmdReadStavCitacuRanniSmena:
                         case UnitMonitor.CmdReadStavCitacuOdpoledniSmena:
                         case UnitMonitor.CmdReadStavCitacuNocniSmena:
+                        case UnitMonitor.CmdReadStavCitacuWithCumulativeStopTime:
                             //zaradim ke zpracovani ktere probiha v PacketBw
                             PackedCollection.Add(packet);
                             break;
@@ -362,6 +415,7 @@ namespace Slevyr.DataAccess.Services
                             case UnitMonitor.CmdReadStavCitacuRanniSmena:
                             case UnitMonitor.CmdReadStavCitacuOdpoledniSmena:
                             case UnitMonitor.CmdReadStavCitacuNocniSmena:
+                            case UnitMonitor.CmdReadStavCitacuWithCumulativeStopTime:
                                 //zaradim ke zpracovani ktere probiha v PacketBw
                                 PackedCollection.Add(packet);
                                 break;
@@ -956,22 +1010,28 @@ namespace Slevyr.DataAccess.Services
                             _unitDictionary[addr].DoReadStavCitacuKonecSmeny(packet);
                             _unitDictionary[addr].SetSmenaHistory(SmenyEnum.Smena3);  //aktualizuji podle poslednich znamych hodnot 
                             //SqlliteDao.AddUnitSmenaHistory(addr, _unitDictionary[addr].UnitStatus);
-                            SqlliteDao.AddUnitKonecSmenyState(addr, cmd, _unitDictionary[addr].UnitStatus,
+                            if (!_unitDictionary[addr].IsInitialStavCitacuSmenDetection)
+                              SqlliteDao.AddUnitKonecSmenyState(addr, cmd, _unitDictionary[addr].UnitStatus,
                                 _unitDictionary[addr].UnitConfig.Zacatek1SmenyTime, _unitDictionary[addr].UnitConfig.Cil3Smeny);
                             break;
                         case UnitMonitor.CmdReadStavCitacuOdpoledniSmena:
                             _unitDictionary[addr].DoReadStavCitacuKonecSmeny(packet);
                             _unitDictionary[addr].SetSmenaHistory(SmenyEnum.Smena2);
                             //SqlliteDao.AddUnitSmenaHistory(addr, _unitDictionary[addr].UnitStatus);
-                            SqlliteDao.AddUnitKonecSmenyState(addr, cmd, _unitDictionary[addr].UnitStatus,
+                            if (!_unitDictionary[addr].IsInitialStavCitacuSmenDetection)
+                                SqlliteDao.AddUnitKonecSmenyState(addr, cmd, _unitDictionary[addr].UnitStatus,
                                 _unitDictionary[addr].UnitConfig.Zacatek3SmenyTime, _unitDictionary[addr].UnitConfig.Cil2Smeny);
                             break;
                         case UnitMonitor.CmdReadStavCitacuRanniSmena:
                             _unitDictionary[addr].DoReadStavCitacuKonecSmeny(packet);
                             _unitDictionary[addr].SetSmenaHistory(SmenyEnum.Smena1);
                             //SqlliteDao.AddUnitSmenaHistory(addr, _unitDictionary[addr].UnitStatus);
-                            SqlliteDao.AddUnitKonecSmenyState(addr, cmd, _unitDictionary[addr].UnitStatus,
+                            if (!_unitDictionary[addr].IsInitialStavCitacuSmenDetection)
+                                SqlliteDao.AddUnitKonecSmenyState(addr, cmd, _unitDictionary[addr].UnitStatus,
                                 _unitDictionary[addr].UnitConfig.Zacatek2SmenyTime, _unitDictionary[addr].UnitConfig.Cil1Smeny);
+                            break;
+                        case UnitMonitor.CmdReadStavCitacuWithCumulativeStopTime:
+                            _unitDictionary[addr].DoReadStavCitacuWithCumulativeStopTime(packet);
                             break;
                     }
 

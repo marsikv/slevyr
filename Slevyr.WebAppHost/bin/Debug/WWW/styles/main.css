@@ -229,8 +229,12 @@ a {
 }
 
 .linka--data {
-   color : black;
-    font-weight: bold;
+}
+
+.linka--cumulativetime {
+    border-radius: 0;
+    padding: 0;
+    margin: 0 0 0 0;
 }
 
 .linka--history {
@@ -692,6 +696,20 @@ aside {
     background-color: Cornsilk ;
     border-radius: 4px;
     border-color: orangered;
+    border-width: 2px;
+    border-style: solid;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    flex: 1;
+}
+
+.tabuleNedef {
+    min-width: 234px;
+    margin-right: 1em;
+    margin-bottom: 1em;
+    padding: .5em 1em;
+    background-color: rgb(240, 240, 240) ;
+    border-radius: 4px;
+    border-color: lightgray;
     border-width: 2px;
     border-style: solid;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);

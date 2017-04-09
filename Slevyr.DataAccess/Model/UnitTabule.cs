@@ -52,6 +52,7 @@ namespace Slevyr.DataAccess.Model
         public UnitTabule()
         {
             AktualDefectTabuleTxt = "-";
+            MachineStatus = MachineStateEnum.NotAvailable;
         }
 
     }

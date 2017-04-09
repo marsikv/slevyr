@@ -116,9 +116,16 @@ var startAddr = null;
         $.getJSON(uri + '/getStatus?Addr=' + addr)
             .done(function (data) {
                 updateTableElements(data);
-                updateLastSmenaTable('#lastSmena1', 1, data.LastSmenaResults[0]);
-                updateLastSmenaTable('#lastSmena2', 2, data.LastSmenaResults[1]);
-                updateLastSmenaTable('#lastSmena3', 3, data.LastSmenaResults[2]);
+                updateAkumulovaneCasyElements(data);
+                if (data.IsTypSmennostiA) {
+                    updateLastSmenaTable('#lastSmena1', 1, data.LastSmenaResults[0]);
+                    updateLastSmenaTable('#lastSmena2', 2, data.LastSmenaResults[1]);
+                    updateLastSmenaTable('#lastSmena3', 3, data.LastSmenaResults[2]);
+                } else {
+                    updateLastSmenaTable('#lastSmena1', 1, data.LastSmenaResults[0]);
+                    updateLastSmenaTable('#lastSmena2', 2, data.LastSmenaResults[2]);
+                    $('#lastSmena3').empty();
+                }
             })
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'GetStatus - error: ' + err);
@@ -130,11 +137,21 @@ var startAddr = null;
 
         if (data == null) return;
 
-        var s = '<td>' + smenaNum + '</td>' + '<td>' + data.Ok + '</td>' + '<td>' + data.Ng + '</td>'
-            + '<td>' + Math.round(data.PrumCyklusOk * 100) / 100 + '</td>'
-            + '<td>' + data.RozdilKusu + '</td>'
-            + '<td>' + Math.round(data.Defektivita * 100) / 100 + '</td>'
-            + '<td>' + data.StopTimeTxt + '</td>';
+        var s;
+
+        if (data.Ok < 0 && data.Ng < 0) {
+            s = '<td>' + smenaNum + '</td>' + '<td>-</td><td>-</td>'
+                + '<td>-</td>'
+                + '<td>-</td>'
+                + '<td>-</td>'
+                + '<td>-</td>';
+        } else {
+            s = '<td>' + smenaNum + '</td>' + '<td>' + data.Ok + '</td>' + '<td>' + data.Ng + '</td>'
+                + '<td>' + Math.round(data.PrumCyklusOk * 100) / 100 + '</td>'
+                + '<td>' + data.RozdilKusu + '</td>'
+                + '<td>' + Math.round(data.Defektivita * 100) / 100 + '</td>'
+                + '<td>' + data.StopTimeTxt + '</td>';
+        }
 
         $(rowid).append(s);
     }
@@ -180,5 +197,18 @@ var startAddr = null;
             $('#stav').text('Vyroba');
         else
             $('#stav').text(data.Tabule.MachineStatusTxt);
+    }
+
+    function updateAkumulovaneCasyElements(data) {
+        if (data.IsOkNg) {
+            $('#casZmenyModelu').attr('title', 'Akumulovaný čas zmeny modelu:' + data.ZmenaModeluDuration + ' sec');
+            $('#casPoruchy').attr('title', 'Akumulovaný čas poruchy stroje:' + data.PoruchaDuration + ' sec');
+            $('#casServisu').attr('title', 'Akumulovaný čas servisu stroje:' + data.ServisDuration + ' sec');
+        } else {
+            $('#casZmenyModelu').attr('title', '-');
+            $('#casPoruchy').attr('title', '-');
+            $('#casServisu').attr('title', '-');
+        }
+
     }
 
