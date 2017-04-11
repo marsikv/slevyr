@@ -160,6 +160,9 @@ namespace Slevyr.DataAccess.Model
 
         public bool IsTypSmennostiA { get; set; }
 
+        /// <summary>pokud jsou jiz casy zjisteny</summary>
+        public bool IsDurationKnown{ get; set; }
+
         public short ZmenaModeluDuration { get; set; }
         public short PoruchaDuration { get; set; }
         public short ServisDuration { get; set; }
@@ -230,6 +233,7 @@ namespace Slevyr.DataAccess.Model
             ZmenaModeluDuration = 0;
             PoruchaDuration = 0;
             ServisDuration = 0;
+            IsDurationKnown = false;
             IsTabuleOk = false;
         }
 

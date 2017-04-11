@@ -444,7 +444,7 @@ namespace Slevyr.DataAccess.Model
             Logger.Debug("");
 
             //byte addr = buff[2];
-            byte cmd = buff[3];
+            //byte cmd = buff[3];
 
             var zmenaModeluDuration = Helper.ToShort(buff[4], buff[5]);
             var poruchaDuration = Helper.ToShort(buff[6], buff[7]);
@@ -456,6 +456,7 @@ namespace Slevyr.DataAccess.Model
             UnitStatus.ZmenaModeluDuration = zmenaModeluDuration;
             UnitStatus.PoruchaDuration = poruchaDuration;
             UnitStatus.ServisDuration = servisDuration;
+            UnitStatus.IsDurationKnown = true;
 
             Logger.Info($"cumulative time zmena modelu:{zmenaModeluDuration} porucha:{poruchaDuration} servis:{servisDuration} unit:{Address}");
         }

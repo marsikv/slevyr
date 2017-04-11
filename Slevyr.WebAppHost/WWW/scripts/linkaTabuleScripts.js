@@ -200,7 +200,7 @@ var startAddr = null;
     }
 
     function updateAkumulovaneCasyElements(data) {
-        if (data.IsOkNg) {
+        if (data.IsOkNg && data.IsDurationKnown) {
             $('#casZmenyModelu').attr('title', 'Akumulovaný čas zmeny modelu: ' + data.ZmenaModeluDuration + ' sec');
             $('#casPoruchy').attr('title', 'Akumulovaný čas poruchy stroje: ' + data.PoruchaDuration + ' sec');
             $('#casServisu').attr('title', 'Akumulovaný čas servisu stroje: ' + data.ServisDuration + ' sec');
