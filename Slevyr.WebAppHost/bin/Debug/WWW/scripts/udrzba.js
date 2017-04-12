@@ -44,9 +44,11 @@ function formatTable(data) {
         var html = '<div class="tabule">' +
             '<div class="tabule--Name">' + device.LinkaName + '</div>' +
             '<div class="tabule--row" data-title="Stav">' + device.MachineStatusTxt + '</div>' +
-            '<div class="tabule--row" data-title="Čas odkdy">' + device.MachineStopTimeTxt + '</div>' +
+            '<div class="tabule--row" data-title="Čas od kdy">' + device.MachineStopTimeTxt + '</div>' +
             '<div class="tabule--row" data-title="Doba trvání">' + device.MachineStopDuration + ' sec.</div>' +
         '</div>';
+
+        html += '<audio autoplay src="sounds/bark.mp3"></audio>';
         
         $('#udrzba').append(html);
     });

@@ -163,9 +163,13 @@ namespace Slevyr.DataAccess.Model
         /// <summary>pokud jsou jiz casy zjisteny</summary>
         public bool IsDurationKnown{ get; set; }
 
-        public short ZmenaModeluDuration { get; set; }
-        public short PoruchaDuration { get; set; }
-        public short ServisDuration { get; set; }
+        public TimeSpan ZmenaModeluDuration { get; set; }
+        public TimeSpan PoruchaDuration { get; set; }
+        public TimeSpan ServisDuration { get; set; }
+
+        public string ZmenaModeluDurationTxt => ZmenaModeluDuration.ToString();
+        public string PoruchaDurationTxt => PoruchaDuration.ToString();
+        public string ServisDurationTxt => ServisDuration.ToString();
 
         /* -- nevyuzivame
         public byte MinOk { get; set; }
@@ -230,9 +234,9 @@ namespace Slevyr.DataAccess.Model
             FinalMachineStopDuration = 0;
             FinalOk = 0;
             FinalNg = 0;
-            ZmenaModeluDuration = 0;
-            PoruchaDuration = 0;
-            ServisDuration = 0;
+            ZmenaModeluDuration = TimeSpan.Zero;
+            PoruchaDuration = TimeSpan.Zero;
+            ServisDuration = TimeSpan.Zero;
             IsDurationKnown = false;
             IsTabuleOk = false;
         }

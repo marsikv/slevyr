@@ -453,9 +453,9 @@ namespace Slevyr.DataAccess.Model
             //short machineStatusInt = buff[10];  //to uz asi neplati - vzdy jen 0
             //MachineStateEnum machineStatus = (MachineStateEnum)machineStatusInt;
 
-            UnitStatus.ZmenaModeluDuration = zmenaModeluDuration;
-            UnitStatus.PoruchaDuration = poruchaDuration;
-            UnitStatus.ServisDuration = servisDuration;
+            UnitStatus.ZmenaModeluDuration = new TimeSpan(0,0,zmenaModeluDuration);
+            UnitStatus.PoruchaDuration = new TimeSpan(0,0,poruchaDuration);
+            UnitStatus.ServisDuration = new TimeSpan(0,0,servisDuration);
             UnitStatus.IsDurationKnown = true;
 
             Logger.Info($"cumulative time zmena modelu:{zmenaModeluDuration} porucha:{poruchaDuration} servis:{servisDuration} unit:{Address}");

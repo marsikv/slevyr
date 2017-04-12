@@ -850,6 +850,7 @@ namespace Slevyr.DataAccess.Services
                     ResetLogger.Info($"Reset RF (cycle={cycleForResetRf})");
                     cycleForResetRf = 0;
                     SendResetRf();
+                    //continue;
                 }
 
                 if (_sendBw.CancellationPending)

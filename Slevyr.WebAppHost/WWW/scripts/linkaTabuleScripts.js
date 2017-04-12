@@ -118,12 +118,12 @@ var startAddr = null;
                 updateTableElements(data);
                 updateAkumulovaneCasyElements(data);
                 if (data.IsTypSmennostiA) {
-                    updateLastSmenaTable('#lastSmena1', 1, data.LastSmenaResults[0]);
-                    updateLastSmenaTable('#lastSmena2', 2, data.LastSmenaResults[1]);
-                    updateLastSmenaTable('#lastSmena3', 3, data.LastSmenaResults[2]);
+                    updateLastSmenaTable('#lastSmena1', 'Ranní', data.LastSmenaResults[0]);
+                    updateLastSmenaTable('#lastSmena2', 'Odpolední', data.LastSmenaResults[1]);
+                    updateLastSmenaTable('#lastSmena3', 'Noční', data.LastSmenaResults[2]);
                 } else {
-                    updateLastSmenaTable('#lastSmena1', 1, data.LastSmenaResults[0]);
-                    updateLastSmenaTable('#lastSmena2', 2, data.LastSmenaResults[2]);
+                    updateLastSmenaTable('#lastSmena1', 'Ranní', data.LastSmenaResults[0]);
+                    updateLastSmenaTable('#lastSmena2', 'Noční', data.LastSmenaResults[2]);
                     $('#lastSmena3').empty();
                 }
             })
@@ -201,13 +201,13 @@ var startAddr = null;
 
     function updateAkumulovaneCasyElements(data) {
         if (data.IsOkNg && data.IsDurationKnown) {
-            $('#casZmenyModelu').attr('title', 'Akumulovaný čas zmeny modelu: ' + data.ZmenaModeluDuration + ' sec');
-            $('#casPoruchy').attr('title', 'Akumulovaný čas poruchy stroje: ' + data.PoruchaDuration + ' sec');
-            $('#casServisu').attr('title', 'Akumulovaný čas servisu stroje: ' + data.ServisDuration + ' sec');
+            $('#casZmenyModelu').text(data.ZmenaModeluDurationTxt);
+            $('#casPoruchy').text(data.PoruchaDurationTxt);
+            $('#casServisu').text(data.ServisDurationTxt);
         } else {
-            $('#casZmenyModelu').attr('title', '-');
-            $('#casPoruchy').attr('title', '-');
-            $('#casServisu').attr('title', '-');
+            $('#casZmenyModelu').text('-');
+            $('#casPoruchy').text('-');
+            $('#casServisu').text('-');
         }
 
     }

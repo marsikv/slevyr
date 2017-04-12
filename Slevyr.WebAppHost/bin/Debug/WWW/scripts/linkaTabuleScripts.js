@@ -201,13 +201,13 @@ var startAddr = null;
 
     function updateAkumulovaneCasyElements(data) {
         if (data.IsOkNg && data.IsDurationKnown) {
-            $('#casZmenyModelu').attr('title', 'Akumulovaný čas zmeny modelu: ' + data.ZmenaModeluDuration + ' sec');
-            $('#casPoruchy').attr('title', 'Akumulovaný čas poruchy stroje: ' + data.PoruchaDuration + ' sec');
-            $('#casServisu').attr('title', 'Akumulovaný čas servisu stroje: ' + data.ServisDuration + ' sec');
+            $('#casZmenyModelu').text(data.ZmenaModeluDurationTxt);
+            $('#casPoruchy').text(data.PoruchaDurationTxt);
+            $('#casServisu').text(data.ServisDurationTxt);
         } else {
-            $('#casZmenyModelu').attr('title', '-');
-            $('#casPoruchy').attr('title', '-');
-            $('#casServisu').attr('title', '-');
+            $('#casZmenyModelu').text('-');
+            $('#casPoruchy').text('-');
+            $('#casServisu').text('-');
         }
 
     }
