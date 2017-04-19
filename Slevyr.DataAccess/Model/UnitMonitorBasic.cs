@@ -154,9 +154,9 @@ namespace Slevyr.DataAccess.Model
         }
 
 
-        public bool SendCommand(byte cmd, bool checkSendConfirmation = true)
+        public bool SendCommand(int cmd, bool checkSendConfirmation = true)
         {
-            return SendCommandLambda(cmd, () => true, checkSendConfirmation);            
+            return SendCommandLambda((byte)cmd, () => true, checkSendConfirmation);            
         }
 
 

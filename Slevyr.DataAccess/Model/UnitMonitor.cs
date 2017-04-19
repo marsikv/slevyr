@@ -31,21 +31,22 @@ namespace Slevyr.DataAccess.Model
 
         #region const pro prikazy
 
-        public const byte CmdZaklNastaveni = 3	; //Zakladni nastaveni
-        public const byte CmdSetHodnotyCitacu = 4	; //Zapise hodnoty do citacu
+        public const byte CmdZaklNastaveni = 3; //Zakladni nastaveni
+        public const byte CmdSetHodnotyCitacu = 4; //Zapise hodnoty do citacu
         //public const byte CmdSet = 5	; //Vyvola programovaci mod adresy
-        public const byte CmdSetParamRf = 6	; //Nastavi parametry RF
-        public const byte CmdResetJednotky = 7	; //Reset jednotky
-        public const byte CmdZapsatEeprom= 15; //Zapise do eeprom od adresy 5 bytu         
-        public const byte CmdSetSmennost = 16; //nastavi variantu smeny
-        public const byte CmdSetDatumDen = 17; //nastavi cas datum a den
-        public const byte CmdSetCilSmen = 18;  //nastavi cile smen
-        public const byte CmdSetDefSmen = 19;  //nastavi cile defektivity smen
-        public const byte CmdSetJasLed = 20;   //nastavi jas LED panelu
-        public const byte CmdSetZacPrestav = 21;   //nastavi zacatky prestavek
+        public const byte CmdSetParamRf = 6; //Nastavi parametry RF
+        public const byte CmdResetJednotky = 7; //Reset jednotky
+        public const byte CmdZapsatEeprom = 0xf;//15; //Zapise do eeprom od adresy 5 bytu         
+        public const byte CmdSetSmennost = 0x10;//16; //nastavi variantu smeny
+        public const byte CmdSetDatumDen = 0x11;//17; //nastavi cas datum a den
+        public const byte CmdSetCilSmen = 0x12;//18;  //nastavi cile smen
+        public const byte CmdSetDefSmen = 0x13;//19;  //nastavi cile defektivity smen
+        public const byte CmdSetJasLed = 0x14;//20;   //nastavi jas LED panelu
+        public const byte CmdSetZacPrestav = 0x15;//21;   //nastavi zacatky prestavek
 
-        public const byte CmdReadVerSwRFT = 1; //vrati verzi sw RFT modulu + panel
-        public const byte CmdReadZakSysNast = 9; //vrati zakladni systemove nastaveni
+        public const byte CmdReadVerSwRFT = 0x1; //vrati verzi sw RFT modulu + panel
+        public const byte CmdReadZakSysNast = 0x9; //vrati zakladni systemove nastaveni
+
         //const byte Get = 10	; //vrati sadu A systemovych nastaveni
         //const byte Get = 11	; //vrati sadu B systemovych nastaveni
         //const byte Get = 12	; //vrati sadu C systemovych nastaveni
@@ -54,9 +55,9 @@ namespace Slevyr.DataAccess.Model
         //const byte Get = 26	; //Vrati hodnoty citace 1 2 3
         //const byte Get = 27	; //Vrati hodnoty citace 4 5 6
         //const byte Get = 28	; //Vrati hodnoty citace 7 8
-        public const byte CmdReadStavCitacu = 96; //Vrati stav citacu
-        public const byte CmdReadCasPosledniOkNg = 97; //vrati hodnotu posledniho cyklu OK
-        public const byte CmdReadHodnotuPrumCykluOkNg = 98; //vrati hodnotu prumerneho cyklu OK
+        public const byte CmdReadStavCitacu = 0x60; //96; //Vrati stav citacu
+        public const byte CmdReadCasPosledniOkNg = 0x61;//97; //vrati hodnotu posledniho cyklu OK
+        public const byte CmdReadHodnotuPrumCykluOkNg = 0x62; //98; //vrati hodnotu prumerneho cyklu OK
         //public const byte CmdReadHodnotuPoslCykluNg = 98; //vrati hodnotu posledniho cyklu NG
         //public const byte CmdReadHodnotuPrumCykluNg = 100; //vrati hodnotu prumerneho cyklu NG
         public const byte CmdReadTeplotu1Cidla = 101; //vrati teplotu z prvniho cidla DS18B20
@@ -64,8 +65,8 @@ namespace Slevyr.DataAccess.Model
         public const byte CmdReadTeplotu3Cidla = 103; //vrati teplotu z tretiho cidla DS18B20
         public const byte CmdReadTeplotu4Cidla = 104; //vrati teplotu ze ctvrteho cidla DS18B20
         public const byte CmdReadTeplotu5Cidla = 105; //vrati teplotu z pateho cidla DS18B20
-        public const byte CmdReadRozdilKusu = 106; //vraci rozdil kusu
-        public const byte CmdReadDefektivita = 107; //vraci defektivitu
+        public const byte CmdReadRozdilKusu = 0x6A; //106; //vraci rozdil kusu
+        public const byte CmdReadDefektivita = 0x6B; //107; //vraci defektivitu
         public const byte CmdReadStavCitacuRanniSmena = 0x6c;     //vraci konecny stav citacu smena 1A a smena 1B, pracuje stejne jako 0x60 (96)
         public const byte CmdReadStavCitacuOdpoledniSmena = 0x6d; //vraci konecny stav citacu smena 2A
         public const byte CmdReadStavCitacuNocniSmena = 0x6e;     //vraci konecny stav citacu smena 3A a 2B
@@ -344,19 +345,22 @@ namespace Slevyr.DataAccess.Model
         public void DoReadCasOkNg(byte[] buff)
         {
             /*
-             * 
-             * Pro příkaz 0x61 je odpověď = 0x00 0x00 ADR 0x61 LSB MSB LSB MSB 0x00 0x00 0xXX
+                Pro příkaz 0x61 je odpověď = 0x00 0x00 ADR 0x61 LSB MSB LSB MSB 0x00 0x00 0xXX
                 čas posledního OK kusu =(LSB+(256*MSB))/10 , Sekundy na desetiny
                 čas posledního NG kusu =(LSB+(256*MSB))/10 , Sekundy na desetiny
                 Metoda měření cyklu = XX  , 0 = čas posledního cyklu (výchozí); >0 čas od posledního cyklu
+                16.4. - doplnen stoptime
              */
             Logger.Debug("");
 
-            var casOk10 = Helper.ToShort(buff[4], buff[5]); 
-            var casNg10 = Helper.ToShort(buff[6], buff[7]); 
+            var casOk10 =  Helper.ToShort(buff[4], buff[5]); 
+            var casNg10 =  Helper.ToShort(buff[6], buff[7]);
+            var stoptime = Helper.ToShort(buff[8], buff[9]);
 
             UnitStatus.CasOk = (float) ( casOk10 / 10.0);
             UnitStatus.CasNg = (float)(casNg10 / 10.0);
+
+            UnitStatus.StopDuration = new TimeSpan(0,0,stoptime);
 
             UnitStatus.CasOkNgTime = DateTime.Now;
             UnitStatus.IsCasOkNg = true;
@@ -606,11 +610,11 @@ namespace Slevyr.DataAccess.Model
         {
             if (UnitConfig.IsTypSmennostiA)
             {
-                UnitStatus.RecalcTabuleA(UnitConfig);                
+                UnitStatus.RecalcTabuleA(UnitConfig, RunConfig);                
             }
             else
             {
-                UnitStatus.RecalcTabuleB(UnitConfig);
+                UnitStatus.RecalcTabuleB(UnitConfig, RunConfig);
             }
         }
 

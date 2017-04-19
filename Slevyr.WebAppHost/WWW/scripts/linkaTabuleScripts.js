@@ -5,6 +5,7 @@ var isTimerEnabled = false;
 var refreshTimer;
 var addr = null;
 var startAddr = null;
+var chart = null;
 
 (function () {
     var hash = location.hash.substr(1);
@@ -104,6 +105,7 @@ var startAddr = null;
 
     function onAddrIdChange() {
         addr = $("#AddrIdDropDown option:selected").val();
+        removeChart();
         readUnitConfig();
         getStatus();
     }
@@ -117,6 +119,7 @@ var startAddr = null;
             .done(function (data) {
                 updateTableElements(data);
                 updateAkumulovaneCasyElements(data);
+                updatePieChart(data);
                 if (data.IsTypSmennostiA) {
                     updateLastSmenaTable('#lastSmena1', 'Ranní', data.LastSmenaResults[0]);
                     updateLastSmenaTable('#lastSmena2', 'Odpolední', data.LastSmenaResults[1]);
@@ -199,16 +202,93 @@ var startAddr = null;
             $('#stav').text(data.Tabule.MachineStatusTxt);
     }
 
-    function updateAkumulovaneCasyElements(data) {
-        if (data.IsOkNg && data.IsDurationKnown) {
-            $('#casZmenyModelu').text(data.ZmenaModeluDurationTxt);
-            $('#casPoruchy').text(data.PoruchaDurationTxt);
-            $('#casServisu').text(data.ServisDurationTxt);
+    function updateAkumulovaneCasyElements(cdata) {
+        if (cdata.IsOkNg && cdata.IsDurationKnown) {
+            $('#casZmenyModelu').text(cdata.ZmenaModeluDurationTxt);
+            $('#casPoruchy').text(cdata.PoruchaDurationTxt);
+            $('#casServisu').text(cdata.ServisDurationTxt);
         } else {
             $('#casZmenyModelu').text('-');
             $('#casPoruchy').text('-');
             $('#casServisu').text('-');
         }
-
     }
+
+    function updatePieChart(cdata) {
+
+        var ctxPie = $("#pieChart");
+
+        if (chart) {
+            chart.data.datasets[0].data[0].value = cdata.VyrobaDurationSec;
+            chart.data.datasets[0].data[1].value = cdata.ZmenaModeluDurationSec;
+            chart.data.datasets[0].data[2].value = cdata.PoruchaDurationSec;
+            chart.data.datasets[0].data[3].value = cdata.ServisDurationSec;
+            chart.data.datasets[0].data[4].value = cdata.OtherStopDurationSec;
+            chart.update();
+        } else {
+            Chart.defaults.global.animation.duration = 0;
+
+            var pdata = {
+                labels: ["Výroba", "Změna modelu", "Porucha", "Servis", "Ostatni"],
+                datasets: [
+                    {
+                        data: [cdata.VyrobaDurationSec, cdata.ZmenaModeluDurationSec, cdata.PoruchaDurationSec,
+                               cdata.ServisDurationSec, cdata.OtherStopDurationSec],
+                        backgroundColor: [
+                            "#006600",
+                            "#0000ff",
+                            "#ff0000",
+                            "#ff3300",
+                            "#8c8c8c"
+                        ],
+                        hoverBackgroundColor: [
+                            "#2db92d",
+                            "#3333ff",
+                            "#ff1a1a",
+                            "#ff5c33",
+                            "#b3b3b3"
+                        ]
+                    }]
+            };
+
+            chart = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: pdata,
+                options: {
+                    tooltips: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (tooltipItem, data) {
+                                var indice = tooltipItem.index;
+                                return data.labels[indice] + ': ' + formatToHHMMSS(data.datasets[0].data[indice]) + '   (' + data.datasets[0].data[indice] + ' sec.)';
+                            }
+                        }
+                    },
+                    hover: {
+                        animationDuration: 400
+                    }
+                }
+            });
+        }
+    }
+
+    function removeChart() {
+        if (chart) {
+            chart.clear();
+            chart.destroy();
+            chart = null;
+        }
+    }
+
+    function formatToHHMMSS(sec_num) {
+        var hours = Math.floor(sec_num / 3600);
+        var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+        var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+        if (hours < 10) { hours = "0" + hours; }
+        if (minutes < 10) { minutes = "0" + minutes; }
+        if (seconds < 10) { seconds = "0" + seconds; }
+        return hours + ':' + minutes + ':' + seconds;
+    }
+
 

@@ -31,15 +31,40 @@
         <div id="menuCloser" class="menuSwitcher menuSwitcher-close"></div>
     </nav>
 
-    <main class="main">
-        <div id="tabule" class="tabuleContainer"></div>
-    </main>
+<main class="main">
+    <div class="linka--info">
+        <div class="label">Linka</div>
+        <h1>
+            <span id="LinkaName">X</span>
+            <select id="AddrIdDropDown" class=""></select>
+        </h1>
+        <br/>
+        <div class="label">Veličina</div>
+        <h1>
+            <select id="MeasureDropDown" class="">
+                <option value="mOK">počet OK</option>
+                <option value="mNG">počet NG</option>
+                <option value="mPrumCasVyrobyOk">Prům. čas výroby OK</option>
+                <option value="mPrumCasVyrobyNG">Prům. čas výroby NG</option>
+                <option value="mDefektivita">Defektivita</option>
+            </select>
+        </h1>
+
+        <h1>
+            Grafy jsou v přípravě !
+        </h1>
+
+        <canvas id="lineChart" style="width:80%; height:80%"></canvas>
+    </div>
+    <!--<div id="tabule" class="tabuleContainer"></div>-->
+</main>
 
     <aside id="notification" class="aside-bottom"></aside>
 
     <script src="scripts\jquery.min.js"></script>
+    <script src="scripts\Chart.min.js"></script>
     <script src="scripts\main.js"></script>
-    <script src="scripts\allTabule.js"></script>
+    <script src="scripts\linkaGraphScripts.js"></script>
 
 </body>
 </html>

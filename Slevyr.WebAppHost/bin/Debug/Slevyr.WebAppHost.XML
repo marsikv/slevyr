@@ -4,6 +4,17 @@
         <name>Slevyr.WebAppHost</name>
     </assembly>
     <members>
+        <member name="T:Slevyr.WebAppHost.Controllers.GraphController">
+            <summary>
+            Provadi export z databaze a vraci CSV jako response
+            </summary>
+        </member>
+        <member name="M:Slevyr.WebAppHost.Controllers.GraphController.Get(System.Byte,System.String)">
+            <summary>
+            vraci data pro graf
+            </summary>
+            <returns></returns>
+        </member>
         <member name="T:Slevyr.WebAppHost.Controllers.ExportController">
             <summary>
             Provadi export z databaze a vraci CSV jako response

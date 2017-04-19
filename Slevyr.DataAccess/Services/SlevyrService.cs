@@ -107,7 +107,7 @@ namespace Slevyr.DataAccess.Services
                 if (_obtainCumulativeTimes == null)
                 {
                     _obtainCumulativeTimes = new System.Timers.Timer();
-                    _obtainCumulativeTimes.Interval = _runConfig.ReadStopDurationPeriod*1000;
+                    _obtainCumulativeTimes.Interval = _runConfig.ReadStopDurationPeriod*1000;    //TODO property do konfigurace
                     _obtainCumulativeTimes.Elapsed += ObtainCumulativeTimes_Elapsed;
                 }
                 _obtainCumulativeTimes.Enabled = true;

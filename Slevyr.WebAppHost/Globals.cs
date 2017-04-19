@@ -70,6 +70,10 @@ namespace Slevyr.WebAppHost
             if (Int32.TryParse(ConfigurationManager.AppSettings["CycleForScheduledResetRf"], out i)) RunConfig.CycleForScheduledResetRf = i;
             if (Boolean.TryParse(ConfigurationManager.AppSettings["AutoResetRF"], out b)) RunConfig.IsAutoResetRF = b;
 
+            if (Int32.TryParse(ConfigurationManager.AppSettings["GraphSamplePeriod"], out i)) RunConfig.GraphSamplePeriodSec = i;
+
+            //GraphSamplePeriodSec
+
             Boolean.TryParse(ConfigurationManager.AppSettings["IsWaitCommandResult"], out b); RunConfig.IsWaitCommandResult = b;
 
             if (Int32.TryParse(ConfigurationManager.AppSettings["ReadStopDurationPeriod"], out i)) RunConfig.ReadStopDurationPeriod = i;

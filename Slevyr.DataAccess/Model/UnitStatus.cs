@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.Runtime.Serialization;
 using NLog;
 
 namespace Slevyr.DataAccess.Model
@@ -60,8 +62,7 @@ namespace Slevyr.DataAccess.Model
 
         #region private fields
 
-        //private TimeSpan _cumulativeStopTimeSpan = new TimeSpan();
-        //private int _lastMachineStopDuration;
+        private int _prevUbehlyCasSmenySec;
 
         #endregion
 
@@ -78,6 +79,8 @@ namespace Slevyr.DataAccess.Model
         {
             get; private set;
         }
+
+        public List<SmenaSample> SmenaSamples;
 
         public int Addr { get; set; }
 
@@ -163,14 +166,32 @@ namespace Slevyr.DataAccess.Model
         /// <summary>pokud jsou jiz casy zjisteny</summary>
         public bool IsDurationKnown{ get; set; }
 
+        [IgnoreDataMember]
         public TimeSpan ZmenaModeluDuration { get; set; }
+
+        [IgnoreDataMember]
         public TimeSpan PoruchaDuration { get; set; }
+
+        [IgnoreDataMember]
         public TimeSpan ServisDuration { get; set; }
+
+        [IgnoreDataMember]
+        //celk. doba kdy je stroj mimo vyrobu (zastaveni vyroby)
+        public TimeSpan StopDuration { get; set; }
 
         public string ZmenaModeluDurationTxt => ZmenaModeluDuration.ToString();
         public string PoruchaDurationTxt => PoruchaDuration.ToString();
         public string ServisDurationTxt => ServisDuration.ToString();
 
+        public double ZmenaModeluDurationSec => ZmenaModeluDuration.TotalSeconds;
+        public double PoruchaDurationSec => PoruchaDuration.TotalSeconds;
+        public double ServisDurationSec => ServisDuration.TotalSeconds;
+        /// <summary>  vsechny ostatni priciny krome zmena modelu, porucha a servis  </summary>
+        public double OtherStopDurationSec => (StopDuration.TotalMilliseconds > 0) ? (StopDuration - ServisDuration - PoruchaDuration - ZmenaModeluDuration).TotalSeconds:0;
+        public double StopDurationSec => StopDuration.TotalSeconds;
+        /// <summary>  celkovy cas vyroby, predpokladame cas smeny kdyz neni stop stroje a neni prestavka</summary>
+        public double VyrobaDurationSec => UbehlyCasSmenySec - StopDuration.TotalSeconds;
+        
         /* -- nevyuzivame
         public byte MinOk { get; set; }
         public byte MinNg { get; set; }
@@ -197,7 +218,7 @@ namespace Slevyr.DataAccess.Model
             CurrentSmena = SmenyEnum.Nedef;
             Tabule = new UnitTabule();
             LastSmenaResults = new SmenaResult[3];
-            
+            SmenaSamples = new List<SmenaSample>();
             PrepareNewSmena();
         }
 
@@ -237,11 +258,14 @@ namespace Slevyr.DataAccess.Model
             ZmenaModeluDuration = TimeSpan.Zero;
             PoruchaDuration = TimeSpan.Zero;
             ServisDuration = TimeSpan.Zero;
+            StopDuration = TimeSpan.Zero;
+            UbehlyCasSmenySec = 0;
             IsDurationKnown = false;
             IsTabuleOk = false;
+            SmenaSamples.Clear();
         }
 
-        private void PrepocetTabule(SmenyEnum smena, bool isTypSmennostiA)
+        private void PrepocetTabule(SmenyEnum smena, bool isTypSmennostiA, RunConfig runCfg)
         {
             Logger.Debug(smena);
 
@@ -280,6 +304,20 @@ namespace Slevyr.DataAccess.Model
                 Tabule.AktualDefectTabule = float.NaN;
             }
 
+            if (runCfg.GraphSamplePeriodSec > 0 && UbehlyCasSmenySec - _prevUbehlyCasSmenySec > runCfg.GraphSamplePeriodSec)
+            {
+                SmenaSamples.Add(new SmenaSample()
+                {
+                    OK = Ok,
+                    NG = Ng,
+                    Defectivita = Tabule.AktualDefectTabule,
+                    PrumCasVyrobyOk = this.PrumCasVyrobyOk,
+                    PrumCasVyrobyNg = PrumCasVyrobyNg,
+                    sampleTime = new TimeSpan(0, 0, 0, UbehlyCasSmenySec)
+                });
+                _prevUbehlyCasSmenySec = UbehlyCasSmenySec;
+            }
+
             Tabule.AktualDefectTabuleTxt = (float.IsNaN(Tabule.AktualDefectTabule) || Ok == 0) ? "-" : Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.CurrentCulture);
 
             Tabule.AktualDefectTabuleStr = (float.IsNaN(Tabule.AktualDefectTabule) || Ok == 0) ? "null" : Math.Round(((decimal)Ng / (decimal)Ok) * 100, 2).ToString(CultureInfo.InvariantCulture);
@@ -315,7 +353,7 @@ namespace Slevyr.DataAccess.Model
         /// <summary>
         /// zjistit jaka je prave ted smena a nastavit cil a defektivitu podle toho
         /// </summary>
-        public void RecalcTabuleA(UnitConfig unitConfig)
+        public void RecalcTabuleA(UnitConfig unitConfig, RunConfig runCfg)
         {
             try
             {
@@ -431,7 +469,7 @@ namespace Slevyr.DataAccess.Model
                     smena = SmenyEnum.Smena3;
                 }
 
-                PrepocetTabule(smena, unitConfig.IsTypSmennostiA);
+                PrepocetTabule(smena, unitConfig.IsTypSmennostiA, runCfg);
 
                 Logger.Debug($"- unit {unitConfig.Addr}");
 
@@ -444,7 +482,7 @@ namespace Slevyr.DataAccess.Model
             }
         }
 
-        public void RecalcTabuleB(UnitConfig unitConfig)
+        public void RecalcTabuleB(UnitConfig unitConfig, RunConfig runCfg)
         {
             try
             {
@@ -568,7 +606,7 @@ namespace Slevyr.DataAccess.Model
                     smena = SmenyEnum.Smena2;
                 }
 
-                PrepocetTabule(smena, unitConfig.IsTypSmennostiA);
+                PrepocetTabule(smena, unitConfig.IsTypSmennostiA, runCfg);
                 
                 Logger.Debug($"- unit {unitConfig.Addr}");
 

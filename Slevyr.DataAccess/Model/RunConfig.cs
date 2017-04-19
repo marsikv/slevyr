@@ -48,9 +48,11 @@ namespace Slevyr.DataAccess.Model
         /// <summary>vraci zda se provede planovany reset RF </summary>
         public bool IsScheduledResetRF => CycleForScheduledResetRf.HasValue && CycleForScheduledResetRf > 0;
 
-       
-
         /// <summary> Provede reset RF kdyz je detekovane vetsi mnozstvi chyb a testovaci paket neni potrzen </summary>
         public bool IsAutoResetRF;
+
+        /// <summary> tak dlouho se min. ceka nez se udela dalsi vzorek stavu linky pro graf, 0 je vypnuto </summary>
+        public int GraphSamplePeriodSec = 0;  //TODO default asi upravit
+
     }
 }

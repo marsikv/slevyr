@@ -9,9 +9,9 @@
 
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&amp;subset=latin-ext" rel="stylesheet">
     <link rel="stylesheet" href="styles/main.css">
+
   </head>
 <body>
-
     <div id="menuOpener" class="menuSwitcher menuSwitcher-open"></div>
 
     <nav id="menu" class="menu">
@@ -22,6 +22,7 @@
             <ul class="menu--list">
                 <a href="index.html"><li class="menu--item menu--item-home menu--item">Home</li></a>
                 <a href="linka-tabule.html"><li class="menu--item menu--item-tabule menu--item-active">Tabule</li></a>
+                <a href="linka-graph.html"><li class="menu--item menu--item-graph menu--item">Grafy</li></a>
                 <a href="linka-params.html"><li class="menu--item menu--item-params">Parametry</li></a>
                 <a href="nastaveni.html"><li class="menu--item menu--item-settings">Nastavení</li></a>
                 <a href="export-csv.html"><li class="menu--item menu--item-export">Export</li></a>
@@ -80,19 +81,22 @@
             <div class="linka--data">
                 <table cellpadding="0" cellspacing="0">
                     <tr>
-                        <td>Aktuální počet dobrých kusů</td>
+                        <td nowrap>Aktuální počet dobrých kusů</td>
                         <td id="okNumValue">0</td>
+                        <td rowspan="9">
+                            <canvas id="pieChart" style="width:600px; height: 250px"></canvas>
+                        </td>
                     </tr>
                     <tr >
-                        <td>Aktuální počet špatných kusů</td>
+                        <td nowrap>Aktuální počet špatných kusů</td>
                         <td id="ngNumValue">0</td>
                     </tr>
                     <tr>
-                        <td id="casOkLabel">Čas cyklu posledního OK kusu</td>
+                        <td nowrap id="casOkLabel">Čas cyklu posledního OK kusu</td>
                         <td id="casOkValue">0 s</td>
                     </tr>
                     <tr>
-                        <td id="casNgLabel">Čas cyklu posledního NG kusu</td>
+                        <td nowrap id="casNgLabel">Čas cyklu posledního NG kusu</td>
                         <td id="casNgValue">0 s</td>
                     </tr>
                     <tr>
@@ -148,12 +152,12 @@
             </div>
 
         </section>
-
     </main>
 
     <aside id="notification" class="aside-bottom"></aside>
 
     <script src="scripts\jquery.min.js"></script>
+    <script src="scripts\Chart.min.js"></script>
     <script src="scripts\main.js"></script>
     <script src="scripts\linkaTabuleScripts.js"></script>
 

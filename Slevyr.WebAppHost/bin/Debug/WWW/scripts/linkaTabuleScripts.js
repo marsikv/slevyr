@@ -5,6 +5,7 @@ var isTimerEnabled = false;
 var refreshTimer;
 var addr = null;
 var startAddr = null;
+var chart = null;
 
 (function () {
     var hash = location.hash.substr(1);
@@ -118,12 +119,12 @@ var startAddr = null;
                 updateTableElements(data);
                 updateAkumulovaneCasyElements(data);
                 if (data.IsTypSmennostiA) {
-                    updateLastSmenaTable('#lastSmena1', 1, data.LastSmenaResults[0]);
-                    updateLastSmenaTable('#lastSmena2', 2, data.LastSmenaResults[1]);
-                    updateLastSmenaTable('#lastSmena3', 3, data.LastSmenaResults[2]);
+                    updateLastSmenaTable('#lastSmena1', 'Ranní', data.LastSmenaResults[0]);
+                    updateLastSmenaTable('#lastSmena2', 'Odpolední', data.LastSmenaResults[1]);
+                    updateLastSmenaTable('#lastSmena3', 'Noční', data.LastSmenaResults[2]);
                 } else {
-                    updateLastSmenaTable('#lastSmena1', 1, data.LastSmenaResults[0]);
-                    updateLastSmenaTable('#lastSmena2', 2, data.LastSmenaResults[2]);
+                    updateLastSmenaTable('#lastSmena1', 'Ranní', data.LastSmenaResults[0]);
+                    updateLastSmenaTable('#lastSmena2', 'Noční', data.LastSmenaResults[2]);
                     $('#lastSmena3').empty();
                 }
             })
@@ -199,15 +200,58 @@ var startAddr = null;
             $('#stav').text(data.Tabule.MachineStatusTxt);
     }
 
-    function updateAkumulovaneCasyElements(data) {
-        if (data.IsOkNg && data.IsDurationKnown) {
-            $('#casZmenyModelu').text(data.ZmenaModeluDurationTxt);
-            $('#casPoruchy').text(data.PoruchaDurationTxt);
-            $('#casServisu').text(data.ServisDurationTxt);
+    function updateAkumulovaneCasyElements(cdata) {
+        if (cdata.IsOkNg && cdata.IsDurationKnown) {
+            $('#casZmenyModelu').text(cdata.ZmenaModeluDurationTxt);
+            $('#casPoruchy').text(cdata.PoruchaDurationTxt);
+            $('#casServisu').text(cdata.ServisDurationTxt);
         } else {
             $('#casZmenyModelu').text('-');
             $('#casPoruchy').text('-');
             $('#casServisu').text('-');
+        }
+
+        var ctxPie = $("#pieChart");
+
+        if (chart) {
+            chart.data.datasets[0].data[0].value = cdata.VyrobaDurationSec;
+            chart.data.datasets[0].data[1].value = cdata.ZmenaModeluDurationSec;
+            chart.data.datasets[0].data[2].value = cdata.PoruchaDurationSec;
+            chart.data.datasets[0].data[3].value = cdata.ServisDurationSec;
+            chart.data.datasets[0].data[4].value = cdata.OtherStopDurationSec;
+            chart.update();
+        } else {
+            Chart.defaults.global.animation.duration = 0;
+            Chart.defaults.global.hover.mode = 'nearest';
+
+            var pdata = {
+                labels: ["Výroba", "Změna modelu", "Porucha", "Servis", "Ostatni"],
+                datasets: [
+                    {
+                        data: [cdata.VyrobaDurationSec, cdata.ZmenaModeluDurationSec, cdata.PoruchaDurationSec,
+                               cdata.ServisDurationSec, cdata.OtherStopDurationSec],
+                        backgroundColor: [
+                            "#006600",
+                            "#0000ff",
+                            "#ff0000",
+                            "#ff3300",
+                            "#8c8c8c"
+                        ],
+                        hoverBackgroundColor: [
+                            "#2db92d",
+                            "#3333ff",
+                            "#ff1a1a",
+                            "#ff5c33",
+                            "#b3b3b3"
+                        ]
+                    }]
+            };
+
+            chart = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: pdata,
+                //options: options
+            });
         }
 
     }

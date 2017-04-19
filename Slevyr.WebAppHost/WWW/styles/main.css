@@ -111,6 +111,10 @@ a {
     background-image: url(../images/menu-tabule.svg);
 }
 
+.menu--item-graph:before {
+    background-image: url(../images/menu-graph.svg);
+}
+
 .menu--item-maintenance:before {
     background-image: url(../images/menu-maintenance.svg);
 }
@@ -229,6 +233,7 @@ a {
 }
 
 .linka--data {
+    max-width: calc(80% - 1em);
 }
 
 .linka--cumulativetime {
