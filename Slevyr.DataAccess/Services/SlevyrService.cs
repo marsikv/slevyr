@@ -38,7 +38,7 @@ namespace Slevyr.DataAccess.Services
         //private static readonly ByteQueue ReceivedByteQueue = new ByteQueue();
         private static readonly ReadWriteBuffer ReceivedBuffer = new ReadWriteBuffer(1024);
 
-        private static readonly BlockingCollection<byte[]> PackedCollection = new BlockingCollection<byte[]>();
+        private static readonly BlockingCollection<byte[]> PacketCollection = new BlockingCollection<byte[]>();
 
         private static readonly ConcurrentQueue<UnitCommand> UnitCommandsQueue = new ConcurrentQueue<UnitCommand>();
 
@@ -309,7 +309,7 @@ namespace Slevyr.DataAccess.Services
                         case UnitMonitor.CmdReadStavCitacuNocniSmena:
                         case UnitMonitor.CmdReadStavCitacuWithCumulativeStopTime:
                             //zaradim ke zpracovani ktere probiha v PacketBw
-                            PackedCollection.Add(packet);
+                            PacketCollection.Add(packet);
                             break;
                     }                                  
                 }
@@ -417,7 +417,7 @@ namespace Slevyr.DataAccess.Services
                             case UnitMonitor.CmdReadStavCitacuNocniSmena:
                             case UnitMonitor.CmdReadStavCitacuWithCumulativeStopTime:
                                 //zaradim ke zpracovani ktere probiha v PacketBw
-                                PackedCollection.Add(packet);
+                                PacketCollection.Add(packet);
                                 break;
                         }
                     }                    
@@ -964,8 +964,16 @@ namespace Slevyr.DataAccess.Services
         /// <param name="e"></param>
         private static void PacketWorkerDoWork(object sender, DoWorkEventArgs e)
         {
-            SqlliteDao.OpenConnection(true, _runConfig.DbFilePath);
+            try
+            {
+                SqlliteDao.OpenConnection(true, _runConfig.DbFilePath);
 
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex);
+                throw;
+            }
             while (true)
             {
                 try
@@ -977,7 +985,7 @@ namespace Slevyr.DataAccess.Services
                         return;
                     }
 
-                    var packet =PackedCollection.Take();
+                    var packet =PacketCollection.Take();
 
                     byte addr = packet[2];
                     byte cmd = packet[3];

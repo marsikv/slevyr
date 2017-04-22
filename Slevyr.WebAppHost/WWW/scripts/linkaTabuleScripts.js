@@ -31,7 +31,7 @@ var chart = null;
         $.getJSON(uriSys + '/getRunConfig?')
             .done(function (data) {
                 isTimerEnabled = data.IsRefreshTimerOn;
-                timerRefreshPeriod = data.RefreshTimerPeriod;
+                var timerRefreshPeriod = data.RefreshTimerPeriod;
 
                 if (isTimerEnabled && (timerRefreshPeriod > 0)) {
                     //alert('set timer to ' + timerRefreshPeriod);
@@ -149,10 +149,19 @@ var chart = null;
                 + '<td>-</td>'
                 + '<td>-</td>';
         } else {
+            var prumCyklusStr = "-";
+            if (!isNaN(data.PrumCyklusOk)) {
+                prumCyklusStr = Math.round(data.PrumCyklusOk * 100) / 100;
+            }
+            var defektivitaStr = "-";
+            if (!isNaN(data.Defektivita)) {
+                defektivitaStr = Math.round(data.Defektivita * 100) / 100;
+            }
+
             s = '<td>' + smenaNum + '</td>' + '<td>' + data.Ok + '</td>' + '<td>' + data.Ng + '</td>'
-                + '<td>' + Math.round(data.PrumCyklusOk * 100) / 100 + '</td>'
+                + '<td>' + prumCyklusStr + '</td>'
                 + '<td>' + data.RozdilKusu + '</td>'
-                + '<td>' + Math.round(data.Defektivita * 100) / 100 + '</td>'
+                + '<td>' + defektivitaStr + '</td>'
                 + '<td>' + data.StopTimeTxt + '</td>';
         }
 
@@ -260,7 +269,7 @@ var chart = null;
                         callbacks: {
                             label: function (tooltipItem, data) {
                                 var indice = tooltipItem.index;
-                                return data.labels[indice] + ': ' + formatToHHMMSS(data.datasets[0].data[indice]) + '   (' + data.datasets[0].data[indice] + ' sec.)';
+                                return data.labels[indice] + ': ' + formatToHHMMSS(data.datasets[0].data[indice]) ;
                             }
                         }
                     },
@@ -283,7 +292,7 @@ var chart = null;
     function formatToHHMMSS(sec_num) {
         var hours = Math.floor(sec_num / 3600);
         var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
-        var seconds = sec_num - (hours * 3600) - (minutes * 60);
+        var seconds = Math.floor(sec_num) - (hours * 3600) - (minutes * 60);
 
         if (hours < 10) { hours = "0" + hours; }
         if (minutes < 10) { minutes = "0" + minutes; }

@@ -7,6 +7,7 @@ var addr = null;
 var measure = null;
 var startAddr = null;
 var lineChart = null;
+//var dataserie = null;
 
 (function () {
     var hash = location.hash.substr(1);
@@ -31,11 +32,11 @@ var lineChart = null;
         $.getJSON(uriSys + '/getRunConfig?')
             .done(function (data) {
                 isTimerEnabled = data.IsRefreshTimerOn;
-                timerRefreshPeriod = data.RefreshTimerPeriod;
+                var timerRefreshPeriod = data.RefreshTimerPeriod * 2;  //perioda pro refresh grafu bude mensi nez zjisteni stavu
 
                 if (isTimerEnabled && (timerRefreshPeriod > 0)) {
                     if (refreshTimer) window.clearInterval(refreshTimer);
-                    //refreshTimer = window.setInterval(getStatus, timerRefreshPeriod);
+                    refreshTimer = window.setInterval(getGraphData(), timerRefreshPeriod);
                 }
                 else {
                     if (refreshTimer) {
@@ -81,13 +82,12 @@ var lineChart = null;
     function onAddrIdChange() {
         addr = $("#AddrIdDropDown option:selected").val();
         readUnitConfig();
-        //getStatus();
+        onMeasureChange();
     }
 
     function onMeasureChange() {
         measure = $("#MeasureDropDown option:selected").val();
-        //getGraphData();
-        updateGraph();
+        getGraphData();
     }
 
     function clearStatus() {
@@ -95,13 +95,15 @@ var lineChart = null;
     }
 
     function getGraphData() {
+        if (!addr || !measure) return;
         $.getJSON(uriGra + '/get',
             {
                 addr: addr,
                 measureName:measure
             })
             .done(function (data) {
-                //window.slVyr.addNotification('success', 'Sucessfully set PocetOkNg');
+                //dataserie = data;
+                updateGraph(data);
                 $('#stav').text('');
             })
             .fail(function (jqXHR, textStatus, err) {
@@ -111,45 +113,71 @@ var lineChart = null;
             });
     }
 
-    function updateGraph() {
+    function updateGraph(dataserie) {
+
         var ctx = $("#lineChart");
 
         if (lineChart) {
-            //myDoughnutChart.data.datasets[0].data[0].value = 100;
-        } else {
+            lineChart.clear();
+            lineChart.destroy();
+            lineChart = null;
+        }
+
+        Chart.defaults.global.animation.duration = 0;
+
+        //else {
             var gdata = {
-                labels: ["January", "February", "March", "April", "May", "June", "July"],
-                datasets: [
-                    {
-                        label: "X",
-                        fill: false,
-                        lineTension: 0.1,
-                        backgroundColor: "rgba(75,192,192,0.4)",
-                        borderColor: "rgba(75,192,192,1)",
-                        borderCapStyle: 'butt',
-                        borderDash: [],
-                        borderDashOffset: 0.0,
-                        borderJoinStyle: 'miter',
-                        pointBorderColor: "rgba(75,192,192,1)",
-                        pointBackgroundColor: "#fff",
-                        pointBorderWidth: 1,
-                        pointHoverRadius: 5,
-                        pointHoverBackgroundColor: "rgba(75,192,192,1)",
-                        pointHoverBorderColor: "rgba(220,220,220,1)",
-                        pointHoverBorderWidth: 2,
-                        pointRadius: 1,
-                        pointHitRadius: 10,
-                        data: [65, 59, 80, 81, 56, 55, 40],
-                        spanGaps: false,
-                    }
-                ]
+                datasets: [{
+                    label: measure,
+                    backgroundColor: "rgba(75,192,192,0.4)",
+                    borderColor: "rgba(75,192,192,1)",
+                    data: dataserie
+                }]
             };
 
             lineChart = new Chart(ctx, {
                 type: 'line',
                 data: gdata,
-                //options: options
+                options: {
+                    tooltips: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (tooltipItem, data) {
+                                var indice = tooltipItem.index;
+                                return data.datasets[0].label + ' - čas ' + formatToHHMMSS(data.datasets[0].data[indice].x);
+                            },
+                            title: function (tooltipItem, data) {
+                                //var indice = tooltipItem.index;
+                                return tooltipItem[0].yLabel;
+                            }
+                        }
+                    },
+                    scales: {
+                        xAxes: [{
+                            type: 'linear',
+                            position: 'bottom',
+                            ticks: {
+                                min: 0,
+                                max: 8
+                            }
+                        }]
+                    }
+                }
             });
-        }
+
+            lineChart.update();
     }
 
+
+    function formatToHHMMSS(hoursFrac) {
+        var sec_num = hoursFrac * 3600;
+
+        var hours = Math.floor(sec_num / 3600);
+        var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+        var seconds = Math.floor(sec_num) - (hours * 3600) - (minutes * 60);
+
+        if (hours < 10) { hours = "0" + hours; }
+        if (minutes < 10) { minutes = "0" + minutes; }
+        if (seconds < 10) { seconds = "0" + seconds; }
+        return hours + ':' + minutes + ':' + seconds;
+    }
