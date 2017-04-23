@@ -24,7 +24,8 @@ var chart = null;
         $("#AddrIdDropDown").change(onAddrIdChange);
 
         jQuery.ajaxSetup({ cache: false });
- 
+
+        Chart.defaults.global.animation.duration = 0; 
     });
 
     function readRunConfig() {
@@ -235,8 +236,6 @@ var chart = null;
             chart.data.datasets[0].data[4].value = cdata.OtherStopDurationSec;
             chart.update();
         } else {
-            Chart.defaults.global.animation.duration = 0;
-
             var pdata = {
                 labels: ["Výroba", "Změna modelu", "Porucha", "Servis", "Ostatni"],
                 datasets: [

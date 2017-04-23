@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using System.Runtime.Serialization;
 using NLog;
 
@@ -249,6 +250,7 @@ namespace Slevyr.DataAccess.Model
         /// </summary>
         private void PrepareNewSmena()
         {
+            Logger.Info("");
             //Ok = 0;
             //Ng = 0;
             //CasOk = float.NaN;
@@ -306,7 +308,12 @@ namespace Slevyr.DataAccess.Model
                 Tabule.AktualDefectTabule = float.NaN;
             }
 
-            if (runCfg.GraphSamplePeriodSec > 0 && _ubehlyCasSmenySec - _prevUbehlyCasSmenySec > runCfg.GraphSamplePeriodSec)
+            var lastSample = SmenaSamples.LastOrDefault();
+            bool hasChange = lastSample == null || lastSample.NG != Ng || lastSample.OK != Ok || lastSample.StavLinky != Tabule.MachineStatus;
+            bool graphSampleEnabled = runCfg.GraphSamplePeriodSec > 0;
+
+            //sample udelam jen pokud je min. casovy odstup a zaroven je detekovana zmena
+            if (graphSampleEnabled && (_ubehlyCasSmenySec - _prevUbehlyCasSmenySec > runCfg.GraphSamplePeriodSec) && hasChange)
             {
                 SmenaSamples.Add(new SmenaSample()
                 {
@@ -314,8 +321,9 @@ namespace Slevyr.DataAccess.Model
                     NG = Ng,
                     Defectivita = Tabule.AktualDefectTabule,
                     PrumCasVyrobyOk = this.PrumCasVyrobyOk,
-                    PrumCasVyrobyNg = PrumCasVyrobyNg,
-                    sampleTime = new TimeSpan(0, 0, 0, _celkUbehlyCasSmenySec)
+                    StavLinky = Tabule.MachineStatus,
+                    RozdilKusu = Tabule.RozdilTabule,
+                    SampleTime = new TimeSpan(0, 0, 0, _celkUbehlyCasSmenySec),
                 });
                 _prevUbehlyCasSmenySec = _ubehlyCasSmenySec;
             }

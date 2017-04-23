@@ -49,7 +49,7 @@ namespace Slevyr.WebAppHost.Controllers
             {
                 var res = SlevyrService.GetUnitStatus(addr).SmenaSamples.Select(s => new DataPoint()
                 {
-                    x = (float)s.sampleTime.TotalHours,
+                    x = (float)s.SampleTime.TotalHours,
                     y = GetValueOfMeasure(s, measureName)
                 }).ToList();
                 return res;
@@ -71,10 +71,12 @@ namespace Slevyr.WebAppHost.Controllers
                     return s.NG;
                 case "PrumCasVyrobyOk":
                     return s.PrumCasVyrobyOk;
-                case "PrumCasVyrobyNG":
-                    return s.PrumCasVyrobyNg;
+                case "StavLinky":
+                    return (float)s.StavLinky;
                 case "Defektivita":
                     return s.Defectivita;
+                case "Rozdil":
+                    return s.RozdilKusu;
                 default:
                     return 0;
             }

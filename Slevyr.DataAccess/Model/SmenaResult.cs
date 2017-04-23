@@ -32,6 +32,12 @@ namespace Slevyr.DataAccess.Model
                     break;
             }
 
+            //pojistka - kdyz je smena typu B mel by se brat Cil2Smeny ale je mozne ze sem prijde jako smena3
+            if (!unitConfig.IsTypSmennostiA && smena != SmenyEnum.Smena1)
+            {
+                cilKusu = unitConfig.Cil2Smeny != 0 ? unitConfig.Cil2Smeny : unitConfig.Cil3Smeny;
+            }
+
             RozdilKusu = (int)Math.Round(Ok - cilKusu);
 
             StopTime = unitStatus.FinalMachineStopDuration >= 0 ? 

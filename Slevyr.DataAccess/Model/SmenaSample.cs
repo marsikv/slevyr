@@ -11,12 +11,20 @@ namespace Slevyr.DataAccess.Model
     /// </summary>
     public class SmenaSample
     {
-        public TimeSpan sampleTime { get; set; }
+        public TimeSpan SampleTime { get; set; }
+
         public int OK { get; set; }
+
         public int NG { get; set; }
+
         public float PrumCasVyrobyOk { get; set; }
-        public float PrumCasVyrobyNg { get; set; }
+
+        //public float PrumCasVyrobyNg { get; set; }
         public float Defectivita { get; set; }
+
+        public int RozdilKusu { get; set; }
+
+        public MachineStateEnum StavLinky { get; set; }
 
     }
 }

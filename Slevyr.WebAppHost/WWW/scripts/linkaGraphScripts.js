@@ -7,7 +7,9 @@ var addr = null;
 var measure = null;
 var startAddr = null;
 var lineChart = null;
+var maxhour = null;
 //var dataserie = null;
+var ctx;
 
 (function () {
     var hash = location.hash.substr(1);
@@ -25,7 +27,9 @@ var lineChart = null;
         $("#MeasureDropDown").change(onMeasureChange);
 
         jQuery.ajaxSetup({ cache: false });
- 
+
+        Chart.defaults.global.animation.duration = 0;
+        ctx = $("#lineChart");
     });
 
     function readRunConfig() {
@@ -36,7 +40,7 @@ var lineChart = null;
 
                 if (isTimerEnabled && (timerRefreshPeriod > 0)) {
                     if (refreshTimer) window.clearInterval(refreshTimer);
-                    refreshTimer = window.setInterval(getGraphData(), timerRefreshPeriod);
+                    refreshTimer = window.setInterval(getGraphData, timerRefreshPeriod);
                 }
                 else {
                     if (refreshTimer) {
@@ -72,6 +76,11 @@ var lineChart = null;
         $.getJSON(uriSys + '/GetUnitConfig?', {addr: addr})
             .done(function (data) {
                 $('#LinkaName').text(data.UnitName);
+                if (data.IsTypSmennostiA) {
+                    maxhour = 8;
+                } else {
+                    maxhour = 12;
+                }
                 window.slVyr.addNotification('success', 'Sucessfully read unit config.');
             })
             .fail(function (jqXHR, textStatus, err) {
@@ -81,12 +90,14 @@ var lineChart = null;
 
     function onAddrIdChange() {
         addr = $("#AddrIdDropDown option:selected").val();
+        removeChart();
         readUnitConfig();
         onMeasureChange();
     }
 
     function onMeasureChange() {
         measure = $("#MeasureDropDown option:selected").val();
+        removeChart();
         getGraphData();
     }
 
@@ -113,61 +124,84 @@ var lineChart = null;
             });
     }
 
-    function updateGraph(dataserie) {
+function updateGraph(dataserie) {
 
-        var ctx = $("#lineChart");
+    if (lineChart) {
+        //pouzit push ?
+        //https://github.com/chartjs/Chart.js/issues/1997
+        //zrejme funguje prirazeni cele serie, to je jednodussi
+        lineChart.data.datasets[0].data = dataserie;
+        lineChart.update();
+    } else {
+        var gdata = {
+            datasets: [
+                {
+                    label: measure,
+                    backgroundColor: "rgba(75,192,192,0.3)",
+                    borderColor: "rgba(75,192,192,1)",
+                    data: dataserie
+                }
+                //{
+                //    label: 'pokus',
+                //    backgroundColor: "rgba(200,192,192,0.4)",
+                //    borderColor: "rgba(200,192,192,1)",
+                //    data: [
+                //        {
+                //            x: 0,
+                //            y: 1.2
+                //        }, {
+                //            x: 3,
+                //            y: 1.3
+                //        }, {
+                //            x: 7,
+                //            y: 1.4
+                //        }
+                //    ]
+                //}
+            ]
+        };
 
+        lineChart = new Chart(ctx, {
+            type: 'line',
+            data: gdata,
+            options: {
+                tooltips: {
+                    enabled: true,
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            var indice = tooltipItem.index;
+                            return data.datasets[0].label + ' - čas ' + formatToHHMMSS(data.datasets[0].data[indice].x);
+                        },
+                        title: function(tooltipItem, data) {
+                            //var indice = tooltipItem.index;
+                            return 'hodnota:' + tooltipItem[0].yLabel;
+                        }
+                    }
+                },
+                scales: {
+                    xAxes: [
+                        {
+                            type: 'linear',
+                            position: 'bottom',
+                            ticks: {
+                                min: 0,
+                                max: maxhour
+                            }
+                        }
+                    ]
+                }
+            }
+        });
+    }
+}
+
+   function removeChart() {
         if (lineChart) {
             lineChart.clear();
             lineChart.destroy();
             lineChart = null;
         }
-
-        Chart.defaults.global.animation.duration = 0;
-
-        //else {
-            var gdata = {
-                datasets: [{
-                    label: measure,
-                    backgroundColor: "rgba(75,192,192,0.4)",
-                    borderColor: "rgba(75,192,192,1)",
-                    data: dataserie
-                }]
-            };
-
-            lineChart = new Chart(ctx, {
-                type: 'line',
-                data: gdata,
-                options: {
-                    tooltips: {
-                        enabled: true,
-                        callbacks: {
-                            label: function (tooltipItem, data) {
-                                var indice = tooltipItem.index;
-                                return data.datasets[0].label + ' - čas ' + formatToHHMMSS(data.datasets[0].data[indice].x);
-                            },
-                            title: function (tooltipItem, data) {
-                                //var indice = tooltipItem.index;
-                                return tooltipItem[0].yLabel;
-                            }
-                        }
-                    },
-                    scales: {
-                        xAxes: [{
-                            type: 'linear',
-                            position: 'bottom',
-                            ticks: {
-                                min: 0,
-                                max: 8
-                            }
-                        }]
-                    }
-                }
-            });
-
-            lineChart.update();
     }
-
 
     function formatToHHMMSS(hoursFrac) {
         var sec_num = hoursFrac * 3600;
