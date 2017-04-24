@@ -5,6 +5,7 @@ var isTimerEnabled = false;
 var refreshTimer;
 var addr = null;
 var measure = null;
+var measure2 = null;
 var startAddr = null;
 var lineChart = null;
 var maxhour = null;
@@ -25,6 +26,7 @@ var ctx;
 
         $("#AddrIdDropDown").change(onAddrIdChange);
         $("#MeasureDropDown").change(onMeasureChange);
+        $("#Measure2DropDown").change(onMeasureChange);
 
         jQuery.ajaxSetup({ cache: false });
 
@@ -62,7 +64,7 @@ var ctx;
 
                 onAddrIdChange();
 
-                window.slVyr.addNotification('success', 'Sucessfully read config..');
+                //window.slVyr.addNotification('success', 'Sucessfully read config..');
 
             })
             .fail(function (jqXHR, textStatus, err) {
@@ -81,7 +83,7 @@ var ctx;
                 } else {
                     maxhour = 12;
                 }
-                window.slVyr.addNotification('success', 'Sucessfully read unit config.');
+                //window.slVyr.addNotification('success', 'Sucessfully read unit config.');
             })
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'LoadParams - error: ' + err);
@@ -97,6 +99,7 @@ var ctx;
 
     function onMeasureChange() {
         measure = $("#MeasureDropDown option:selected").val();
+        measure2 = $("#Measure2DropDown option:selected").val();
         removeChart();
         getGraphData();
     }
@@ -122,6 +125,31 @@ var ctx;
                 $('#stav').text('Error: ' + err);
                 alert("get graph data - error");
             });
+
+        if (!measure2 || measure2 === '-') return;
+        $.getJSON(uriGra + '/get',
+            {
+                addr: addr,
+                measureName: measure2
+            })
+            .done(function (data) {
+                //dataserie = data;
+                updateGraph2(data);
+                $('#stav').text('');
+            })
+            .fail(function (jqXHR, textStatus, err) {
+                window.slVyr.addNotification('error', 'get graph data - error: ' + err);
+                $('#stav').text('Error: ' + err);
+                alert("get graph data - error");
+            });
+    }
+
+
+    function updateGraph2(dataserie2) {
+        if (lineChart) {
+            lineChart.data.datasets[1].data = dataserie2;
+            lineChart.update();
+        }
     }
 
 function updateGraph(dataserie) {
@@ -133,33 +161,65 @@ function updateGraph(dataserie) {
         lineChart.data.datasets[0].data = dataserie;
         lineChart.update();
     } else {
-        var gdata = {
-            datasets: [
+        var gdata;
+        var gyAxes;
+        var hasMeasure2 = measure2 && measure2 !== '-';
+
+        if (hasMeasure2) {
+            gdata = {
+                datasets: [
+                    {
+                        label: measure,
+                        backgroundColor: "rgba(75,192,192,0.3)",
+                        borderColor: "rgba(75,192,192,1)",
+                        yAxisID: "y-axis-0",
+                        steppedLine: measure === 'StavLinky',
+                        data: dataserie
+                    },
+                    {
+                        label: measure2,
+                        backgroundColor: "rgba(153, 102, 255, 0.2)",
+                        borderColor: "rgba(153, 102, 255, 1)",
+                        steppedLine: measure2 === 'StavLinky',
+                        yAxisID: "y-axis-1",
+                        pointStyle: "rect"
+                        //steppedLine: true
+                        //data: dataserie2
+                    }
+                ]
+            };
+        } else {
+            gdata = {
+                datasets: [
+                    {
+                        label: measure,
+                        backgroundColor: "rgba(75,192,192,0.3)",
+                        borderColor: "rgba(75,192,192,1)",
+                        steppedLine: measure === 'StavLinky',
+                        data: dataserie
+                    }
+                ]
+            };
+        }
+
+        if (hasMeasure2) {
+            gyAxes = [
                 {
-                    label: measure,
-                    backgroundColor: "rgba(75,192,192,0.3)",
-                    borderColor: "rgba(75,192,192,1)",
-                    data: dataserie
+                    position: "left",
+                    "id": "y-axis-0"
+                }, {
+                    position: "right",                    
+                    "id": "y-axis-1"
                 }
-                //{
-                //    label: 'pokus',
-                //    backgroundColor: "rgba(200,192,192,0.4)",
-                //    borderColor: "rgba(200,192,192,1)",
-                //    data: [
-                //        {
-                //            x: 0,
-                //            y: 1.2
-                //        }, {
-                //            x: 3,
-                //            y: 1.3
-                //        }, {
-                //            x: 7,
-                //            y: 1.4
-                //        }
-                //    ]
-                //}
-            ]
-        };
+            ];
+        } else {
+            gyAxes = [
+                {
+                    position: "left",
+                    "id": "y-axis-0"
+                }
+            ];
+        }
 
         lineChart = new Chart(ctx, {
             type: 'line',
@@ -169,12 +229,13 @@ function updateGraph(dataserie) {
                     enabled: true,
                     callbacks: {
                         label: function(tooltipItem, data) {
-                            var indice = tooltipItem.index;
-                            return data.datasets[0].label + ' - čas ' + formatToHHMMSS(data.datasets[0].data[indice].x);
+                            var i = tooltipItem.index;
+                            var dsi = tooltipItem.datasetIndex;
+                            return data.datasets[dsi].label + ' - čas ' + formatToHHMMSS(data.datasets[dsi].data[i].x);
                         },
                         title: function(tooltipItem, data) {
                             //var indice = tooltipItem.index;
-                            return 'hodnota:' + tooltipItem[0].yLabel;
+                            return '     ' + tooltipItem[0].yLabel;
                         }
                     }
                 },
@@ -188,7 +249,8 @@ function updateGraph(dataserie) {
                                 max: maxhour
                             }
                         }
-                    ]
+                    ],
+                    yAxes: gyAxes
                 }
             }
         });
