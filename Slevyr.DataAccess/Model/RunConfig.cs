@@ -51,8 +51,12 @@ namespace Slevyr.DataAccess.Model
         /// <summary> Provede reset RF kdyz je detekovane vetsi mnozstvi chyb a testovaci paket neni potrzen </summary>
         public bool IsAutoResetRF;
 
-        /// <summary> tak dlouho se min. ceka nez se udela dalsi vzorek stavu linky pro graf, 0 je vypnuto </summary>
-        public int GraphSamplePeriodSec = 0;  //TODO default asi upravit
+        /// <summary> tak dlouho se min. ceka nez se udela dalsi vzorek stavu linky pro graf [sec], 0 je vypnuto </summary>
+        public int GraphSamplePeriodSec = 60;
+
+        /// <summary>  Min. cas pro ulozeni vzorku i pokud se stav linky nezmenil, [sec]</summary>
+        public int GraphMinSamplePeriodSec = int.MaxValue;
+
 
     }
 }

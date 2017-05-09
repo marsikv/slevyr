@@ -1092,6 +1092,21 @@ namespace Slevyr.DataAccess.Services
             DataSendReceivedLogger.Debug($"->  {buffLength}; {BitConverter.ToString(inBuff)}");
         }
 
-      
+
+        public static void SaveAllUnitStatus()
+        {
+            foreach (var u in _unitDictionary.Values)
+            {
+                u.UnitStatus.SaveToFile(_runConfig.JsonDataFilePath);
+            }
+        }
+
+        public static void RestoreAllUnitStatus()
+        {
+            foreach (var u in _unitDictionary.Values)
+            {
+                u.UnitStatus.RestoreFromFile(_runConfig.JsonDataFilePath);
+            }
+        }
     }
 }

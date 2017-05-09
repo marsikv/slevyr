@@ -72,7 +72,7 @@ namespace Slevyr.WebAppHost
 
             if (Int32.TryParse(ConfigurationManager.AppSettings["GraphSamplePeriod"], out i)) RunConfig.GraphSamplePeriodSec = i;
 
-            //GraphSamplePeriodSec
+            if (Int32.TryParse(ConfigurationManager.AppSettings["GraphMinSamplePeriod"], out i)) RunConfig.GraphMinSamplePeriodSec = i;
 
             Boolean.TryParse(ConfigurationManager.AppSettings["IsWaitCommandResult"], out b); RunConfig.IsWaitCommandResult = b;
 

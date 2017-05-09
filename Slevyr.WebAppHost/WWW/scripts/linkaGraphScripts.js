@@ -9,7 +9,6 @@ var measure2 = null;
 var startAddr = null;
 var lineChart = null;
 var maxhour = null;
-//var dataserie = null;
 var ctx;
 
 (function () {
@@ -21,8 +20,6 @@ var ctx;
 
     $(document).ready(function () {
         readRunConfig();
-
-        //$("#GetStatus").click(getStatus);
 
         $("#AddrIdDropDown").change(onAddrIdChange);
         $("#MeasureDropDown").change(onMeasureChange);
@@ -152,7 +149,7 @@ var ctx;
         }
     }
 
-function updateGraph(dataserie) {
+   function updateGraph(dataserie) {
 
     if (lineChart) {
         //pouzit push ?
@@ -186,6 +183,7 @@ function updateGraph(dataserie) {
                         //steppedLine: true
                         //data: dataserie2
                     }
+                    
                 ]
             };
         } else {

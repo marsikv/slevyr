@@ -654,8 +654,8 @@ namespace Slevyr.DataAccess.Model
 
         public void SetSmenaHistory(SmenyEnum smena)
         {
-           UnitStatus.LastSmenaResults[UnitStatus.GetSmenaNum(smena) - 1] = 
-                new SmenaResult(UnitStatus, UnitConfig, smena);
+            //UnitStatus.PastSmenaResults[UnitStatus.GetSmenaNum(smena) - 1] =  new SmenaResult(UnitStatus, UnitConfig, smena);
+            UnitStatus.PastSmenaResults[UnitStatus.GetSmenaIndex(smena)].Set(UnitStatus, UnitConfig, smena);
         }
     }
 }

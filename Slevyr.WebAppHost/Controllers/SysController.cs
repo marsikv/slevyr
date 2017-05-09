@@ -120,6 +120,19 @@ namespace Slevyr.WebAppHost.Controllers
             }
         }
 
+        [HttpGet]
+        public void SaveUnitStatus()
+        {
+            SlevyrService.SaveAllUnitStatus();
+        }
+
+        [HttpGet]
+        public void RestoreUnitStatus()
+        {
+            SlevyrService.RestoreAllUnitStatus();
+        }
+
+
         #endregion
 
         /// <summary>

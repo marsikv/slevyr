@@ -1,11 +1,16 @@
 ﻿var uri = 'api/slevyr';
 var uriSys = 'api/sys';
+var uriGra = 'api/graph';
 
 var isTimerEnabled = false;
 var refreshTimer;
 var addr = null;
 var startAddr = null;
 var chart = null;
+var lineChart = null;
+var ctxLineChart;
+var ctxPie;
+var maxhour = null;
 
 (function () {
     var hash = location.hash.substr(1);
@@ -17,21 +22,24 @@ var chart = null;
     $(document).ready(function () {
         readRunConfig();
 
-        //$("#RefreshStatus").click(refreshStatus);     
-
         $("#GetStatus").click(getStatus);
 
         $("#AddrIdDropDown").change(onAddrIdChange);
 
         jQuery.ajaxSetup({ cache: false });
- 
+
+        Chart.defaults.global.animation.duration = 0;
+
+        ctxLineChart = $("#lineChart");
+
+        ctxPie = $("#pieChart");
     });
 
     function readRunConfig() {
         $.getJSON(uriSys + '/getRunConfig?')
             .done(function (data) {
                 isTimerEnabled = data.IsRefreshTimerOn;
-                timerRefreshPeriod = data.RefreshTimerPeriod;
+                var timerRefreshPeriod = data.RefreshTimerPeriod;
 
                 if (isTimerEnabled && (timerRefreshPeriod > 0)) {
                     //alert('set timer to ' + timerRefreshPeriod);
@@ -96,6 +104,11 @@ var chart = null;
         $.getJSON(uriSys + '/GetUnitConfig?', {addr: addr})
             .done(function (data) {
                 $('#LinkaName').text(data.UnitName);
+                if (data.IsTypSmennostiA) {
+                    maxhour = 8;
+                } else {
+                    maxhour = 12;
+                }
                 window.slVyr.addNotification('success', 'Sucessfully read unit config.');
             })
             .fail(function (jqXHR, textStatus, err) {
@@ -105,6 +118,7 @@ var chart = null;
 
     function onAddrIdChange() {
         addr = $("#AddrIdDropDown option:selected").val();
+        removeChart();
         readUnitConfig();
         getStatus();
     }
@@ -118,19 +132,22 @@ var chart = null;
             .done(function (data) {
                 updateTableElements(data);
                 updateAkumulovaneCasyElements(data);
+                updatePieChart(data);
                 if (data.IsTypSmennostiA) {
-                    updateLastSmenaTable('#lastSmena1', 'Ranní', data.LastSmenaResults[0]);
-                    updateLastSmenaTable('#lastSmena2', 'Odpolední', data.LastSmenaResults[1]);
-                    updateLastSmenaTable('#lastSmena3', 'Noční', data.LastSmenaResults[2]);
+                    updateLastSmenaTable('#lastSmena1', 'Ranní', data.PastSmenaResults[0]);
+                    updateLastSmenaTable('#lastSmena2', 'Odpolední', data.PastSmenaResults[1]);
+                    updateLastSmenaTable('#lastSmena3', 'Noční', data.PastSmenaResults[2]);
                 } else {
-                    updateLastSmenaTable('#lastSmena1', 'Ranní', data.LastSmenaResults[0]);
-                    updateLastSmenaTable('#lastSmena2', 'Noční', data.LastSmenaResults[2]);
+                    updateLastSmenaTable('#lastSmena1', 'Ranní', data.PastSmenaResults[0]);
+                    updateLastSmenaTable('#lastSmena2', 'Noční', data.PastSmenaResults[2]);
                     $('#lastSmena3').empty();
                 }
             })
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'GetStatus - error: ' + err);
             });
+
+            getLineGraphData();
     }
 
     function updateLastSmenaTable(rowid, smenaNum, data) {
@@ -147,10 +164,19 @@ var chart = null;
                 + '<td>-</td>'
                 + '<td>-</td>';
         } else {
+            var prumCyklusStr = "-";
+            if (!isNaN(data.PrumCyklusOk)) {
+                prumCyklusStr = Math.round(data.PrumCyklusOk * 100) / 100;
+            }
+            var defektivitaStr = "-";
+            if (!isNaN(data.Defektivita)) {
+                defektivitaStr = Math.round(data.Defektivita * 100) / 100;
+            }
+
             s = '<td>' + smenaNum + '</td>' + '<td>' + data.Ok + '</td>' + '<td>' + data.Ng + '</td>'
-                + '<td>' + Math.round(data.PrumCyklusOk * 100) / 100 + '</td>'
+                + '<td>' + prumCyklusStr + '</td>'
                 + '<td>' + data.RozdilKusu + '</td>'
-                + '<td>' + Math.round(data.Defektivita * 100) / 100 + '</td>'
+                + '<td>' + defektivitaStr + '</td>'
                 + '<td>' + data.StopTimeTxt + '</td>';
         }
 
@@ -210,9 +236,10 @@ var chart = null;
             $('#casPoruchy').text('-');
             $('#casServisu').text('-');
         }
+    }
 
-        var ctxPie = $("#pieChart");
-
+    function updatePieChart(cdata) {
+        
         if (chart) {
             chart.data.datasets[0].data[0].value = cdata.VyrobaDurationSec;
             chart.data.datasets[0].data[1].value = cdata.ZmenaModeluDurationSec;
@@ -221,9 +248,6 @@ var chart = null;
             chart.data.datasets[0].data[4].value = cdata.OtherStopDurationSec;
             chart.update();
         } else {
-            Chart.defaults.global.animation.duration = 0;
-            Chart.defaults.global.hover.mode = 'nearest';
-
             var pdata = {
                 labels: ["Výroba", "Změna modelu", "Porucha", "Servis", "Ostatni"],
                 datasets: [
@@ -250,9 +274,115 @@ var chart = null;
             chart = new Chart(ctxPie, {
                 type: 'doughnut',
                 data: pdata,
-                //options: options
+                options: {
+                    tooltips: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (tooltipItem, data) {
+                                var indice = tooltipItem.index;
+                                return data.labels[indice] + ': ' + formatToHHMMSS(data.datasets[0].data[indice]) ;
+                            }
+                        }
+                    },
+                    hover: {
+                        animationDuration: 400
+                    }
+                }
             });
         }
-
     }
+
+
+    function getLineGraphData() {
+        if (!addr) return;
+
+        $.getJSON(uriGra + '/get',
+            {
+                addr: addr,
+                measureName: "OK"
+            })
+            .done(function (data) {
+                //dataserie = data;
+                updateLineGraph(data);
+                $('#stav').text('');
+            })
+            .fail(function (jqXHR, textStatus, err) {
+                window.slVyr.addNotification('error', 'get graph data - error: ' + err);
+                $('#stav').text('Error: ' + err);
+                alert("get graph data - error");
+            });
+    }
+
+
+    function updateLineGraph(dataserie) {
+        if (lineChart) {
+            lineChart.data.datasets[0].data = dataserie;
+            lineChart.update();
+        } else {
+            var gdata = {
+                    datasets: [
+                        {
+                            label: "OK",
+                            backgroundColor: "rgba(75,192,192,0.3)",
+                            borderColor: "rgba(75,192,192,1)",
+                            steppedLine: true,
+                            data: dataserie
+                        }
+                    ]
+                };
+
+            lineChart = new Chart(ctxLineChart, {
+                type: 'line',
+                data: gdata,
+                options: {
+                    legend: {
+                      display: false  
+                    },
+                    scales: {
+                        xAxes: [
+                            {
+                                type: 'linear',
+                                position: 'bottom',
+                                ticks: {
+                                    min: 0,
+                                    max: maxhour
+                                }
+                            }
+                        ],
+                        yAxes: [
+                            {
+                                //display: false
+                                position: "left"
+                            }
+                        ]
+                    }
+                }
+            });
+        }
+    }
+
+    function removeChart() {
+        if (chart) {
+            chart.clear();
+            chart.destroy();
+            chart = null;
+        }
+        if (lineChart) {
+            lineChart.clear();
+            lineChart.destroy();
+            lineChart = null;
+        }
+    }
+
+    function formatToHHMMSS(sec_num) {
+        var hours = Math.floor(sec_num / 3600);
+        var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+        var seconds = Math.floor(sec_num) - (hours * 3600) - (minutes * 60);
+
+        if (hours < 10) { hours = "0" + hours; }
+        if (minutes < 10) { minutes = "0" + minutes; }
+        if (seconds < 10) { seconds = "0" + seconds; }
+        return hours + ':' + minutes + ':' + seconds;
+    }
+
 
