@@ -7,24 +7,24 @@ namespace Slevyr.DataAccess.Model
     {
         #region properties
 
-        public int Ok { get; private set; }
+        public int Ok { get;  set; }
 
-        public int Ng { get; private set; }
+        public int Ng { get;  set; }
 
-        public float PrumCyklusOk { get; private set; }
+        public float PrumCyklusOk { get;  set; }
     
-        public int RozdilKusu { get; private set; }
+        public int RozdilKusu { get;  set; }
 
-        public float Defektivita { get; private set; }
+        public float Defektivita { get;  set; }
 
-        public TimeSpan StopTime { get; private set; }
+        public TimeSpan StopTime { get;  set; }
 
         public string StopTimeTxt => StopTime.ToString();
 
         /// <summary>
         /// Vzorky smeny pro grafy
         /// </summary>
-        public List<SmenaSample> SmenaSamples { get; private set; }
+        public List<SmenaSample> SmenaSamples { get;  set; }
 
         #endregion
 

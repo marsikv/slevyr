@@ -43,7 +43,7 @@ namespace Slevyr.WebAppHost.Controllers
         [HttpGet]
         public List<DataPoint> Get([FromUri]byte addr,[FromUri] string measureName)
         {
-            Logger.Info($"measureName:{measureName} unit addr:{addr}");
+            //Logger.Debug($"measureName:{measureName} unit addr:{addr}");
 
             try
             {
@@ -54,8 +54,32 @@ namespace Slevyr.WebAppHost.Controllers
                 }).ToList();
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Logger.Error(ex);
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
+            }
+        }
+
+        [HttpGet]
+        public List<DataPoint> GetPast([FromUri]byte addr, [FromUri] string measureName, [FromUri] int smena)
+        {
+            try
+            {
+                if (SlevyrService.GetUnitStatus(addr)?.PastSmenaResults[smena]?.SmenaSamples == null)
+                {
+                    return null;
+                }
+                var res = SlevyrService.GetUnitStatus(addr).PastSmenaResults[smena].SmenaSamples.Select(s => new DataPoint()
+                {
+                    x = (float)s.SampleTime.TotalHours,
+                    y = GetValueOfMeasure(s, measureName)
+                }).ToList();
+                return res;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex);
                 throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
             }
         }

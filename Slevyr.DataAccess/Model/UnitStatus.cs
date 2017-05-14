@@ -87,12 +87,12 @@ namespace Slevyr.DataAccess.Model
         /// </summary>
         //public TimeSpan CumulativeStopTimeSpan => _cumulativeStopTimeSpan;  - tu uz nepotrebuji protoze prikazy 6c,6d,6e vraceji kumulovany stop time
 
-        public UnitTabule Tabule { get; private set; }
+        public UnitTabule Tabule;
 
         /// <summary>
         /// vysledky predchozich smen (3 nebo 2 podle typu smennosti)
         /// </summary>
-        public SmenaResult[] PastSmenaResults { get; private set; }
+        public SmenaResult[] PastSmenaResults;
 
         public List<SmenaSample> SmenaSamples;
 
@@ -296,7 +296,7 @@ namespace Slevyr.DataAccess.Model
                 if (_currentSmena != SmenyEnum.Nedef)
                     //aby bylo zajisteno ze se opravdu jedna o prechod z jedne smeny do druhe 
                 {
-                    PastSmenaResults[UnitStatus.GetSmenaIndex(smena)].SetSamples(SmenaSamples);
+                    PastSmenaResults[UnitStatus.GetSmenaIndex(_currentSmena)].SetSamples(SmenaSamples);
 
                     PrepareNewSmena();
 
@@ -691,9 +691,8 @@ namespace Slevyr.DataAccess.Model
 
         public void SaveToFile(string dataFilePath)
         {
-            JsonSerializer serializer = new JsonSerializer();
-            serializer.Converters.Add(new JavaScriptDateTimeConverter());
-            serializer.NullValueHandling = NullValueHandling.Ignore;
+            JsonSerializer serializer = new JsonSerializer {NullValueHandling = NullValueHandling.Ignore};
+            //serializer.Converters.Add(new JavaScriptDateTimeConverter());
 
             if (!Directory.Exists(dataFilePath)) Directory.CreateDirectory(dataFilePath);
 
@@ -712,19 +711,24 @@ namespace Slevyr.DataAccess.Model
 
             using (StreamReader file = File.OpenText(fileName))
             {
-                JsonSerializer serializer = new JsonSerializer();
-                serializer.Converters.Add(new JavaScriptDateTimeConverter());
-                serializer.NullValueHandling = NullValueHandling.Ignore;
+                try
+                {
+                    JsonSerializer serializer = new JsonSerializer {NullValueHandling = NullValueHandling.Ignore};
+                    //serializer.Converters.Add(new JavaScriptDateTimeConverter());
 
-                var res = (UnitStatus) serializer.Deserialize(file, typeof (UnitStatus));
+                    var res = (UnitStatus)serializer.Deserialize(file, typeof(UnitStatus));
 
-                if (res == null) return;
+                    if (res == null) return;
 
-                SmenaSamples = res.SmenaSamples;
+                    SmenaSamples = res.SmenaSamples;
 
-                PastSmenaResults = res.PastSmenaResults;
-
-
+                    PastSmenaResults = res.PastSmenaResults;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex);
+                    throw;
+                }                
             }
         }
 

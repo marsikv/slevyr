@@ -38,11 +38,11 @@
             <span id="LinkaName">X</span>
             <select id="AddrIdDropDown" class=""></select>
 
-            <select id="Smena" class="">
-                <option value="Current" selected="selected">Aktuální směna</option>
-                <option value="Ranni">Předchozí ranní</option>
-                <option value="Odpoledni">Předchozí odpolední</option>
-                <option value="Noční">Předchozí noční</option>
+            <select id="SmenaDropDown" class="">
+                <option value="-1" selected="selected">Aktuální směna</option>
+                <option value="0">Předchozí ranní</option>
+                <option value="1">Předchozí odpolední</option>
+                <option value="2">Předchozí noční</option>
             </select>
 
         </h1>
@@ -71,10 +71,35 @@
         </h1>        
     </div>
 
-    <div style="width: 100%; height: 100%">
-        <canvas id="lineChart"></canvas>
+
+    <!--<div>
+        <table cellpadding="0" cellspacing="0" >
+            <tr>
+                <td >
+                    <div style="width: 100%; height: 100%">
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div style="width: 100%; height: 20%">
+                        <canvas id="lineChartStavLinky"></canvas>
+                    </div>
+                </td>
+            </tr>
+       </table>
+    </div>-->
+
+
+    <div style="width: 100%; height: 50%">
+        <canvas id="lineChart"  height="120"></canvas>
     </div>
-        
+
+    <div style="width: 100%; height: 50%">
+        <canvas id="lineChartStavLinky" height="30"></canvas>
+    </div>
+
 </main>
 
     <aside id="notification" class="aside-bottom"></aside>

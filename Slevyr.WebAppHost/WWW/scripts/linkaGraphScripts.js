@@ -8,8 +8,11 @@ var measure = null;
 var measure2 = null;
 var startAddr = null;
 var lineChart = null;
-var maxhour = null;
+var lineChartStavLinky = null;
+var maxhour = 8;
+var smena = -1;
 var ctx;
+var ctxStavLinky;
 
 (function () {
     var hash = location.hash.substr(1);
@@ -24,11 +27,13 @@ var ctx;
         $("#AddrIdDropDown").change(onAddrIdChange);
         $("#MeasureDropDown").change(onMeasureChange);
         $("#Measure2DropDown").change(onMeasureChange);
+        $("#SmenaDropDown").change(onSmenaChange);
 
         jQuery.ajaxSetup({ cache: false });
 
         Chart.defaults.global.animation.duration = 0;
         ctx = $("#lineChart");
+        ctxStavLinky = $("#lineChartStavLinky");
     });
 
     function readRunConfig() {
@@ -101,33 +106,43 @@ var ctx;
         getGraphData();
     }
 
+    function onSmenaChange() {
+        smena = $("#SmenaDropDown option:selected").val();
+        measure2 = $("#Measure2DropDown option:selected").val();
+        removeChart();
+        getGraphData();
+    }
+    
     function clearStatus() {
         $('#stav').text('...');
     }
 
-    function getGraphData() {
+    function getGraphHistoryData() {
         if (!addr || !measure) return;
-        $.getJSON(uriGra + '/get',
-            {
-                addr: addr,
-                measureName:measure
-            })
-            .done(function (data) {
-                //dataserie = data;
-                updateGraph(data);
-                $('#stav').text('');
-            })
-            .fail(function (jqXHR, textStatus, err) {
-                window.slVyr.addNotification('error', 'get graph data - error: ' + err);
-                $('#stav').text('Error: ' + err);
-                alert("get graph data - error");
-            });
+
+        $.getJSON(uriGra + '/getPast',
+                {
+                    addr: addr,
+                    measureName: measure,
+                    smena:smena
+                })
+                .done(function (data) {
+                    //dataserie = data;
+                    updateGraph(data);
+                    $('#stav').text('');
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    window.slVyr.addNotification('error', 'get graph data - error: ' + err);
+                    $('#stav').text('Error: ' + err);
+                    alert("get graph data - error");
+                });
 
         if (!measure2 || measure2 === '-') return;
-        $.getJSON(uriGra + '/get',
+        $.getJSON(uriGra + '/getPast',
             {
                 addr: addr,
-                measureName: measure2
+                measureName: measure2,
+                smena: smena
             })
             .done(function (data) {
                 //dataserie = data;
@@ -139,8 +154,81 @@ var ctx;
                 $('#stav').text('Error: ' + err);
                 alert("get graph data - error");
             });
+
+        $.getJSON(uriGra + '/getPast',
+               {
+                   addr: addr,
+                   measureName: 'StavLinky',
+                   smena: smena
+               })
+               .done(function (data) {
+                   updateGraphStavLinky(data);
+                   $('#stav').text('');
+               })
+               .fail(function (jqXHR, textStatus, err) {
+                   window.slVyr.addNotification('error', 'get graph data - error: ' + err);
+                   $('#stav').text('Error: ' + err);
+                   alert("get graph data - error");
+               });
     }
 
+    function getGraphData() {
+        if (!addr || !measure) return;
+
+        if (smena > -1) {
+            getGraphHistoryData();
+            return;
+        }
+
+        $.getJSON(uriGra + '/get',
+                {
+                    addr: addr,
+                    measureName: measure
+                })
+                .done(function (data) {
+                    //dataserie = data;
+                    updateGraph(data);
+                    $('#stav').text('');
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    window.slVyr.addNotification('error', 'get graph data - error: ' + err);
+                    $('#stav').text('Error: ' + err);
+                    alert("get graph data - error");
+                });
+
+        if (!measure2 || measure2 === '-') return;
+
+        $.getJSON(uriGra + '/get',
+                {
+                    addr: addr,
+                    measureName: measure2
+                })
+                .done(function (data) {
+                    //dataserie = data;
+                    updateGraph2(data);
+                    $('#stav').text('');
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    window.slVyr.addNotification('error', 'get graph data - error: ' + err);
+                    $('#stav').text('Error: ' + err);
+                    alert("get graph data - error");
+                });
+
+        $.getJSON(uriGra + '/get',
+                {
+                    addr: addr,
+                    measureName: 'StavLinky'
+                })
+                .done(function (data) {
+                    updateGraphStavLinky(data);
+                    $('#stav').text('');
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    window.slVyr.addNotification('error', 'get graph data - error: ' + err);
+                    $('#stav').text('Error: ' + err);
+                    alert("get graph data - error");
+                });
+    }
 
     function updateGraph2(dataserie2) {
         if (lineChart) {
@@ -149,117 +237,175 @@ var ctx;
         }
     }
 
-   function updateGraph(dataserie) {
-
-    if (lineChart) {
-        //pouzit push ?
-        //https://github.com/chartjs/Chart.js/issues/1997
-        //zrejme funguje prirazeni cele serie, to je jednodussi
-        lineChart.data.datasets[0].data = dataserie;
-        lineChart.update();
-    } else {
-        var gdata;
-        var gyAxes;
-        var hasMeasure2 = measure2 && measure2 !== '-';
-
-        if (hasMeasure2) {
-            gdata = {
-                datasets: [
-                    {
-                        label: measure,
-                        backgroundColor: "rgba(75,192,192,0.3)",
-                        borderColor: "rgba(75,192,192,1)",
-                        yAxisID: "y-axis-0",
-                        steppedLine: measure === 'StavLinky',
-                        data: dataserie
-                    },
-                    {
-                        label: measure2,
-                        backgroundColor: "rgba(153, 102, 255, 0.2)",
-                        borderColor: "rgba(153, 102, 255, 1)",
-                        steppedLine: measure2 === 'StavLinky',
-                        yAxisID: "y-axis-1",
-                        pointStyle: "rect"
-                        //steppedLine: true
-                        //data: dataserie2
-                    }
-                    
-                ]
-            };
+    function updateGraphStavLinky(dataserie) {
+        if (lineChartStavLinky) {
+            lineChartStavLinky.data.datasets[0].data = dataserie;
+            lineChartStavLinky.update();
         } else {
+            var gdata;
+
             gdata = {
                 datasets: [
                     {
-                        label: measure,
-                        backgroundColor: "rgba(75,192,192,0.3)",
-                        borderColor: "rgba(75,192,192,1)",
-                        steppedLine: measure === 'StavLinky',
+                        label: 'StavLinky',
+                        backgroundColor: "rgba(100,100,100,0.3)",
+                        borderColor: "rgba(100,100,100,1)",
+                        steppedLine: true,
                         data: dataserie
                     }
                 ]
             };
-        }
 
-        if (hasMeasure2) {
-            gyAxes = [
-                {
-                    position: "left",
-                    "id": "y-axis-0"
-                }, {
-                    position: "right",                    
-                    "id": "y-axis-1"
-                }
-            ];
-        } else {
-            gyAxes = [
-                {
-                    position: "left",
-                    "id": "y-axis-0"
-                }
-            ];
-        }
-
-        lineChart = new Chart(ctx, {
-            type: 'line',
-            data: gdata,
-            options: {
-                tooltips: {
-                    enabled: true,
-                    callbacks: {
-                        label: function(tooltipItem, data) {
-                            var i = tooltipItem.index;
-                            var dsi = tooltipItem.datasetIndex;
-                            return data.datasets[dsi].label + ' - čas ' + formatToHHMMSS(data.datasets[dsi].data[i].x);
-                        },
-                        title: function(tooltipItem, data) {
-                            //var indice = tooltipItem.index;
-                            return '     ' + tooltipItem[0].yLabel;
-                        }
-                    }
-                },
-                scales: {
-                    xAxes: [
-                        {
-                            type: 'linear',
-                            position: 'bottom',
-                            ticks: {
-                                min: 0,
-                                max: maxhour
+            lineChartStavLinky = new Chart(ctxStavLinky, {
+                type: 'line',
+                data: gdata,
+                options: {
+                    tooltips: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (tooltipItem, data) {
+                                var i = tooltipItem.index;
+                                var dsi = tooltipItem.datasetIndex;
+                                return data.datasets[dsi].label + ' - ' + formatStavToDescription(data.datasets[dsi].data[i].y);
+                            },
+                            title: function (tooltipItem, data) {
+                                //var indice = tooltipItem.index;
+                                return '     ' + tooltipItem[0].yLabel;
                             }
                         }
-                    ],
-                    yAxes: gyAxes
+                    },
+                    scales: {
+                        xAxes: [
+                            {
+                                type: 'linear',
+                                position: 'bottom',
+                                ticks: {
+                                    min: 0,
+                                    max: maxhour
+                                }
+                            }
+                        ]
+                    }
                 }
-            }
-        });
+            });
+        }
     }
-}
+
+   function updateGraph(dataserie) {
+
+        if (lineChart) {
+            //pouzit push ?
+            //https://github.com/chartjs/Chart.js/issues/1997
+            //zrejme funguje prirazeni cele serie, to je jednodussi
+            lineChart.data.datasets[0].data = dataserie;
+            lineChart.update();
+        } else {
+            var gdata;
+            var gyAxes;
+            var hasMeasure2 = measure2 && measure2 !== '-';
+
+            if (hasMeasure2) {
+                gdata = {
+                    datasets: [
+                        {
+                            label: measure,
+                            backgroundColor: "rgba(75,192,192,0.3)",
+                            borderColor: "rgba(75,192,192,1)",
+                            yAxisID: "y-axis-0",
+                            steppedLine: measure === 'StavLinky',
+                            data: dataserie
+                        },
+                        {
+                            label: measure2,
+                            backgroundColor: "rgba(153, 102, 255, 0.2)",
+                            borderColor: "rgba(153, 102, 255, 1)",
+                            steppedLine: measure2 === 'StavLinky',
+                            yAxisID: "y-axis-1",
+                            pointStyle: "rect"
+                            //steppedLine: true
+                            //data: dataserie2
+                        }
+                    ]
+                };
+            } else {
+                gdata = {
+                    datasets: [
+                        {
+                            label: measure,
+                            backgroundColor: "rgba(75,192,192,0.3)",
+                            borderColor: "rgba(75,192,192,1)",
+                            steppedLine: measure === 'StavLinky',
+                            data: dataserie
+                        }
+                    ]
+                };
+            }
+
+            if (hasMeasure2) {
+                gyAxes = [
+                    {
+                        position: "left",
+                        "id": "y-axis-0"
+                    }, {
+                        position: "right",
+                        "id": "y-axis-1"
+                    }
+                ];
+            } else {
+                gyAxes = [
+                    {
+                        position: "left",
+                        "id": "y-axis-0"
+                    }
+                ];
+            }
+
+            lineChart = new Chart(ctx, {
+                type: 'line',
+                data: gdata,
+                options: {
+                    tooltips: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (tooltipItem, data) {
+                                var i = tooltipItem.index;
+                                var dsi = tooltipItem.datasetIndex;
+                                return data.datasets[dsi].label + ' - čas ' + formatToHHMMSS(data.datasets[dsi].data[i].x);
+                            },
+                            title: function (tooltipItem, data) {
+                                //var indice = tooltipItem.index;
+                                return '     ' + tooltipItem[0].yLabel;
+                            }
+                        }
+                    },
+                    scales: {
+                        xAxes: [
+                            {
+                                type: 'linear',
+                                position: 'bottom',
+                                ticks: {
+                                    min: 0,
+                                    max: maxhour
+                                }
+                            }
+                        ],
+                        yAxes: gyAxes
+                    }
+                }
+            });
+        }
+    }
 
    function removeChart() {
         if (lineChart) {
             lineChart.clear();
             lineChart.destroy();
             lineChart = null;
+        }
+        if (lineChartStavLinky) {
+            lineChartStavLinky.clear();
+            lineChartStavLinky.destroy();
+            lineChartStavLinky = null;
         }
     }
 
@@ -274,4 +420,30 @@ var ctx;
         if (minutes < 10) { minutes = "0" + minutes; }
         if (seconds < 10) { seconds = "0" + seconds; }
         return hours + ':' + minutes + ':' + seconds;
+    }
+
+    function formatStavToDescription(stav) {
+        switch (stav) {
+            case 0:
+                return 'Výroba';
+                break;
+            case 1:
+                return 'Přerušení výroby';
+                break;
+            case 2:
+                return 'Stop stroje';
+                break;
+            case 3:
+                return 'Změna modelu';
+                break;
+            case 4:
+                return 'Porucha';
+                break;
+            case 5:
+                return 'Servis';
+                break;
+            default:
+                return '-';
+        }
+
     }

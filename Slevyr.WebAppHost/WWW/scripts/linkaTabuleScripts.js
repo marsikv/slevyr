@@ -42,13 +42,11 @@ var maxhour = null;
                 var timerRefreshPeriod = data.RefreshTimerPeriod;
 
                 if (isTimerEnabled && (timerRefreshPeriod > 0)) {
-                    //alert('set timer to ' + timerRefreshPeriod);
                     if (refreshTimer) window.clearInterval(refreshTimer);
                     refreshTimer = window.setInterval(getStatus, timerRefreshPeriod);
                 }
                 else {
                     if (refreshTimer) {
-                        //alert('clear timer');
                         window.clearInterval(refreshTimer);
                     }
                 }
@@ -89,7 +87,7 @@ var maxhour = null;
 
                 onAddrIdChange();
 
-                window.slVyr.addNotification('success', 'Sucessfully read config..');
+                //window.slVyr.addNotification('success', 'Sucessfully read config..');
                 //$('#stav').text('');
 
             })
@@ -109,7 +107,7 @@ var maxhour = null;
                 } else {
                     maxhour = 12;
                 }
-                window.slVyr.addNotification('success', 'Sucessfully read unit config.');
+                //window.slVyr.addNotification('success', 'Sucessfully read unit config.');
             })
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'LoadParams - error: ' + err);
