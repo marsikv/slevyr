@@ -128,13 +128,12 @@ var ctxStavLinky;
                 })
                 .done(function (data) {
                     //dataserie = data;
-                    updateGraph(data);
-                    $('#stav').text('');
+                    updateGraph(data,0);
+                    //$('#stav').text('');
                 })
                 .fail(function (jqXHR, textStatus, err) {
                     window.slVyr.addNotification('error', 'get graph data - error: ' + err);
-                    $('#stav').text('Error: ' + err);
-                    alert("get graph data - error");
+                    //$('#stav').text('Error: ' + err);
                 });
 
         if (!measure2 || measure2 === '-') return;
@@ -146,13 +145,12 @@ var ctxStavLinky;
             })
             .done(function (data) {
                 //dataserie = data;
-                updateGraph2(data);
-                $('#stav').text('');
+                updateGraph(data,1);
+                //$('#stav').text('');
             })
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'get graph data - error: ' + err);
-                $('#stav').text('Error: ' + err);
-                alert("get graph data - error");
+                //$('#stav').text('Error: ' + err);
             });
 
         $.getJSON(uriGra + '/getPast',
@@ -162,14 +160,28 @@ var ctxStavLinky;
                    smena: smena
                })
                .done(function (data) {
-                   updateGraphStavLinky(data);
+                   updateGraphStavLinky(data,0);
                    $('#stav').text('');
                })
                .fail(function (jqXHR, textStatus, err) {
                    window.slVyr.addNotification('error', 'get graph data - error: ' + err);
                    $('#stav').text('Error: ' + err);
-                   alert("get graph data - error");
                });
+
+        $.getJSON(uriGra + '/getPast',
+              {
+                  addr: addr,
+                  measureName: 'Prestavka',
+                  smena: smena
+              })
+              .done(function (data) {
+                  updateGraphStavLinky(data, 1);
+                  $('#stav').text('');
+              })
+              .fail(function (jqXHR, textStatus, err) {
+                  window.slVyr.addNotification('error', 'get graph data - error: ' + err);
+                  $('#stav').text('Error: ' + err);
+              });
     }
 
     function getGraphData() {
@@ -187,13 +199,12 @@ var ctxStavLinky;
                 })
                 .done(function (data) {
                     //dataserie = data;
-                    updateGraph(data);
+                    updateGraph(data,0);
                     $('#stav').text('');
                 })
                 .fail(function (jqXHR, textStatus, err) {
                     window.slVyr.addNotification('error', 'get graph data - error: ' + err);
                     $('#stav').text('Error: ' + err);
-                    alert("get graph data - error");
                 });
 
         if (!measure2 || measure2 === '-') return;
@@ -205,13 +216,12 @@ var ctxStavLinky;
                 })
                 .done(function (data) {
                     //dataserie = data;
-                    updateGraph2(data);
+                    updateGraph(data,1);
                     $('#stav').text('');
                 })
                 .fail(function (jqXHR, textStatus, err) {
                     window.slVyr.addNotification('error', 'get graph data - error: ' + err);
                     $('#stav').text('Error: ' + err);
-                    alert("get graph data - error");
                 });
 
         $.getJSON(uriGra + '/get',
@@ -220,26 +230,32 @@ var ctxStavLinky;
                     measureName: 'StavLinky'
                 })
                 .done(function (data) {
-                    updateGraphStavLinky(data);
+                    updateGraphStavLinky(data,0);
                     $('#stav').text('');
                 })
                 .fail(function (jqXHR, textStatus, err) {
                     window.slVyr.addNotification('error', 'get graph data - error: ' + err);
                     $('#stav').text('Error: ' + err);
-                    alert("get graph data - error");
+                });
+
+        $.getJSON(uriGra + '/get',
+                {
+                    addr: addr,
+                    measureName: 'Prestavka'
+                })
+                .done(function (data) {
+                    updateGraphStavLinky(data,1);
+                    $('#stav').text('');
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    window.slVyr.addNotification('error', 'get graph data - error: ' + err);
+                    $('#stav').text('Error: ' + err);
                 });
     }
 
-    function updateGraph2(dataserie2) {
-        if (lineChart) {
-            lineChart.data.datasets[1].data = dataserie2;
-            lineChart.update();
-        }
-    }
-
-    function updateGraphStavLinky(dataserie) {
+    function updateGraphStavLinky(dataserie, index) {
         if (lineChartStavLinky) {
-            lineChartStavLinky.data.datasets[0].data = dataserie;
+            lineChartStavLinky.data.datasets[index].data = dataserie;
             lineChartStavLinky.update();
         } else {
             var gdata;
@@ -251,7 +267,18 @@ var ctxStavLinky;
                         backgroundColor: "rgba(100,100,100,0.3)",
                         borderColor: "rgba(100,100,100,1)",
                         steppedLine: true,
+                        pointRadius: 0,
+                        yAxisID: "y-axis-0",
                         data: dataserie
+                    },
+                    {
+                        label: 'Prestavka',
+                        backgroundColor: "rgba(0,250,0,0.2)",
+                        borderColor: "#3ADF00",
+                        steppedLine: true,
+                        yAxisID: "y-axis-1",
+                        pointRadius: 0
+                        //data: dataserie
                     }
                 ]
             };
@@ -284,6 +311,33 @@ var ctxStavLinky;
                                     max: maxhour
                                 }
                             }
+                        ],
+                        yAxes: [
+                            {
+                                //display: false
+                                position: "left",
+                                ticks: {
+                                    min: 0,
+                                    max: 5.0,
+                                    stepSize: 1,
+                                    suggestedMax: 5.0,
+                                    suggestedMin:0
+                                },
+                                id: "y-axis-0"
+                            },
+                            {
+                                //display: false
+                                position: "right",
+                                ticks: {
+                                    min: 0,
+                                    max: 1.0,
+                                    stepSize: 1,
+                                    suggestedMax: 1.0,
+                                    suggestedMin: 0
+                                },
+                                id: "y-axis-1"
+                            }
+
                         ]
                     }
                 }
@@ -291,13 +345,13 @@ var ctxStavLinky;
         }
     }
 
-   function updateGraph(dataserie) {
+   function updateGraph(dataserie, index) {
 
         if (lineChart) {
             //pouzit push ?
             //https://github.com/chartjs/Chart.js/issues/1997
             //zrejme funguje prirazeni cele serie, to je jednodussi
-            lineChart.data.datasets[0].data = dataserie;
+            lineChart.data.datasets[index].data = dataserie;
             lineChart.update();
         } else {
             var gdata;
@@ -345,17 +399,17 @@ var ctxStavLinky;
                 gyAxes = [
                     {
                         position: "left",
-                        "id": "y-axis-0"
+                        id: "y-axis-0"
                     }, {
                         position: "right",
-                        "id": "y-axis-1"
+                        id: "y-axis-1"
                     }
                 ];
             } else {
                 gyAxes = [
                     {
                         position: "left",
-                        "id": "y-axis-0"
+                        id: "y-axis-0"
                     }
                 ];
             }

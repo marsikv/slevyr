@@ -6,6 +6,8 @@ var uriSys = 'api/sys';
         $("#Apply").click(applySettings);
         $("#SyncTime").click(nastavAktualniCas);
         $("#ResetRf").click(resetRf);
+        $("#SaveState").click(saveUnitStatus);
+        $("#RestoreState").click(restoreUnitStatus);
         jQuery.ajaxSetup({ cache: false });
     });
 
@@ -20,7 +22,7 @@ var uriSys = 'api/sys';
                 $('#relaxTime').val(data.RelaxTime);
                 $('#portReadTimeout').val(data.PortReadTimeout);
 
-                window.slVyr.addNotification('success', 'Successufully Load Configuration.');
+                //window.slVyr.addNotification('success', 'Successufully Load Configuration.');
             })
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'Load Configuration Error: ' + err);
@@ -72,5 +74,29 @@ var uriSys = 'api/sys';
             })
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'Reset RF Error: ' + err);
+            });
+    }
+
+    function saveUnitStatus() {
+        $.getJSON(uriSys + '/SaveUnitStatus',
+            {
+            })
+            .done(function (data) {
+                window.slVyr.addNotification('success', 'Zpracován pozadavek na ulozeni stavu');
+            })
+            .fail(function (jqXHR, textStatus, err) {
+                window.slVyr.addNotification('error', 'Error: ' + err);
+            });
+    }
+
+    function restoreUnitStatus() {
+        $.getJSON(uriSys + '/RestoreUnitStatus',
+            {
+            })
+            .done(function (data) {
+                window.slVyr.addNotification('success', 'Zpracován pozadavek na obnoveni stavu');
+            })
+            .fail(function (jqXHR, textStatus, err) {
+                window.slVyr.addNotification('error', 'Error: ' + err);
             });
     }

@@ -89,6 +89,8 @@ namespace Slevyr.DataAccess.Services
 
             _obtainCumulativeTimes.Enabled = false;
 
+            SaveAllUnitStatus();
+
             Thread.Sleep(ReadAsyncTimeout * 3);
 
             ClosePort();
@@ -808,7 +810,7 @@ namespace Slevyr.DataAccess.Services
         {
             _sendBw?.CancelAsync();
             _dataReaderBw?.CancelAsync();
-            _readAsyncCancellationTokenSource.Cancel();
+            _readAsyncCancellationTokenSource?.Cancel();
         }
 
         private static void StopPacketWorker()

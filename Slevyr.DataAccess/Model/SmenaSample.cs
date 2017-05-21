@@ -24,6 +24,8 @@ namespace Slevyr.DataAccess.Model
 
         public int RozdilKusu { get; set; }
 
+        public int IsPrestavka { get; set; }
+
         public MachineStateEnum StavLinky { get; set; }
 
     }

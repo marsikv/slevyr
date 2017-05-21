@@ -12,6 +12,7 @@ using NLog;
 namespace Slevyr.DataAccess.Model
 {
 
+
     public enum MachineStateEnum
     {
         [Description("Výroba")]
@@ -347,6 +348,8 @@ namespace Slevyr.DataAccess.Model
                     PrumCasVyrobyOk = this.PrumCasVyrobyOk,
                     StavLinky = Tabule.MachineStatus,
                     RozdilKusu = Tabule.RozdilTabule,
+                    IsPrestavka = Tabule.IsPrestavkaTabule ? 1:0,
+                    //IsPrestavka = 1,
                     SampleTime = new TimeSpan(0, 0, 0, _celkUbehlyCasSmenySec),
                 });
                 _prevUbehlyCasSmenySec = _ubehlyCasSmenySec;

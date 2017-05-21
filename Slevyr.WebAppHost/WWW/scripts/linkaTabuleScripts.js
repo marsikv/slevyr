@@ -196,7 +196,7 @@ var maxhour = null;
             $('#casOkValue').text('-');
             $('#casNgValue').text('-');
             $('#checkTime').text('-');
-            window.slVyr.addNotification('error', 'Chyba jednotky - error: ');   //lepsi hlasku
+            window.slVyr.addNotification('error', 'Neplatná data jednotky');   //lepsi hlasku
         }
 
         if (data.Tabule.IsPrestavkaTabule) {
@@ -273,6 +273,10 @@ var maxhour = null;
                 type: 'doughnut',
                 data: pdata,
                 options: {
+                    legend: {
+                        position: 'top',
+                        boxWidth: 10
+                    },
                     tooltips: {
                         enabled: true,
                         callbacks: {
@@ -294,6 +298,8 @@ var maxhour = null;
     function getLineGraphData() {
         if (!addr) return;
 
+        //return;
+
         $.getJSON(uriGra + '/get',
             {
                 addr: addr,
@@ -301,20 +307,35 @@ var maxhour = null;
             })
             .done(function (data) {
                 //dataserie = data;
-                updateLineGraph(data);
-                $('#stav').text('');
+                updateLineGraph(data,0);
+                //$('#stav').text('');
             })
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'get graph data - error: ' + err);
-                $('#stav').text('Error: ' + err);
-                alert("get graph data - error");
+                //$('#stav').text('Error: ' + err);
             });
+
+
+        $.getJSON(uriGra + '/get',
+                {
+                    addr: addr,
+                    measureName: "Rozdil"
+                })
+                .done(function (data) {
+                    //dataserie = data;
+                    updateLineGraph(data,1);
+                    //$('#stav').text('');
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    window.slVyr.addNotification('error', 'get graph data - error: ' + err);
+                    //$('#stav').text('Error: ' + err);
+                });
     }
 
 
-    function updateLineGraph(dataserie) {
+    function updateLineGraph(dataserie,index) {
         if (lineChart) {
-            lineChart.data.datasets[0].data = dataserie;
+            lineChart.data.datasets[index].data = dataserie;
             lineChart.update();
         } else {
             var gdata = {
@@ -324,7 +345,18 @@ var maxhour = null;
                             backgroundColor: "rgba(75,192,192,0.3)",
                             borderColor: "rgba(75,192,192,1)",
                             steppedLine: true,
+                            pointRadius: 0,
+                            yAxisID: "y-axis-0",
                             data: dataserie
+                        },
+                        {
+                            label: "Rozdíl",
+                            backgroundColor: "rgba(153, 102, 255, 0.2)",
+                            borderColor: "rgba(153, 102, 255, 1)",
+                            steppedLine: true,
+                            yAxisID: "y-axis-1",
+                            pointRadius: 0
+                            //data: dataserie
                         }
                     ]
                 };
@@ -332,10 +364,7 @@ var maxhour = null;
             lineChart = new Chart(ctxLineChart, {
                 type: 'line',
                 data: gdata,
-                options: {
-                    legend: {
-                      display: false  
-                    },
+                options: {                    
                     scales: {
                         xAxes: [
                             {
@@ -350,8 +379,15 @@ var maxhour = null;
                         yAxes: [
                             {
                                 //display: false
-                                position: "left"
+                                position: "left",
+                                id: "y-axis-0"
+                            },
+                            {
+                                 //display: false
+                                position: "right",
+                                id: "y-axis-1"
                             }
+
                         ]
                     }
                 }
