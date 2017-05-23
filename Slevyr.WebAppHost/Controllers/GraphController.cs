@@ -101,6 +101,8 @@ namespace Slevyr.WebAppHost.Controllers
                     return s.Defectivita;
                 case "Rozdil":
                     return s.RozdilKusu;
+                case "Prestavka":
+                    return s.IsPrestavka;
                 default:
                     return 0;
             }
