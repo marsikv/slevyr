@@ -275,7 +275,10 @@ var maxhour = null;
                 options: {
                     legend: {
                         position: 'top',
-                        boxWidth: 10
+                        labels: {
+                            boxWidth: 10
+                        }
+                        
                     },
                     tooltips: {
                         enabled: true,

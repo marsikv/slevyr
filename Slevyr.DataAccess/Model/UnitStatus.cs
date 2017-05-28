@@ -70,7 +70,7 @@ namespace Slevyr.DataAccess.Model
 
         private int _prevUbehlyCasSmenySec;
 
-        private SmenyEnum _currentSmena;
+        private SmenyEnum _lastSmena;
 
         /// <summary>cas v sec. ktery uz aktualni smene ubehl, bez prestavek = cas prace </summary>
         private int _ubehlyCasSmenySec;
@@ -177,6 +177,8 @@ namespace Slevyr.DataAccess.Model
 
         public bool IsTypSmennostiA { get; set; }
 
+        public SmenyEnum Smena { get; set; }
+
         /// <summary>pokud jsou jiz casy zjisteny</summary>
         public bool IsDurationKnown { get; set; }
 
@@ -237,7 +239,7 @@ namespace Slevyr.DataAccess.Model
 
         public UnitStatus()
         {
-            _currentSmena = SmenyEnum.Nedef;
+            _lastSmena = SmenyEnum.Nedef;
             Tabule = new UnitTabule();
             PastSmenaResults = new SmenaResult[3] {new SmenaResult(), new SmenaResult(), new SmenaResult() };
             PrepareNewSmena();
@@ -288,24 +290,24 @@ namespace Slevyr.DataAccess.Model
             SmenaSamples = new List<SmenaSample>();
         }
 
-        private void PrepocetTabule(SmenyEnum smena, bool isTypSmennostiA, RunConfig runCfg)
+        private void DoRecalcTabule(SmenyEnum smena, bool isTypSmennostiA, RunConfig runCfg)
         {
             Logger.Debug(smena);
 
-            if (smena != SmenyEnum.Nedef && smena != _currentSmena) //dochazi ke zmene smeny
+            if (smena != SmenyEnum.Nedef && smena != _lastSmena) //dochazi ke zmene smeny
             {
-                if (_currentSmena != SmenyEnum.Nedef)
+                if (_lastSmena != SmenyEnum.Nedef)
                     //aby bylo zajisteno ze se opravdu jedna o prechod z jedne smeny do druhe 
                 {
-                    PastSmenaResults[UnitStatus.GetSmenaIndex(_currentSmena)].SetSamples(SmenaSamples);
+                    PastSmenaResults[UnitStatus.GetSmenaIndex(_lastSmena)].SetSamples(SmenaSamples);
 
                     PrepareNewSmena();
 
                     //udalost oznamuje ze aktualni smena konci
                     //po odchyceni se po definovanem zpozdeni zaradi prikaz k nacteni stavu do fronty adhoc prikazu
-                    PrechodSmeny?.Invoke(this, _currentSmena);
+                    PrechodSmeny?.Invoke(this, _lastSmena);
                 }
-                _currentSmena = smena;
+                _lastSmena = smena;
             }
 
             try
@@ -426,8 +428,6 @@ namespace Slevyr.DataAccess.Model
 
                 Logger.Debug($"actual time is {dateTimeNow}");
 
-                SmenyEnum smena = SmenyEnum.Nedef;
-
                 if (timeSec > zacatekSmeny1Sec && timeSec < zacatekSmeny2Sec) //smena1 = ranni 6-14h
                 {
                     _celkUbehlyCasSmenySec = timeSec - zacatekSmeny1Sec;
@@ -454,7 +454,7 @@ namespace Slevyr.DataAccess.Model
                     }
                     Tabule.CilKusuTabule = unitConfig.Cil1Smeny;
                     Tabule.CilDefectTabule = unitConfig.Def1Smeny;
-                    smena = SmenyEnum.Smena1;
+                    Smena = SmenyEnum.Smena1;
 
                 }
                 else if (timeSec > zacatekSmeny2Sec && timeSec < zacatekSmeny3Sec) //smena 2 = odpoledni 14-22h
@@ -482,7 +482,7 @@ namespace Slevyr.DataAccess.Model
                     }
                     Tabule.CilKusuTabule = unitConfig.Cil2Smeny;
                     Tabule.CilDefectTabule = unitConfig.Def2Smeny;
-                    smena = SmenyEnum.Smena2;
+                    Smena = SmenyEnum.Smena2;
 
                 }
                 else if (timeSec > zacatekSmeny3Sec || timeSec < zacatekSmeny1Sec) //smena 3 = nocni 22-6h
@@ -519,10 +519,10 @@ namespace Slevyr.DataAccess.Model
                     }
                     Tabule.CilKusuTabule = unitConfig.Cil3Smeny;
                     Tabule.CilDefectTabule = unitConfig.Def3Smeny;
-                    smena = SmenyEnum.Smena3;
+                    Smena = SmenyEnum.Smena3;
                 }
 
-                PrepocetTabule(smena, unitConfig.IsTypSmennostiA, runCfg);
+                DoRecalcTabule(Smena, unitConfig.IsTypSmennostiA, runCfg);
 
                 Logger.Debug($"- unit {unitConfig.Addr}");
 
@@ -571,7 +571,6 @@ namespace Slevyr.DataAccess.Model
 
                 Logger.Debug($"actual time is {dateTimeNow}");
 
-                SmenyEnum smena = SmenyEnum.Nedef;
                 Tabule.IsPrestavkaTabule = false;
 
                 if (timeSec >= zacatekSmeny1Sec && timeSec < zacatekSmeny2Sec) //smena1 B (denni typicky od 6:00)
@@ -616,9 +615,8 @@ namespace Slevyr.DataAccess.Model
 
                     Tabule.CilKusuTabule = unitConfig.Cil1Smeny;
                     Tabule.CilDefectTabule = unitConfig.Def1Smeny;
-                    smena = SmenyEnum.Smena1;
+                    Smena = SmenyEnum.Smena1;
                 }
-
                 else if (timeSec >= zacatekSmeny2Sec || timeSec < zacatekSmeny1Sec) //smena 2 B (nocni typicky od 18:00)
                 {
                     if (timeSec >= zacatekSmeny2Sec && timeSec < zacatek1PrestavkySmeny2Sec)
@@ -674,10 +672,10 @@ namespace Slevyr.DataAccess.Model
 
                     Tabule.CilKusuTabule = unitConfig.Cil2Smeny;
                     Tabule.CilDefectTabule = unitConfig.Def2Smeny;
-                    smena = SmenyEnum.Smena2;
+                    Smena = SmenyEnum.Smena2;
                 }
 
-                PrepocetTabule(smena, unitConfig.IsTypSmennostiA, runCfg);
+                DoRecalcTabule(Smena, unitConfig.IsTypSmennostiA, runCfg);
 
                 Logger.Debug($"- unit {unitConfig.Addr}");
 

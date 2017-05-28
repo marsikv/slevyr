@@ -1,5 +1,6 @@
 ﻿var uriGra = 'api/graph';
 var uriSys = 'api/sys';
+var uriSlevyr = 'api/slevyr';
 
 var isTimerEnabled = false;
 var refreshTimer;
@@ -11,7 +12,9 @@ var lineChart = null;
 var lineChartStavLinky = null;
 var maxhour = 8;
 var smena = -1;
-var ctx;
+var currentSmena = -1;
+var smenaStarHour = 0;
+var ctxMeasuresLinky;
 var ctxStavLinky;
 
 (function () {
@@ -32,7 +35,7 @@ var ctxStavLinky;
         jQuery.ajaxSetup({ cache: false });
 
         Chart.defaults.global.animation.duration = 0;
-        ctx = $("#lineChart");
+        ctxMeasuresLinky = $("#lineChart");
         ctxStavLinky = $("#lineChartStavLinky");
     });
 
@@ -120,6 +123,14 @@ var ctxStavLinky;
     function getGraphHistoryData() {
         if (!addr || !measure) return;
 
+        $.getJSON(uriSlevyr + '/GetSmenaStartHour?', { addr: addr, smenaIndex: smena})
+            .done(function (data) {
+                smenaStarHour = data;
+            })
+            .fail(function (jqXHR, textStatus, err) {
+                window.slVyr.addNotification('error', 'GetSmenaStartHour - error: ' + err);
+            });
+
         $.getJSON(uriGra + '/getPast',
                 {
                     addr: addr,
@@ -191,6 +202,15 @@ var ctxStavLinky;
             getGraphHistoryData();
             return;
         }
+
+        $.getJSON(uriSlevyr + '/GetCurrentSmena?', { addr: addr })
+            .done(function (data) {
+                currentSmena = data.Smena;
+                smenaStarHour = data.StarHour;
+            })
+            .fail(function (jqXHR, textStatus, err) {
+                window.slVyr.addNotification('error', 'GetCurrentSmena - error: ' + err);
+            });
 
         $.getJSON(uriGra + '/get',
                 {
@@ -267,7 +287,7 @@ var ctxStavLinky;
                         backgroundColor: "rgba(100,100,100,0.3)",
                         borderColor: "rgba(100,100,100,1)",
                         steppedLine: true,
-                        pointRadius: 0,
+                        pointRadius: 2,
                         yAxisID: "y-axis-0",
                         data: dataserie
                     },
@@ -293,7 +313,8 @@ var ctxStavLinky;
                             label: function (tooltipItem, data) {
                                 var i = tooltipItem.index;
                                 var dsi = tooltipItem.datasetIndex;
-                                return data.datasets[dsi].label + ' - ' + formatStavToDescription(data.datasets[dsi].data[i].y);
+                                return formatStavToDescription(data.datasets[dsi].data[i].y)+
+                                ' - čas ' + formatToHHMMSS(smenaStarHour + data.datasets[dsi].data[i].x);
                             },
                             title: function (tooltipItem, data) {
                                 //var indice = tooltipItem.index;
@@ -313,7 +334,7 @@ var ctxStavLinky;
                             }
                         ],
                         yAxes: [
-                            {
+                            {                                
                                 //display: false
                                 position: "left",
                                 ticks: {
@@ -321,7 +342,8 @@ var ctxStavLinky;
                                     max: 5.0,
                                     stepSize: 1,
                                     suggestedMax: 5.0,
-                                    suggestedMin:0
+                                    suggestedMin: 0,
+                                    padding:8
                                 },
                                 id: "y-axis-0"
                             },
@@ -333,7 +355,8 @@ var ctxStavLinky;
                                     max: 1.0,
                                     stepSize: 1,
                                     suggestedMax: 1.0,
-                                    suggestedMin: 0
+                                    suggestedMin: 0,
+                                    padding: 8
                                 },
                                 id: "y-axis-1"
                             }
@@ -398,9 +421,11 @@ var ctxStavLinky;
             if (hasMeasure2) {
                 gyAxes = [
                     {
-                        position: "left",
+                        stacked: true,
+                        position: "left",                        
                         id: "y-axis-0"
                     }, {
+                        stacked: true,
                         position: "right",
                         id: "y-axis-1"
                     }
@@ -414,7 +439,7 @@ var ctxStavLinky;
                 ];
             }
 
-            lineChart = new Chart(ctx, {
+            lineChart = new Chart(ctxMeasuresLinky, {
                 type: 'line',
                 data: gdata,
                 options: {
@@ -424,7 +449,8 @@ var ctxStavLinky;
                             label: function (tooltipItem, data) {
                                 var i = tooltipItem.index;
                                 var dsi = tooltipItem.datasetIndex;
-                                return data.datasets[dsi].label + ' - čas ' + formatToHHMMSS(data.datasets[dsi].data[i].x);
+                                return data.datasets[dsi].label + ' - čas '
+                                    + formatToHHMMSS(smenaStarHour + data.datasets[dsi].data[i].x);
                             },
                             title: function (tooltipItem, data) {
                                 //var indice = tooltipItem.index;
@@ -444,7 +470,7 @@ var ctxStavLinky;
                             }
                         ],
                         yAxes: gyAxes
-                    }
+                    }                    
                 }
             });
         }
@@ -461,7 +487,8 @@ var ctxStavLinky;
             lineChartStavLinky.destroy();
             lineChartStavLinky = null;
         }
-    }
+   }
+
 
     function formatToHHMMSS(hoursFrac) {
         var sec_num = hoursFrac * 3600;

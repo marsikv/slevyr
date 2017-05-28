@@ -87,9 +87,9 @@ namespace Slevyr.DataAccess.Services
 
             StopSendReceiveWorkers();
 
-            _obtainCumulativeTimes.Enabled = false;
+            if (_obtainCumulativeTimes!=null) _obtainCumulativeTimes.Enabled = false;
 
-            SaveAllUnitStatus();
+            //SaveAllUnitStatus();
 
             Thread.Sleep(ReadAsyncTimeout * 3);
 

@@ -616,6 +616,7 @@ namespace Slevyr.DataAccess.Model
             {
                 UnitStatus.RecalcTabuleB(UnitConfig, RunConfig);
             }
+            
         }
 
         #endregion

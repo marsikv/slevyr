@@ -62,6 +62,76 @@ namespace Slevyr.WebAppHost.Controllers
             }
         }
 
+        /// <summary>
+        /// Vraci pro linku aktuální směnu a čas kdy směna začala v hodinách s desetinami
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <returns></returns>
+        [HttpGet]        
+        public Object GetCurrentSmena([FromUri] byte addr)
+        {
+            Logger.Info($"+ {addr}");
+
+            try
+            {
+                var smena = SlevyrService.GetUnitStatus(addr).Smena;
+                var unitCfg = SlevyrService.GetUnitConfig(addr);
+                double startHour=0;
+                switch (smena)
+                {
+                    case SmenyEnum.Smena1:
+                        startHour = unitCfg.Zacatek1SmenyTime.TotalHours;
+                        break;
+                    case SmenyEnum.Smena2:
+                        startHour = unitCfg.Zacatek2SmenyTime.TotalHours;
+                        break;
+                    case SmenyEnum.Smena3:
+                        startHour = unitCfg.Zacatek3SmenyTime.TotalHours;
+                        break;
+                    default:
+                        return null;
+                } 
+
+                return new { Smena = UnitStatus.GetSmenaIndex(smena), StarHour = startHour };
+            }
+            catch (Exception)
+            {
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
+            }
+        }
+
+        /// <summary>
+        /// Vraci pro linku a směnu čas kdy směna začala v hodinách s desetinami
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="smenaIndex"></param>
+        /// <returns></returns>
+        [HttpGet]
+        public double GetSmenaStartHour([FromUri] byte addr, [FromUri] byte smenaIndex)
+        {
+            Logger.Info($"+ {addr}");
+            try
+            {
+                var unitCfg = SlevyrService.GetUnitConfig(addr);
+                switch (smenaIndex)
+                {
+                    case 0:
+                        return unitCfg.Zacatek1SmenyTime.TotalHours;
+                    case 1:
+                        return unitCfg.Zacatek2SmenyTime.TotalHours;
+                    case 2:
+                        return unitCfg.Zacatek3SmenyTime.TotalHours;
+                    default:
+                        return 0;
+                }
+
+            }
+            catch (Exception)
+            {
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest));
+            }
+        }
+
 
         [HttpGet]
         public bool NastavJednotku([FromUri] byte addr, [FromUri] bool writeProtectEEprom, [FromUri] byte minOK, [FromUri] byte minNG, 
