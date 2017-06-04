@@ -293,7 +293,7 @@ var ctxStavLinky;
                     },
                     {
                         label: 'Prestavka',
-                        backgroundColor: "rgba(0,250,0,0.2)",
+                        backgroundColor: "rgba(0,250,0,0.4)",
                         borderColor: "#3ADF00",
                         steppedLine: true,
                         yAxisID: "y-axis-1",
@@ -343,7 +343,7 @@ var ctxStavLinky;
                                     stepSize: 1,
                                     suggestedMax: 5.0,
                                     suggestedMin: 0,
-                                    padding:8
+                                    padding:14
                                 },
                                 id: "y-axis-0"
                             },
@@ -390,7 +390,7 @@ var ctxStavLinky;
                             borderColor: "rgba(75,192,192,1)",
                             yAxisID: "y-axis-0",
                             steppedLine: measure === 'StavLinky',
-                            data: dataserie
+                            //data: dataserie
                         },
                         {
                             label: measure2,
@@ -418,26 +418,26 @@ var ctxStavLinky;
                 };
             }
 
-            if (hasMeasure2) {
-                gyAxes = [
-                    {
-                        stacked: true,
-                        position: "left",                        
-                        id: "y-axis-0"
-                    }, {
-                        stacked: true,
-                        position: "right",
-                        id: "y-axis-1"
-                    }
-                ];
-            } else {
-                gyAxes = [
-                    {
-                        position: "left",
-                        id: "y-axis-0"
-                    }
-                ];
-            }
+            //if (hasMeasure2) {
+            //    gyAxes = [
+            //        {
+            //            stacked: true,
+            //            position: "left",                        
+            //            id: "y-axis-0"
+            //        }, {
+            //            stacked: true,
+            //            position: "right",
+            //            id: "y-axis-1"
+            //        }
+            //    ];
+            //} else {
+            //    gyAxes = [
+            //        {
+            //            position: "left",
+            //            id: "y-axis-0"
+            //        }
+            //    ];
+            //}
 
             lineChart = new Chart(ctxMeasuresLinky, {
                 type: 'line',
@@ -469,10 +469,23 @@ var ctxStavLinky;
                                 }
                             }
                         ],
-                        yAxes: gyAxes
+                        yAxes: [
+                            {
+                                stacked: true,
+                                position: "left",
+                                id: "y-axis-0"
+                            }, {
+                                stacked: true,
+                                position: "right",
+                                id: "y-axis-1"
+                            }
+                        ]
                     }                    
                 }
             });
+
+            lineChart.data.datasets[index].data = dataserie;
+
         }
     }
 

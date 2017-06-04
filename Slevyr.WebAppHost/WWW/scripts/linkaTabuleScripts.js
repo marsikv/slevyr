@@ -24,6 +24,8 @@ var maxhour = null;
 
         $("#GetStatus").click(getStatus);
 
+        $("#lineChartDiv").click(onLineChartClick);
+
         $("#AddrIdDropDown").change(onAddrIdChange);
 
         jQuery.ajaxSetup({ cache: false });
@@ -120,6 +122,14 @@ var maxhour = null;
         readUnitConfig();
         getStatus();
     }
+
+    function onLineChartClick() {
+        //addr = $("#AddrIdDropDown option:selected").val();
+        //window.alert("click");
+        window.location.href = 'linka-graph.html#'+addr;
+    }
+
+    
 
     function clearStatus() {
         $('#stav').text('...');

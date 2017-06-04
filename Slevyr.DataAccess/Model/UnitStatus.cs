@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -77,6 +78,8 @@ namespace Slevyr.DataAccess.Model
 
         /// <summary> cas v sec. smeny ktery ubehl od zacatku vcetne prestavek </summary>
         private int _celkUbehlyCasSmenySec;
+
+        private Stopwatch _samplesStopWatch = new Stopwatch();
 
 
         #endregion
@@ -336,11 +339,13 @@ namespace Slevyr.DataAccess.Model
             bool hasChange = lastSample == null || lastSample.NG != Ng || lastSample.OK != Ok ||
                              lastSample.StavLinky != Tabule.MachineStatus;
             bool graphSampleEnabled = runCfg.GraphSamplePeriodSec > 0;
-            var timeElased = _ubehlyCasSmenySec - _prevUbehlyCasSmenySec;
+            var smenaTimeElased = _ubehlyCasSmenySec - _prevUbehlyCasSmenySec;
+
+            var minSampleTimeElapsed = _samplesStopWatch.ElapsedMilliseconds > runCfg.GraphMinSamplePeriodSec * 1000;
 
             //sample udelam jen pokud je min. casovy odstup a zaroven je detekovana zmena
-            if (graphSampleEnabled && (((timeElased > runCfg.GraphSamplePeriodSec) && hasChange) 
-                                       ||(timeElased > runCfg.GraphMinSamplePeriodSec)) )
+            if (graphSampleEnabled && (((smenaTimeElased > runCfg.GraphSamplePeriodSec) && hasChange) 
+                                       || minSampleTimeElapsed) )
             {
                 SmenaSamples.Add(new SmenaSample()
                 {
@@ -355,6 +360,7 @@ namespace Slevyr.DataAccess.Model
                     SampleTime = new TimeSpan(0, 0, 0, _celkUbehlyCasSmenySec),
                 });
                 _prevUbehlyCasSmenySec = _ubehlyCasSmenySec;
+                _samplesStopWatch.Restart();
             }
 
             Tabule.AktualDefectTabuleTxt = (float.IsNaN(Tabule.AktualDefectTabule) || Ok == 0)
@@ -455,7 +461,6 @@ namespace Slevyr.DataAccess.Model
                     Tabule.CilKusuTabule = unitConfig.Cil1Smeny;
                     Tabule.CilDefectTabule = unitConfig.Def1Smeny;
                     Smena = SmenyEnum.Smena1;
-
                 }
                 else if (timeSec > zacatekSmeny2Sec && timeSec < zacatekSmeny3Sec) //smena 2 = odpoledni 14-22h
                 {

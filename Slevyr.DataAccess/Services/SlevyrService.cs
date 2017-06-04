@@ -73,8 +73,7 @@ namespace Slevyr.DataAccess.Services
 
         public static int UnitCount => _unitDictionary.Count;
 
-        //TODO je vystaveno jen kvuli staremu zpusobu komunikace, jak to bude mozne tak tohle zrusit
-        public static SerialPortWraper SerialPort => _serialPort;
+        private static SerialPortWraper SerialPort => _serialPort;
 
         #endregion
 
@@ -89,7 +88,7 @@ namespace Slevyr.DataAccess.Services
 
             if (_obtainCumulativeTimes!=null) _obtainCumulativeTimes.Enabled = false;
 
-            //SaveAllUnitStatus();
+            SaveAllUnitStatus();
 
             Thread.Sleep(ReadAsyncTimeout * 3);
 
@@ -143,7 +142,6 @@ namespace Slevyr.DataAccess.Services
                 var uc = new UnitCommand(() => _unitDictionary[u].SendReadStavCitacuKonecSmeny(
                     UnitMonitor.CmdReadStavCitacuOdpoledniSmena), "CmdReadStavCitacuKonecSmeny", u, UnitMonitor.CmdReadStavCitacuOdpoledniSmena);
                 UnitCommandsQueue.Enqueue(uc);
-
             }
 
             foreach (var u in UnitAddresses)
@@ -151,7 +149,6 @@ namespace Slevyr.DataAccess.Services
                 var uc = new UnitCommand(() => _unitDictionary[u].SendReadStavCitacuKonecSmeny(
                     UnitMonitor.CmdReadStavCitacuNocniSmena), "CmdReadStavCitacuKonecSmeny", u, UnitMonitor.CmdReadStavCitacuNocniSmena);
                 UnitCommandsQueue.Enqueue(uc);
-
             }
         }
 

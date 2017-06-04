@@ -47,6 +47,7 @@ namespace Slevyr.WebAppHost.Controllers
 
             try
             {
+                Logger.Debug($"measure:{measureName}");
                 var res = SlevyrService.GetUnitStatus(addr).SmenaSamples.Select(s => new DataPoint()
                 {
                     x = (float)s.SampleTime.TotalHours,
