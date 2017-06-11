@@ -657,9 +657,9 @@ namespace Slevyr.DataAccess.Model
                     {
                         //prestavka 2, typicky 02:00 do 02:20
                         Tabule.IsPrestavkaTabule = true;
+                        //cas se zastavil na zacatku 2. prestavky 2. smeny + pripocteme sekundy z min. dne
                         _ubehlyCasSmenySec = (AllDaySec - zacatekSmeny2Sec - Prestavka1Sec) +
-                                             zacatek2PrestavkySmeny2Sec;
-                            //cas se zastavil na zacatku 2. prestavky 2. smeny + pripocteme sekundy z min. dne
+                                             zacatek2PrestavkySmeny2Sec;                            
                         _celkUbehlyCasSmenySec = (AllDaySec - zacatekSmeny2Sec) + timeSec;
                     }
                     else if (timeSec >= konec2PrestavkySmeny2Sec && timeSec < zacatekSmeny1Sec)

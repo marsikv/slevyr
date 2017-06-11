@@ -53,6 +53,26 @@ namespace Slevyr.DataAccess.Model
 
         public bool IsTypSmennostiA => TypSmennosti.Equals("A");
 
+        public void CalcPrestavkySmenaB(TimeSpan p1s1, TimeSpan p1s2, TimeSpan p2po)
+        {
+            TypSmennosti = "B";
+            //UnitStatus.IsTypSmennostiA = UnitConfig.IsTypSmennostiA;
+            Prestavka1Smeny = null;
+            Prestavka2Smeny = null;
+            Prestavka3Smeny = null;
+            Prestavka1Smeny1 = p1s1.ToString();  //TODO ukladat TimeSpan, ne string
+            Prestavka1Smeny2 = p1s2.ToString();
+
+            Prestavka2Po = p2po.ToString();
+            Prestavka2Smeny1Time = p1s1 + p2po;
+            if (Prestavka2Smeny1Time.TotalHours > 24)
+                Prestavka2Smeny1Time = Prestavka2Smeny1Time.Subtract(new TimeSpan(0, 24, 0, 0));
+
+            Prestavka2Smeny2Time = p1s2 + p2po;
+            if (Prestavka2Smeny2Time.TotalHours > 24)
+                Prestavka2Smeny2Time = Prestavka2Smeny2Time.Subtract(new TimeSpan(0, 24, 0, 0));
+        }
+
         public void SaveToFile(string dataFilePath)
         {
             JsonSerializer serializer = new JsonSerializer();
@@ -107,8 +127,11 @@ namespace Slevyr.DataAccess.Model
                 Prestavka1Smeny1 = res.Prestavka1Smeny1;
                 Prestavka1Smeny2 = res.Prestavka1Smeny2;
                 Prestavka2Po = res.Prestavka2Po;
-                Prestavka2Smeny1Time = res.Prestavka2Smeny2Time;
+                Prestavka2Smeny1Time = res.Prestavka2Smeny1Time;
                 Prestavka2Smeny2Time = res.Prestavka2Smeny2Time;
+
+                if (TypSmennosti == "B" )
+                   CalcPrestavkySmenaB(TimeSpan.Parse(Prestavka1Smeny1), TimeSpan.Parse(Prestavka1Smeny2), TimeSpan.Parse(Prestavka2Po));
             }
         }
     }

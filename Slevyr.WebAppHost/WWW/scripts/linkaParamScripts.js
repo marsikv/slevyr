@@ -133,56 +133,72 @@ function readRunConfig() {
             });
     }
 
-    function saveUnitConfig() {
-        //alert('saveUnitConfig');
+    //function saveUnitConfig() {
+    //    var model = {
+    //        addr: addr
+    //        UnitName: $('#LinkaNameEdit').val(),
+    //        TypSmennosti: $('#TypSmennosti').val(),
+    //        Cil1Smeny: $('#Cil1Smeny').val(),
+    //        Cil2Smeny: $('#Cil2Smeny').val(),
+    //        Cil3Smeny: $('#Cil3Smeny').val(),
+    //        Def1Smeny: $('#Def1Smeny').val(),
+    //        Def2Smeny: $('#Def2Smeny').val(),
+    //        Def3Smeny: $('#Def3Smeny').val(),
+    //        Prestavka1Smeny: $('#Prestavka1Smeny').val(),
+    //        Prestavka2Smeny: $('#Prestavka2Smeny').val(),
+    //        Prestavka3Smeny: $('#Prestavka3Smeny').val(),
+    //        Zacatek1Smeny: $('#Zacatek1Smeny').val(),
+    //        Zacatek2Smeny: $('#Zacatek2Smeny').val(),
+    //        Zacatek3Smeny: $('#Zacatek3Smeny').val(),
+    //        WriteProtectEEprom:  $('#WriteProtectEEprom').prop('checked'),
+    //        MinOK: $('#MinOK').val(),
+    //        MinNG: $('#MinNG').val(),
+    //        BootloaderOn: $('#BootloaderOn').prop('checked'),
+    //        ParovanyLED: $('#AddrParovanyLed').val(),
+    //        RozliseniCidel: $('#RozliseniCidelTeploty').val(),
+    //        PracovniJasLed: $('#PracovniJasLed').val(),
+    //        Prestavka1Smeny1: $('#Prestavka1Smeny1').val(),
+    //        Prestavka1Smeny2: $('#Prestavka1Smeny2').val(),
+    //        Prestavka2Po: $('#Prestavka2Po').val()
+    //    };
 
-        var model = {
-            Addr: addr,
-            UnitName: $('#LinkaNameEdit').val(),
-            TypSmennosti: $('#TypSmennosti').val(),
-            Cil1Smeny: $('#Cil1Smeny').val(),
-            Cil2Smeny: $('#Cil2Smeny').val(),
-            Cil3Smeny: $('#Cil3Smeny').val(),
-            Def1Smeny: $('#Def1Smeny').val(),
-            Def2Smeny: $('#Def2Smeny').val(),
-            Def3Smeny: $('#Def3Smeny').val(),
-            Prestavka1Smeny: $('#Prestavka1Smeny').val(),
-            Prestavka2Smeny: $('#Prestavka2Smeny').val(),
-            Prestavka3Smeny: $('#Prestavka3Smeny').val(),
-            Zacatek1Smeny: $('#Zacatek1Smeny').val(),
-            Zacatek2Smeny: $('#Zacatek2Smeny').val(),
-            Zacatek3Smeny: $('#Zacatek3Smeny').val(),
-            WriteProtectEEprom:  $('#WriteProtectEEprom').prop('checked'),
-            MinOK: $('#MinOK').val(),
-            MinNG: $('#MinNG').val(),
-            BootloaderOn: $('#BootloaderOn').prop('checked'),
-            ParovanyLED: $('#AddrParovanyLed').val(),
-            RozliseniCidel: $('#RozliseniCidelTeploty').val(),
-            PracovniJasLed: $('#PracovniJasLed').val(),
-            Prestavka1Smeny1: $('#Prestavka1Smeny1').val(),
-            Prestavka1Smeny2: $('#Prestavka1Smeny2').val(),
-            Prestavka2Po: $('#Prestavka2Po').val()
-        };
+    //    typSmennostiIsA = model.TypSmennosti === 'A';
 
-        typSmennostiIsA = model.TypSmennosti === 'A';
+    //    updateElementsForTypSmennosti(typSmennostiIsA);
 
-        updateElementsForTypSmennosti(typSmennostiIsA);
+    //    $.ajax({
+    //        type: "POST",
+    //        data: JSON.stringify(model),
+    //        url: uriSys + "/saveUnitConfig",
+    //        contentType: "application/json"
+    //    }).done(function (res) {
+    //        $('#stav').text('');
+    //        $('#LinkaName').text(model.UnitName);
+    //        console.log('res', res);
+    //        // Do something with the result :)
+    //    }).fail(function (jqXHR, textStatus, err) {
+    //        window.slVyr.addNotification('error', 'SaveUnitConfig - error: ' + err);
+    //        // $('#stav').text('Error: ' + err);
+    //    });
+    //}
 
-        $.ajax({
-            type: "POST",
-            data: JSON.stringify(model),
-            url: uriSys + "/saveUnitConfig",
-            contentType: "application/json"
-        }).done(function (res) {
+function saveUnitConfig() {
+
+    $.getJSON(uriSys + '/saveUnitConfig',
+            {
+                addr: addr         
+            })
+        .done(function (data) {
+            //window.slVyr.addNotification('success', 'Sucessfully set PocetOkNg');
             $('#stav').text('');
-            $('#LinkaName').text(model.UnitName);
-            console.log('res', res);
-            // Do something with the result :)
-        }).fail(function (jqXHR, textStatus, err) {
+            typSmennostiIsA = model.TypSmennosti === 'A';
+            updateElementsForTypSmennosti(typSmennostiIsA);
+        })
+        .fail(function (jqXHR, textStatus, err) {
             window.slVyr.addNotification('error', 'SaveUnitConfig - error: ' + err);
-            // $('#stav').text('Error: ' + err);
-        });
-    }
+            $('#stav').text('Error: ' + err);
+        });    
+}
 
     function nastavPocOkNg() {
         var pocOk = $('#PocetOk').val();
@@ -200,7 +216,6 @@ function readRunConfig() {
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'nastavPocOkNg - error: ' + err);
                 $('#stav').text('Error: ' + err);
-                alert("nastavPocOkNg - error");
             });
     }
 

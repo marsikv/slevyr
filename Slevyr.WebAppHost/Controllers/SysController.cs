@@ -88,14 +88,33 @@ namespace Slevyr.WebAppHost.Controllers
 
         #region UnitConfig
 
-        [HttpPost]
-        public void SaveUnitConfig([FromBody] UnitConfig unitCfg)
+        /// <summary>
+        /// Ulozit aktualni konfiguraci jednotky
+        /// </summary>
+        /// <param name="addr"></param>
+        //[HttpPost]
+        //public void SaveUnitConfig([FromBody] UnitConfig unitCfg)
+        //{
+        //    Logger.Info($"Addr:{unitCfg.Addr}");
+
+        //    try
+        //    {
+        //        SlevyrService.SaveUnitConfig(unitCfg);
+
+        //    }
+        //    catch (KeyNotFoundException)
+        //    {
+        //        throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+        //    }
+        //}
+        [HttpGet]
+        public void SaveUnitConfig([FromUri] byte addr)
         {
-            Logger.Info($"Addr:{unitCfg.Addr}");
+            Logger.Info($"Addr:{addr}");
 
             try
             {
-                SlevyrService.SaveUnitConfig(unitCfg);
+                SlevyrService.SaveUnitConfig(SlevyrService.GetUnitConfig(addr));
 
             }
             catch (KeyNotFoundException)

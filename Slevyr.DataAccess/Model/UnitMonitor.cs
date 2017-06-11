@@ -184,18 +184,7 @@ namespace Slevyr.DataAccess.Model
         public bool SendSetPrestavkyB(TimeSpan p1s1, TimeSpan p1s2, TimeSpan p2po)
         {
             Logger.Info($"+ unit {Address}");
-
-            UnitConfig.TypSmennosti = "B";
-            UnitStatus.IsTypSmennostiA = UnitConfig.IsTypSmennostiA;
-            UnitConfig.Prestavka1Smeny = null;  
-            UnitConfig.Prestavka2Smeny = null;
-            UnitConfig.Prestavka3Smeny = null;
-            UnitConfig.Prestavka1Smeny1 = p1s1.ToString();  //TODO ukladat TimeSpan, ne string;
-            UnitConfig.Prestavka1Smeny2 = p1s2.ToString();
-            UnitConfig.Prestavka2Po = p2po.ToString();
-            UnitConfig.Prestavka2Smeny1Time = p1s1 + p2po;
-            UnitConfig.Prestavka2Smeny2Time = p1s2 + p2po; 
-
+           
             return SendCommand(CmdSetZacPrestav, (byte)'B', p1s1, p1s2, p2po);
         }
 
@@ -528,16 +517,15 @@ namespace Slevyr.DataAccess.Model
         /// Probiha synchronne s cekanim nejen na potvrzeni odeslani prikazu ale i na vysledek prikazu
         /// </summary>
         /// <returns></returns>
-        public bool ObtainStatusSync()
-        {
-            CurrentCmdStartTime = DateTime.Now;
-         
+        public bool ObtainUnitStatusSync()
+        {        
             CurrentCmd = CmdReadStavCitacu;
 
             TplLogger.Debug($"+Obtain status [{Address:x2}]");
 
             TplLogger.Debug($" Send command {CurrentCmd:x2} to [{Address:x2}]");
 
+            CurrentCmdStartTime = DateTime.Now;
             var res = SendCommand(CurrentCmd);
             if (res)
             {
@@ -562,20 +550,18 @@ namespace Slevyr.DataAccess.Model
                 _errorRecordedCnt++;
 
                 //poslat testovaci paket pomoci SendCommand, pokud neprojde tak vime ze je zaseknuty RF modul a je potreba provest reset
-
             }
 
             Thread.Sleep(RunConfig.RelaxTime);
 
             if (res)
             {
-                CurrentCmdStartTime = DateTime.Now;
                 CurrentCmd = CmdReadCasPosledniOkNg;
 
                 TplLogger.Debug($" Send command {CurrentCmd:x2} to [{Address:x2}]");
 
+                CurrentCmdStartTime = DateTime.Now;
                 res = SendCommand(CurrentCmd);
-
                 if (res)
                 {
                     TimeSpan duration = DateTime.Now - CurrentCmdStartTime;

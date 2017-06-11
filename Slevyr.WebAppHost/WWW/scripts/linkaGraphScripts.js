@@ -10,7 +10,7 @@ var measure2 = null;
 var startAddr = null;
 var lineChart = null;
 var lineChartStavLinky = null;
-var maxhour = 8;
+var maxhour = null;
 var smena = -1;
 var currentSmena = -1;
 var smenaStarHour = 0;
@@ -274,6 +274,8 @@ var ctxStavLinky;
     }
 
     function updateGraphStavLinky(dataserie, index) {
+        if (!maxhour) return;
+
         if (lineChartStavLinky) {
             lineChartStavLinky.data.datasets[index].data = dataserie;
             lineChartStavLinky.update();
@@ -343,7 +345,7 @@ var ctxStavLinky;
                                     stepSize: 1,
                                     suggestedMax: 5.0,
                                     suggestedMin: 0,
-                                    padding:14
+                                    padding:20
                                 },
                                 id: "y-axis-0"
                             },
@@ -369,6 +371,7 @@ var ctxStavLinky;
     }
 
    function updateGraph(dataserie, index) {
+       if (!maxhour) return;
 
         if (lineChart) {
             //pouzit push ?
@@ -378,7 +381,7 @@ var ctxStavLinky;
             lineChart.update();
         } else {
             var gdata;
-            var gyAxes;
+            //var gyAxes;
             var hasMeasure2 = measure2 && measure2 !== '-';
 
             if (hasMeasure2) {
@@ -389,7 +392,7 @@ var ctxStavLinky;
                             backgroundColor: "rgba(75,192,192,0.3)",
                             borderColor: "rgba(75,192,192,1)",
                             yAxisID: "y-axis-0",
-                            steppedLine: measure === 'StavLinky',
+                            steppedLine: measure === 'StavLinky'
                             //data: dataserie
                         },
                         {
@@ -417,28 +420,7 @@ var ctxStavLinky;
                     ]
                 };
             }
-
-            //if (hasMeasure2) {
-            //    gyAxes = [
-            //        {
-            //            stacked: true,
-            //            position: "left",                        
-            //            id: "y-axis-0"
-            //        }, {
-            //            stacked: true,
-            //            position: "right",
-            //            id: "y-axis-1"
-            //        }
-            //    ];
-            //} else {
-            //    gyAxes = [
-            //        {
-            //            position: "left",
-            //            id: "y-axis-0"
-            //        }
-            //    ];
-            //}
-
+         
             lineChart = new Chart(ctxMeasuresLinky, {
                 type: 'line',
                 data: gdata,

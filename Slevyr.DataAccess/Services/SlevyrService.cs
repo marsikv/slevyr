@@ -24,7 +24,7 @@ namespace Slevyr.DataAccess.Services
         private static readonly Logger DataSendReceivedLogger = LogManager.GetLogger("DataReceived");
         private static readonly Logger ErrorsLogger = LogManager.GetLogger("Errors");
         private static readonly Logger TplLogger = LogManager.GetLogger("Tpl");
-        private static readonly Logger ResetLogger = LogManager.GetLogger("ResetRf");
+        //private static readonly Logger ResetLogger = LogManager.GetLogger("ResetRf");
         private const int ReadAsyncTimeout = 1000;
 
         private static volatile object _lock = new object();
@@ -51,15 +51,20 @@ namespace Slevyr.DataAccess.Services
         //timer pomoci nehoz posilame prikaz na zjisteni kumulativnich casu na jednotkach 0x6f
         private static System.Timers.Timer _obtainCumulativeTimes;
 
-        public static readonly AutoResetEvent WaitEventPriorityCommandResult = new AutoResetEvent(false);
-
         private static bool _isSendWorkerStarted;
         private static bool _isPacketWorkerStarted;
         private static int _sendWorkerCycleCnt;
 
+        private static CancellationTokenSource _readAsyncCancellationTokenSource;
+        private static bool _resetRfInProgress;
+
         #endregion
 
         #region Properties
+
+        public static readonly AutoResetEvent WaitEventTestConfirm = new AutoResetEvent(false);
+
+        public static readonly AutoResetEvent WaitEventPriorityCommandResult = new AutoResetEvent(false);
 
         public static RunConfig Config
         {
@@ -315,17 +320,15 @@ namespace Slevyr.DataAccess.Services
             }           
         }
 
-        static CancellationTokenSource _readAsyncCancellationTokenSource;
-        private static bool _resetRfInProgress;
-
-        private static async void DatareadWorkerDoWork(object sender, DoWorkEventArgs e)
+ 
+        private static async void DataReadWorkerDoWork(object sender, DoWorkEventArgs e)
         {
             OpenPort();
             if (!CheckIsPortOpen()) return;
             _readAsyncCancellationTokenSource = new CancellationTokenSource();
             _serialPort.DiscardInBuffer();
 
-            while (true)
+            while (true)     //TODO opravdu while(true) uvnitr DoWork ?
             {
                 //DataSendReceivedLogger.Debug(".");
                 if (_dataReaderBw.CancellationPending)
@@ -365,11 +368,12 @@ namespace Slevyr.DataAccess.Services
                         continue;
                     }
 
-
                     if (packet[0] == 4 && packet[1] == 0 && packet[2] == 0 && packet[3] == 0 && packet[4] == 0)  //testovaci packet
                     {
-                        TplLogger.Debug($"test packet");
-                        _unitDictionary.FirstOrDefault().Value.WaitEventSendConfirm.Set();
+                        TplLogger.Debug($"Test packet");
+                        WaitEventTestConfirm.Set();   //poslu potvrzeni ze test command prosel OK
+                        TplLogger.Debug("  WaitEventTestConfirm.Set");
+                        //_unitDictionary.FirstOrDefault().Value.WaitEventSendConfirm.Set();
                         continue;
                     }
 
@@ -425,7 +429,6 @@ namespace Slevyr.DataAccess.Services
             }
         }
 
-
         #endregion
 
         #region open close port
@@ -441,7 +444,9 @@ namespace Slevyr.DataAccess.Services
                 {
                     lock (_lock)
                     {
+                        Logger.Info("Do OPEN");
                         _serialPort.Open();
+                        DataSendReceivedLogger.Info($"Port open: {_serialPort.IsOpen}");
                     }
                 }
 
@@ -453,7 +458,6 @@ namespace Slevyr.DataAccess.Services
             {
                 Logger.Error(ex);
                 return false;
-                //throw;
             }
         }
 
@@ -473,12 +477,14 @@ namespace Slevyr.DataAccess.Services
                 }
             }
             Logger.Debug("-");
-            return !_serialPort.IsOpen;
+            var res = !_serialPort.IsOpen;
+            DataSendReceivedLogger.Info($"Port closed: {res}");
+            return res;
         }
 
         public static void SendResetRf()
         {
-            _resetRfInProgress = true;
+            //_resetRfInProgress = true;
             var uc = new UnitCommand(ResetRf, "ResetRF", -1, -1);
             UnitCommandsQueue.Enqueue(uc);
         }
@@ -486,9 +492,12 @@ namespace Slevyr.DataAccess.Services
         private static bool ResetRf()
         {
             Logger.Info("+");
+            TplLogger.Debug("+ResetRf");
             lock (_lock)
             {
                 Logger.Info("lock");
+
+                _resetRfInProgress = true;
 
                 _dataReaderBw?.CancelAsync();
                 _readAsyncCancellationTokenSource.Cancel();
@@ -499,12 +508,12 @@ namespace Slevyr.DataAccess.Services
                 //Thread.Sleep(5000);  //musime pockat na timeout potvrzeni odeslani
 
                 _serialPort.DtrEnable = true;
-                DataSendReceivedLogger.Info("DtrEnable=true");
+                DataSendReceivedLogger.Info("DtrEnable=true (1/2)");
 
                 Thread.Sleep(1000);
 
                 _serialPort.DtrEnable = true;
-                DataSendReceivedLogger.Info("DtrEnable=true");
+                DataSendReceivedLogger.Info("DtrEnable=true (2/2)");
 
                 Thread.Sleep(1000);
 
@@ -515,10 +524,18 @@ namespace Slevyr.DataAccess.Services
 
                 SlevyrService.WaitEventPriorityCommandResult.Set();
 
+                //SlevyrService.ClosePort(); //TODO otestovat
+                
                 Task.Delay(2000).ContinueWith(t =>
                 {
+                    //if (SerialPortIsOpen)
+                    //{
+                    //    throw new Exception("Port by jeste nemel byt otevreny");  //zde pro kontrolu
+                    //}
+                    //SlevyrService.OpenPort();
                     _dataReaderBw.RunWorkerAsync();
                     _resetRfInProgress = false;
+                    TplLogger.Debug("-ResetRf");
                 });                
             }
 
@@ -640,6 +657,9 @@ namespace Slevyr.DataAccess.Services
             Logger.Debug($"addr:{addr} p1s1:{p1s1} p1s2:{p1s2} p2po:{p2po}");
 
             if (_runConfig.IsMockupMode) return true;
+
+            _unitDictionary[addr].UnitConfig.CalcPrestavkySmenaB(p1s1, p1s2, p2po);
+            _unitDictionary[addr].UnitStatus.IsTypSmennostiA = _unitDictionary[addr].UnitConfig.IsTypSmennostiA;
 
             var uc = new UnitCommand(() => _unitDictionary[addr].SendSetPrestavkyB(p1s1, p1s2, p2po), "SendSetPrestavkyB", addr, UnitMonitor.CmdSetZacPrestav);
             UnitCommandsQueue.Enqueue(uc);
@@ -778,7 +798,7 @@ namespace Slevyr.DataAccess.Services
                 if (!_runConfig.UseDataReceivedEvent)
                 {
                     _dataReaderBw = new BackgroundWorker {WorkerReportsProgress = true,WorkerSupportsCancellation = true};
-                    _dataReaderBw.DoWork += DatareadWorkerDoWork;
+                    _dataReaderBw.DoWork += DataReadWorkerDoWork;
                     _dataReaderBw.RunWorkerAsync();
                     Logger.Info("*** datareader worker started ***");
                 }
@@ -827,7 +847,7 @@ namespace Slevyr.DataAccess.Services
             {
                 Logger.Info($"worker cycle {++_sendWorkerCycleCnt}");
 
-                if (_resetRfInProgress)
+                if (_resetRfInProgress)  //po dobu resetRf nic nedelam
                 {
                     Thread.Sleep(1000);
                     continue;
@@ -835,18 +855,22 @@ namespace Slevyr.DataAccess.Services
                
                 if (_runConfig.IsAutoResetRF)
                 {
-                    var rfOk = _unitDictionary.FirstOrDefault().Value.TestCommand();   //provedu test odesláním testovacího paketu
+                    var rfOk = _unitDictionary.FirstOrDefault().Value.TestCommand();   //provedu test odesláním testovacího paketu na prvni jednotku
                     if (!rfOk)
                     {
                         Logger.Info($"*** Reset RF ***");
                         SendResetRf();
+                    }
+                    else
+                    { 
+                        Thread.Sleep(100);   //radeji chvili pockam
                     }
                 }
 
                 if (_runConfig.IsScheduledResetRF && cycleForResetRf++ >= _runConfig.CycleForScheduledResetRf)
                 {
                     Logger.Info($"*** scheduled Reset RF (cycle={cycleForResetRf})***");
-                    ResetLogger.Info($"Reset RF (cycle={cycleForResetRf})");
+                    //ResetLogger.Info($"Reset RF (cycle={cycleForResetRf})");
                     cycleForResetRf = 0;
                     SendResetRf();
                     //continue;
@@ -915,7 +939,7 @@ namespace Slevyr.DataAccess.Services
 
                         if (_runConfig.IsWaitCommandResult)  //synchronizace nejen potvrzeni odeslani prikazu ale i prijeti vysledku
                         {
-                            res = _unitDictionary[addr].ObtainStatusSync();                            
+                            res = _unitDictionary[addr].ObtainUnitStatusSync();                            
                         }
                         else
                         {

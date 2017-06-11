@@ -144,15 +144,8 @@ namespace Slevyr.DataAccess.Model
 
         public bool TestCommand()
         {
-            ClearSendBuffer();
-
-            _sendBuff[0] = (byte)1;
-
-            var res = SendCommandCore(UnitMonitor.CmdTestPacket, true);
-
-            return res;
+            return SendTestCommandCore();
         }
-
 
         public bool SendCommand(int cmd, bool checkSendConfirmation = true)
         {
@@ -198,16 +191,20 @@ namespace Slevyr.DataAccess.Model
 
             try
             {
+                //zresetuji signaly
+                WaitEventSendConfirm.Reset();
+                WaitEventCommandResult.Reset();
+
                 //odeslat pripraveny command s parametry
                 SlevyrService.WriteToPort(_sendBuff, BuffLength);
 
                 //Thread.Sleep(10);
 
-                Logger.Debug(" -w");
+                //Logger.Debug(" -w");
 
                 if (checkSendConfirmation)
                 {
-                    WaitEventSendConfirm.Reset();
+                    //WaitEventSendConfirm.Reset();
                     var sendConfirmReceived = WaitEventSendConfirm.WaitOne(_runConfig.SendCommandTimeOut);
                     var r = (sendConfirmReceived) ? "confirmed" : "expired";
 
@@ -215,10 +212,10 @@ namespace Slevyr.DataAccess.Model
                     res = sendConfirmReceived;
                 }
 
-                if (_runConfig.IsWaitCommandResult)
-                {
-                    WaitEventCommandResult.Reset(); //protoze result mohl prijit necekane po timout-u a mohl byt tudiz ve stavu signaled
-                }
+                //if (_runConfig.IsWaitCommandResult)
+                //{
+                //    WaitEventCommandResult.Reset(); //protoze result mohl prijit necekane po timout-u a mohl byt tudiz ve stavu signaled
+                //}
 
                 //Thread.Sleep(10);
             }
@@ -231,5 +228,43 @@ namespace Slevyr.DataAccess.Model
 
             return res;
         }
+
+        /// <summary>
+        /// posle testovaci prikaz na port
+        /// </summary>
+        /// <returns></returns>
+        private bool SendTestCommandCore()
+        {
+            bool res = false;
+            Logger.Debug("+");
+
+            if (!SlevyrService.CheckIsPortOpen()) return false;
+
+            ClearSendBuffer();
+            _sendBuff[0] = (byte)1;
+
+            try
+            {
+                //odeslat pripraveny command s parametry
+                SlevyrService.WaitEventTestConfirm.Reset();
+
+                SlevyrService.WriteToPort(_sendBuff, BuffLength);
+
+                var sendConfirmReceived = SlevyrService.WaitEventTestConfirm.WaitOne(_runConfig.SendCommandTimeOut);
+
+                var r = (sendConfirmReceived) ? "confirmed" : "expired";
+                TplLogger.Debug($"  SendCommand {0:x2} to [{_address:x2}] : send {r}");
+                res = sendConfirmReceived;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex);
+            }
+
+            Logger.Debug($"- res:{res}");
+
+            return res;
+        }
+
     }
 }
