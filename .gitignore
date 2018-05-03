@@ -9,7 +9,10 @@ Slevyr.WebAppHost/bin/
 /Slevyr.DataAccess/bin/Release/EntityFramework.SqlServer.xml
 Slevyr.DataAccess/bin/Release/
 Slevyr.DataAccess/obj/Release/
+Slevyr.DataAccess/bin/Debug/
+Slevyr.DataAccess/obj/Debug/
 Slevyr.DataAccess/bin/
 Slevyr.DataAccess/obj/
 TestConsoleApp/bin/
 UnitTest/bin/
+/.vs/SledovaniVyroby/v15/Server/sqlite3

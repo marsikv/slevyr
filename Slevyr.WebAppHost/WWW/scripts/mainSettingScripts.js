@@ -1,5 +1,6 @@
 var uri = 'api/slevyr';
 var uriSys = 'api/sys';
+var uriSound = 'api/sound';
 
     $(document).ready(function () {
         readRunConfig();
@@ -8,6 +9,9 @@ var uriSys = 'api/sys';
         $("#ResetRf").click(resetRf);
         $("#SaveState").click(saveUnitStatus);
         $("#RestoreState").click(restoreUnitStatus);
+
+        $("#StartAlarm").click(startAlarm);
+        $("#StopAlarm").click(stopAlarm);
         jQuery.ajaxSetup({ cache: false });
     });
 
@@ -94,9 +98,34 @@ var uriSys = 'api/sys';
             {
             })
             .done(function (data) {
-                window.slVyr.addNotification('success', 'Zpracován pozadavek na obnoveni stavu');
+                window.slVyr.addNotification('success', 'Zpracovan pozadavek na obnoveni stavu');
             })
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'Error: ' + err);
             });
     }
+
+function startAlarm() {
+    $.getJSON(uriSound + '/StartAlarm',
+            {
+            })
+        .done(function (data) {
+            window.slVyr.addNotification('success', 'Zpracovan pozadavek na spusteni poplachu, poplach se bude prehravat 15 minut');
+        })
+        .fail(function (jqXHR, textStatus, err) {
+            window.slVyr.addNotification('error', 'Error: ' + err);
+        });
+    }
+
+
+function stopAlarm() {
+    $.getJSON(uriSound + '/StopAlarm',
+            {
+            })
+        .done(function (data) {
+            window.slVyr.addNotification('success', 'Zpracovan pozadavek na ukonceni poplachu');
+        })
+        .fail(function (jqXHR, textStatus, err) {
+            window.slVyr.addNotification('error', 'Error: ' + err);
+        });
+}

@@ -216,7 +216,7 @@ a {
 
 .linka--num {
     min-width: 100px;
-    max-width: calc(50% - 1em);
+    max-width: calc(60% - 1em);
     margin: 0 2em 2em 0;
     background-color: white;
     border-radius: 4px;
@@ -233,7 +233,7 @@ a {
 }
 
 .linka--data {
-    max-width: calc(80% - 1em);
+    
 }
 
 .linka--cumulativetime {
@@ -521,7 +521,7 @@ table tr td {
     }
 
     table tr td {
-        font-size: 14px;
+        font-size: 15px;
     }
 }
 

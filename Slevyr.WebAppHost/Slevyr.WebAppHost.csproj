@@ -171,6 +171,7 @@
   <ItemGroup>
     <Compile Include="Controllers\GraphController.cs" />
     <Compile Include="Controllers\ExportController.cs" />
+    <Compile Include="Controllers\SoundController.cs" />
     <Compile Include="Controllers\SysController.cs" />
     <Compile Include="Controllers\UdrzbaController.cs" />
     <Compile Include="Middleware\AuthMiddleware.cs" />
@@ -293,6 +294,8 @@
     </None>
     <Content Include="NLog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TransformOnBuild>true</TransformOnBuild>
+      <SubType>Designer</SubType>
     </Content>
     <None Include="App.Debug.config">
       <DependentUpon>App.config</DependentUpon>
@@ -306,6 +309,14 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="mykey.snk" />
+    <None Include="NLog.Debug.config">
+      <DependentUpon>NLog.config</DependentUpon>
+      <IsTransformFile>True</IsTransformFile>
+    </None>
+    <None Include="NLog.Release.config">
+      <DependentUpon>NLog.config</DependentUpon>
+      <IsTransformFile>True</IsTransformFile>
+    </None>
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
@@ -383,11 +394,11 @@ del  $(SolutionDir)..\deploy\Slevyr.WebAppHost.vshost.exe.config</PostBuildEvent
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\SlowCheetah.2.5.48\build\SlowCheetah.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SlowCheetah.2.5.48\build\SlowCheetah.targets'))" />
     <Error Condition="!Exists('..\packages\System.Data.SQLite.Core.1.0.105.0\build\net451\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.Data.SQLite.Core.1.0.105.0\build\net451\System.Data.SQLite.Core.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.VisualStudio.SlowCheetah.3.0.61\build\Microsoft.VisualStudio.SlowCheetah.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.VisualStudio.SlowCheetah.3.0.61\build\Microsoft.VisualStudio.SlowCheetah.targets'))" />
   </Target>
-  <Import Project="..\packages\SlowCheetah.2.5.48\build\SlowCheetah.targets" Condition="Exists('..\packages\SlowCheetah.2.5.48\build\SlowCheetah.targets')" />
   <Import Project="..\packages\System.Data.SQLite.Core.1.0.105.0\build\net451\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.105.0\build\net451\System.Data.SQLite.Core.targets')" />
+  <Import Project="..\packages\Microsoft.VisualStudio.SlowCheetah.3.0.61\build\Microsoft.VisualStudio.SlowCheetah.targets" Condition="Exists('..\packages\Microsoft.VisualStudio.SlowCheetah.3.0.61\build\Microsoft.VisualStudio.SlowCheetah.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

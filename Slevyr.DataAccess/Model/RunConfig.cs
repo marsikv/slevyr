@@ -57,6 +57,16 @@ namespace Slevyr.DataAccess.Model
         /// <summary>  Min. cas pro ulozeni vzorku i pokud se stav linky nezmenil, [sec]</summary>
         public int GraphMinSamplePeriodSec = int.MaxValue;
 
+        /// <summary>  zkukovy soubor pro hlaseni prestavek (waw)</summary>
+        public string HlaseniPrestavekSoundFile;
+
+
+        /// <summary>  zkukovy soubor pro hlaseni smen (waw)</summary>
+        public string HlaseniSmenSoundFile;
+
+
+        /// <summary>  zkukovy soubor pro poplach (waw)</summary>
+        public string PoplachSoundFile;
 
     }
 }

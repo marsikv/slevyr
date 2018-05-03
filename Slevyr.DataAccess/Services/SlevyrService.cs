@@ -84,7 +84,6 @@ namespace Slevyr.DataAccess.Services
 
         #region init method
 
-
         public static void Stop()
         {
             StopPacketWorker();
@@ -770,11 +769,11 @@ namespace Slevyr.DataAccess.Services
 
         #region save/load/get unitConfig
 
-        public static void SaveUnitConfig(UnitConfig unitCfg)
+        public static void SaveUnitConfig(UnitConfig unitCfg, int addr)
         {
-            Logger.Debug($"addr:{unitCfg.Addr}");
+            Logger.Debug($"addr:{addr}");
 
-            _unitDictionary[unitCfg.Addr].UnitConfig = unitCfg;
+            _unitDictionary[addr].UnitConfig = unitCfg;
             unitCfg.SaveToFile(_runConfig.JsonDataFilePath);                        
         }
 
@@ -785,6 +784,15 @@ namespace Slevyr.DataAccess.Services
             //nacteno je jiz pri startu
             //_unitDictionary[addr].LoadUnitConfigFromFile(addr, _runConfig.JsonDataFilePath);
             return _unitDictionary[addr].UnitConfig;          
+        }
+
+        public static UnitConfig LoadUnitConfig(byte addr)
+        {
+            Logger.Debug($"addr:{addr}");
+
+            //nactu ze souboru
+            _unitDictionary[addr].LoadUnitConfigFromFile(addr, _runConfig.JsonDataFilePath);
+            return _unitDictionary[addr].UnitConfig;
         }
 
         #endregion

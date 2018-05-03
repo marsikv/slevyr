@@ -34,6 +34,8 @@ namespace Slevyr.WebAppHost
 
             SlevyrService.Init(Globals.PortConfig, Globals.RunConfig);
 
+            SoundService.Init(Globals.RunConfig);
+
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             if (Debugger.IsAttached || args.Length > 0)

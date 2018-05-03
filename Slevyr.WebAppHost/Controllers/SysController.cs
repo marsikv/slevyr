@@ -114,7 +114,7 @@ namespace Slevyr.WebAppHost.Controllers
 
             try
             {
-                SlevyrService.SaveUnitConfig(SlevyrService.GetUnitConfig(addr));
+                SlevyrService.SaveUnitConfig(SlevyrService.GetUnitConfig(addr), addr);
 
             }
             catch (KeyNotFoundException)
@@ -131,6 +131,23 @@ namespace Slevyr.WebAppHost.Controllers
             try
             {
                 var res = SlevyrService.GetUnitConfig(addr);
+                return res;
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.NotFound));
+            }
+        }
+
+
+        [HttpGet]
+        public UnitConfig LoadUnitConfig([FromUri] byte addr)
+        {
+            Logger.Info($"Addr:{addr}");
+
+            try
+            {
+                var res = SlevyrService.LoadUnitConfig(addr);
                 return res;
             }
             catch (KeyNotFoundException)

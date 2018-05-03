@@ -94,6 +94,7 @@
     <Compile Include="Services\Helper.cs" />
     <Compile Include="Services\Mock.cs" />
     <Compile Include="Services\SlevyrService.cs" />
+    <Compile Include="Services\SoundService.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SerialPortWraper\SerialPortWraper.csproj">

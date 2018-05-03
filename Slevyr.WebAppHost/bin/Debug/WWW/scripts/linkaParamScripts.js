@@ -13,7 +13,7 @@ $(document).ready(function () {
         $("#AddrIdDropDown").change(onAddrIdChange);
 
         $("#SaveParams").click(saveUnitConfig);
-        $("#LoadParams").click(readUnitConfig);
+        $("#LoadParams").click(loadUnitConfig);
 
         $("#NastavCileSmen").click(nastavCileSmen);
         $("#NastavPocOkNg").click(nastavPocOkNg);
@@ -80,6 +80,55 @@ function readRunConfig() {
         readUnitConfig();
     }
 
+    function loadUnitConfig() {
+        if (typeof addr != 'undefined' && addr != null && addr.length > 1)
+            $.getJSON(uriSys + '/LoadUnitConfig', {
+                    addr: addr
+                })
+                .done(function (data) {
+                    typSmennostiIsA = data.TypSmennosti === 'A';
+                    $('#TypSmennosti').val(data.TypSmennosti);
+                    $('#LinkaName').text(data.UnitName);
+                    $('#LinkaNameEdit').val(data.UnitName);
+                    $('#Cil1Smeny').val(data.Cil1Smeny);
+                    $('#Cil2Smeny').val(data.Cil2Smeny);
+                    $('#Cil3Smeny').val(data.Cil3Smeny);
+                    $('#Def1Smeny').val(data.Def1Smeny);
+                    $('#Def2Smeny').val(data.Def2Smeny);
+                    $('#Def3Smeny').val(data.Def3Smeny);
+
+                    $('#Prestavka1Smeny').val(data.Prestavka1Smeny);
+                    $('#Prestavka2Smeny').val(data.Prestavka2Smeny);
+                    $('#Prestavka3Smeny').val(data.Prestavka3Smeny);
+
+                    $('#Zacatek1Smeny').val(data.Zacatek1Smeny);
+                    $('#Zacatek2Smeny').val(data.Zacatek2Smeny);
+                    $('#Zacatek3Smeny').val(data.Zacatek3Smeny);
+
+                    $('#WriteProtectEEprom').prop('checked', data.WriteProtectEEprom);
+
+                    $('#MinOK').val(data.MinOK);
+
+                    $('#MinNG').val(data.MinNG);
+
+                    $('#BootloaderOn').prop('checked', data.BootloaderOn);
+                    $('#RozliseniCidelTeploty').val(data.RozliseniCidel);
+                    $('#PracovniJasLed').val(data.PracovniJasLed);
+                    $('#AddrParovanyLed').val(data.ParovanyLED);
+
+                    $('#Prestavka1Smeny1').val(data.Prestavka1Smeny1);
+                    $('#Prestavka1Smeny2').val(data.Prestavka1Smeny2);
+                    $('#Prestavka2Po').val(data.Prestavka2Po);
+
+                    updateElementsForTypSmennosti(typSmennostiIsA);
+
+                    window.slVyr.addNotification('success', 'LoadUnitConfig Successufully done.');
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    window.slVyr.addNotification('error', 'LoadUnitConfig - error: ' + err);
+                });
+    }
+
     function readUnitConfig() {
         //alert('readUnitConfig'+addr);
         //var addr = $('#addrId').val();
@@ -132,57 +181,25 @@ function readRunConfig() {
                 // alert("readUnitConfig - error");
             });
     }
+   
 
-    function saveUnitConfig() {
-        //alert('saveUnitConfig');
+function saveUnitConfig() {
 
-        var model = {
-            Addr: addr,
-            UnitName: $('#LinkaNameEdit').val(),
-            TypSmennosti: $('#TypSmennosti').val(),
-            Cil1Smeny: $('#Cil1Smeny').val(),
-            Cil2Smeny: $('#Cil2Smeny').val(),
-            Cil3Smeny: $('#Cil3Smeny').val(),
-            Def1Smeny: $('#Def1Smeny').val(),
-            Def2Smeny: $('#Def2Smeny').val(),
-            Def3Smeny: $('#Def3Smeny').val(),
-            Prestavka1Smeny: $('#Prestavka1Smeny').val(),
-            Prestavka2Smeny: $('#Prestavka2Smeny').val(),
-            Prestavka3Smeny: $('#Prestavka3Smeny').val(),
-            Zacatek1Smeny: $('#Zacatek1Smeny').val(),
-            Zacatek2Smeny: $('#Zacatek2Smeny').val(),
-            Zacatek3Smeny: $('#Zacatek3Smeny').val(),
-            WriteProtectEEprom:  $('#WriteProtectEEprom').prop('checked'),
-            MinOK: $('#MinOK').val(),
-            MinNG: $('#MinNG').val(),
-            BootloaderOn: $('#BootloaderOn').prop('checked'),
-            ParovanyLED: $('#AddrParovanyLed').val(),
-            RozliseniCidel: $('#RozliseniCidelTeploty').val(),
-            PracovniJasLed: $('#PracovniJasLed').val(),
-            Prestavka1Smeny1: $('#Prestavka1Smeny1').val(),
-            Prestavka1Smeny2: $('#Prestavka1Smeny2').val(),
-            Prestavka2Po: $('#Prestavka2Po').val()
-        };
-
-        typSmennostiIsA = model.TypSmennosti === 'A';
-
-        updateElementsForTypSmennosti(typSmennostiIsA);
-
-        $.ajax({
-            type: "POST",
-            data: JSON.stringify(model),
-            url: uriSys + "/saveUnitConfig",
-            contentType: "application/json"
-        }).done(function (res) {
+    $.getJSON(uriSys + '/saveUnitConfig',
+            {
+                addr: addr         
+            })
+        .done(function (data) {
+            //window.slVyr.addNotification('success', 'Sucessfully set PocetOkNg');
             $('#stav').text('');
-            $('#LinkaName').text(model.UnitName);
-            console.log('res', res);
-            // Do something with the result :)
-        }).fail(function (jqXHR, textStatus, err) {
+            typSmennostiIsA = model.TypSmennosti === 'A';
+            updateElementsForTypSmennosti(typSmennostiIsA);
+        })
+        .fail(function (jqXHR, textStatus, err) {
             window.slVyr.addNotification('error', 'SaveUnitConfig - error: ' + err);
-            // $('#stav').text('Error: ' + err);
-        });
-    }
+            $('#stav').text('Error: ' + err);
+        });    
+}
 
     function nastavPocOkNg() {
         var pocOk = $('#PocetOk').val();
@@ -200,7 +217,6 @@ function readRunConfig() {
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'nastavPocOkNg - error: ' + err);
                 $('#stav').text('Error: ' + err);
-                alert("nastavPocOkNg - error");
             });
     }
 

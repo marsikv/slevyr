@@ -58,6 +58,11 @@ namespace Slevyr.WebAppHost
                 DbFilePath = ConfigurationManager.AppSettings["DbFilePath"],
                 SendAttempts = Int32.Parse(ConfigurationManager.AppSettings["SendAttempts"]),
                 DefaultExportFileName = ConfigurationManager.AppSettings["DefaultExportFileName"],
+
+                HlaseniPrestavekSoundFile = ConfigurationManager.AppSettings["HlaseniPrestavekSoundFile"],
+                HlaseniSmenSoundFile = ConfigurationManager.AppSettings["HlaseniSmenSoundFile"],
+                PoplachSoundFile = ConfigurationManager.AppSettings["PoplachSoundFile"],
+
             };
 
             bool b;

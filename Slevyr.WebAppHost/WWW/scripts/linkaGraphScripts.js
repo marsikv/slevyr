@@ -45,16 +45,6 @@ var ctxStavLinky;
                 isTimerEnabled = data.IsRefreshTimerOn;
                 var timerRefreshPeriod = data.RefreshTimerPeriod * 2;  //perioda pro refresh grafu bude mensi nez zjisteni stavu
 
-                if (isTimerEnabled && (timerRefreshPeriod > 0)) {
-                    if (refreshTimer) window.clearInterval(refreshTimer);
-                    refreshTimer = window.setInterval(getGraphData, timerRefreshPeriod);
-                }
-                else {
-                    if (refreshTimer) {
-                        window.clearInterval(refreshTimer);
-                    }
-                }
-
                 $.each(data.UnitAddrs, function (key,value) {
                     $('#AddrIdDropDown')
                         .append($("<option></option>")
@@ -69,7 +59,15 @@ var ctxStavLinky;
 
                 onAddrIdChange();
 
-                //window.slVyr.addNotification('success', 'Sucessfully read config..');
+                if (isTimerEnabled && (timerRefreshPeriod > 0)) {
+                    if (refreshTimer) window.clearInterval(refreshTimer);
+                    refreshTimer = window.setInterval(getGraphData, timerRefreshPeriod);
+                }
+                else {
+                    if (refreshTimer) {
+                        window.clearInterval(refreshTimer);
+                    }
+                }
 
             })
             .fail(function (jqXHR, textStatus, err) {
@@ -99,6 +97,7 @@ var ctxStavLinky;
         addr = $("#AddrIdDropDown option:selected").val();
         removeChart();
         readUnitConfig();
+        //if (!maxhour) return;
         onMeasureChange();
     }
 
@@ -485,7 +484,9 @@ var ctxStavLinky;
    }
 
 
-    function formatToHHMMSS(hoursFrac) {
+   function formatToHHMMSS(hoursFrac) {
+       if (hoursFrac > 24) hoursFrac -= 24;
+
         var sec_num = hoursFrac * 3600;
 
         var hours = Math.floor(sec_num / 3600);

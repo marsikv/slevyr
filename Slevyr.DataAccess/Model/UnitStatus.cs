@@ -246,6 +246,7 @@ namespace Slevyr.DataAccess.Model
             Tabule = new UnitTabule();
             PastSmenaResults = new SmenaResult[3] {new SmenaResult(), new SmenaResult(), new SmenaResult() };
             PrepareNewSmena();
+            _samplesStopWatch.Start();
         }
 
         #endregion
@@ -339,13 +340,13 @@ namespace Slevyr.DataAccess.Model
             bool hasChange = lastSample == null || lastSample.NG != Ng || lastSample.OK != Ok ||
                              lastSample.StavLinky != Tabule.MachineStatus;
             bool graphSampleEnabled = runCfg.GraphSamplePeriodSec > 0;
-            var smenaTimeElased = _ubehlyCasSmenySec - _prevUbehlyCasSmenySec;
+            //var smenaTimeElased = _ubehlyCasSmenySec - _prevUbehlyCasSmenySec;
 
+            var normalSampleTimeElapsed = _samplesStopWatch.ElapsedMilliseconds > runCfg.GraphSamplePeriodSec * 1000;
             var minSampleTimeElapsed = _samplesStopWatch.ElapsedMilliseconds > runCfg.GraphMinSamplePeriodSec * 1000;
 
-            //sample udelam jen pokud je min. casovy odstup a zaroven je detekovana zmena
-            if (graphSampleEnabled && (((smenaTimeElased > runCfg.GraphSamplePeriodSec) && hasChange) 
-                                       || minSampleTimeElapsed) )
+            //sample udelam jen pokud je min. casovy odstup (GraphSamplePeriodSec) a zaroven je detekovana zmena nebo pokud je cas posledního vzorku starsi nez GraphMinSamplePeriodSec
+            if (graphSampleEnabled && (normalSampleTimeElapsed && hasChange || minSampleTimeElapsed) )
             {
                 SmenaSamples.Add(new SmenaSample()
                 {
@@ -603,7 +604,7 @@ namespace Slevyr.DataAccess.Model
                     {
                         //prestavka 2
                         Tabule.IsPrestavkaTabule = true;
-                        _ubehlyCasSmenySec = zacatek2PrestavkySmeny1Sec - zacatekSmeny1Sec;
+                        _ubehlyCasSmenySec = zacatek2PrestavkySmeny1Sec - zacatekSmeny1Sec - Prestavka1Sec;
                             //cas se zastavil na zacatku 2. prestavky
                     }
                     else if (timeSec >= konec2PrestavkySmeny1Sec && timeSec < zacatekSmeny2Sec)
