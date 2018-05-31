@@ -48,7 +48,7 @@ var uriSound = 'api/sound';
                 //PortReadTimeout: $('#portReadTimeout').val(),
             })
             .done(function (data) {
-                window.slVyr.addNotification('success', 'Set Configuration Successufully Done.');
+                window.slVyr.addNotification('success', 'Nastaveni konfigurace provedeno.');
             })
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'Set Configuration Error: ' + err);
@@ -62,7 +62,7 @@ var uriSound = 'api/sound';
             {
             })
             .done(function (data) {
-                window.slVyr.addNotification('success', 'Successufully Synchronized.');
+                window.slVyr.addNotification('success', 'Pozadavek na synchronizaci casu byl odeslan.');
             })
             .fail(function (jqXHR, textStatus, err) {
                 window.slVyr.addNotification('error', 'Synchronization Error: ' + err);

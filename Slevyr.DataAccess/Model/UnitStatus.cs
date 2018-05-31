@@ -73,6 +73,11 @@ namespace Slevyr.DataAccess.Model
 
         private SmenyEnum _lastSmena;
 
+        /// <summary>
+        /// cas v sec. od zacatku smeny kdy zacala prestavka
+        /// </summary>
+        private int _lastPrestavkaCasSmenySec;
+
         /// <summary>cas v sec. ktery uz aktualni smene ubehl, bez prestavek = cas prace </summary>
         private int _ubehlyCasSmenySec;
 
@@ -236,6 +241,8 @@ namespace Slevyr.DataAccess.Model
         /// </summary>
         public event EventHandler<SmenyEnum> PrechodSmeny;
 
+        public event EventHandler<int> ZacatekPrestavky;
+
         #endregion
 
         #region ctor
@@ -294,7 +301,7 @@ namespace Slevyr.DataAccess.Model
             SmenaSamples = new List<SmenaSample>();
         }
 
-        private void DoRecalcTabule(SmenyEnum smena, bool isTypSmennostiA, RunConfig runCfg)
+        private void DoRecalcTabule(SmenyEnum smena, int prestavka, bool isTypSmennostiA, RunConfig runCfg)
         {
             Logger.Debug(smena);
 
@@ -312,6 +319,11 @@ namespace Slevyr.DataAccess.Model
                     PrechodSmeny?.Invoke(this, _lastSmena);
                 }
                 _lastSmena = smena;
+            }
+
+            if (Tabule.IsPrestavkaTabule)
+            {
+                ZacatekPrestavky?.Invoke(this, prestavka);
             }
 
             try
@@ -431,6 +443,8 @@ namespace Slevyr.DataAccess.Model
                 int konecPrestavkySmeny2Sec = zacatekPrestavkySmeny2Sec + PrestavkaSec;
                 int konecPrestavkySmeny3Sec = zacatekPrestavkySmeny3Sec + PrestavkaSec;
 
+                int prestavka=0;
+
                 Tabule.IsPrestavkaTabule = false;
 
                 Logger.Debug($"actual time is {dateTimeNow}");
@@ -448,6 +462,7 @@ namespace Slevyr.DataAccess.Model
                     {
                         //prestavka
                         Tabule.IsPrestavkaTabule = true;
+                        prestavka = zacatekPrestavkySmeny1Sec;
                         _ubehlyCasSmenySec = zacatekPrestavkySmeny1Sec - zacatekSmeny1Sec;
                             //cas se zastavil na zacatku prestavky
                     }
@@ -476,6 +491,7 @@ namespace Slevyr.DataAccess.Model
                     {
                         //prestavka
                         Tabule.IsPrestavkaTabule = true;
+                        prestavka = zacatekPrestavkySmeny2Sec;
                         _ubehlyCasSmenySec = zacatekPrestavkySmeny2Sec - zacatekSmeny2Sec;
                             //cas se zastavil na zacatku prestavky
                     }
@@ -512,6 +528,7 @@ namespace Slevyr.DataAccess.Model
                     {
                         //prestavka
                         Tabule.IsPrestavkaTabule = true;
+                        prestavka = zacatekPrestavkySmeny3Sec;
                         _ubehlyCasSmenySec = (AllDaySec - zacatekSmeny3Sec) + zacatekPrestavkySmeny3Sec;
                         _celkUbehlyCasSmenySec = (AllDaySec - zacatekSmeny3Sec) + timeSec;
                     }
@@ -528,7 +545,7 @@ namespace Slevyr.DataAccess.Model
                     Smena = SmenyEnum.Smena3;
                 }
 
-                DoRecalcTabule(Smena, unitConfig.IsTypSmennostiA, runCfg);
+                DoRecalcTabule(Smena, prestavka, unitConfig.IsTypSmennostiA, runCfg);
 
                 Logger.Debug($"- unit {unitConfig.Addr}");
 
@@ -573,11 +590,11 @@ namespace Slevyr.DataAccess.Model
                 int konec2PrestavkySmeny1Sec = zacatek2PrestavkySmeny1Sec + Prestavka2Sec;
                 int konec2PrestavkySmeny2Sec = zacatek2PrestavkySmeny2Sec + Prestavka2Sec;
 
+                int prestavka=0;
+
                 Tabule.IsPrestavkaTabule = false;
 
                 Logger.Debug($"actual time is {dateTimeNow}");
-
-                Tabule.IsPrestavkaTabule = false;
 
                 if (timeSec >= zacatekSmeny1Sec && timeSec < zacatekSmeny2Sec) //smena1 B (denni typicky od 6:00)
                 {
@@ -592,6 +609,7 @@ namespace Slevyr.DataAccess.Model
                     {
                         //prestavka 1
                         Tabule.IsPrestavkaTabule = true;
+                        prestavka = zacatek1PrestavkySmeny1Sec;
                         _ubehlyCasSmenySec = zacatek1PrestavkySmeny1Sec - zacatekSmeny1Sec;
                             //cas se zastavil na zacatku 1. prestavky
                     }
@@ -604,6 +622,7 @@ namespace Slevyr.DataAccess.Model
                     {
                         //prestavka 2
                         Tabule.IsPrestavkaTabule = true;
+                        prestavka = zacatek2PrestavkySmeny1Sec;
                         _ubehlyCasSmenySec = zacatek2PrestavkySmeny1Sec - zacatekSmeny1Sec - Prestavka1Sec;
                             //cas se zastavil na zacatku 2. prestavky
                     }
@@ -635,6 +654,7 @@ namespace Slevyr.DataAccess.Model
                     {
                         //prestavka 1, typicky 22:00 do 22:30
                         Tabule.IsPrestavkaTabule = true;
+                        prestavka = zacatek1PrestavkySmeny2Sec;
                         _ubehlyCasSmenySec = zacatek1PrestavkySmeny2Sec - zacatekSmeny2Sec;
                             //cas se zastavil na zacatku 1. prestavky 2. smeny
                         _celkUbehlyCasSmenySec = timeSec - zacatekSmeny2Sec;
@@ -658,6 +678,7 @@ namespace Slevyr.DataAccess.Model
                     {
                         //prestavka 2, typicky 02:00 do 02:20
                         Tabule.IsPrestavkaTabule = true;
+                        prestavka = zacatek2PrestavkySmeny2Sec;
                         //cas se zastavil na zacatku 2. prestavky 2. smeny + pripocteme sekundy z min. dne
                         _ubehlyCasSmenySec = (AllDaySec - zacatekSmeny2Sec - Prestavka1Sec) +
                                              zacatek2PrestavkySmeny2Sec;                            
@@ -681,7 +702,7 @@ namespace Slevyr.DataAccess.Model
                     Smena = SmenyEnum.Smena2;
                 }
 
-                DoRecalcTabule(Smena, unitConfig.IsTypSmennostiA, runCfg);
+                DoRecalcTabule(Smena, prestavka, unitConfig.IsTypSmennostiA, runCfg);
 
                 Logger.Debug($"- unit {unitConfig.Addr}");
 

@@ -57,6 +57,8 @@ namespace Slevyr.DataAccess.Services
 
         private static CancellationTokenSource _readAsyncCancellationTokenSource;
         private static bool _resetRfInProgress;
+        private static SmenyEnum _lastSmena;
+        private static int _lastCasPrestavky=0;
 
         #endregion
 
@@ -65,6 +67,7 @@ namespace Slevyr.DataAccess.Services
         public static readonly AutoResetEvent WaitEventTestConfirm = new AutoResetEvent(false);
 
         public static readonly AutoResetEvent WaitEventPriorityCommandResult = new AutoResetEvent(false);
+        
 
         public static RunConfig Config
         {
@@ -170,6 +173,7 @@ namespace Slevyr.DataAccess.Services
             {
                 var um = new UnitMonitor((byte) a, _runConfig);
                 um.UnitStatus.PrechodSmeny += UnitStatusOnPrechodSmeny;
+                um.UnitStatus.ZacatekPrestavky += UnitStatusOnZacatekPrestavky;
                 _unitDictionary.Add(a, um);
             }
 
@@ -187,6 +191,20 @@ namespace Slevyr.DataAccess.Services
             Logger.Info("Unit count: " + _unitDictionary.Count);
         
             Logger.Info("-");
+        }
+
+        /// <summary>
+        /// je vyvolan pri zacatu prestavky
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="casPrestavky"></param>
+        private static void UnitStatusOnZacatekPrestavky(object sender, int casPrestavky)
+        {
+            if (casPrestavky != _lastCasPrestavky)
+            {
+                SoundService.PlayHlaseniPrestavek();
+                _lastCasPrestavky = casPrestavky;
+            }
         }
 
         /// <summary>
@@ -224,6 +242,14 @@ namespace Slevyr.DataAccess.Services
                 var uc = new UnitCommand(() => _unitDictionary[us.Addr].SendReadStavCitacuKonecSmeny(cmd), "CmdReadStavCitacuKonecSmeny", us.Addr, cmd);
                 UnitCommandsQueue.Enqueue(uc);
             });
+
+
+            if (smena != _lastSmena)
+            {
+                SoundService.PlayHlaseniSmen();
+                _lastSmena = smena;
+            }
+
         }
 
         private static void _serialPort_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
@@ -843,6 +869,14 @@ namespace Slevyr.DataAccess.Services
             _packetBw?.CancelAsync();
         }
 
+        /// <summary>
+        /// odesílání příkazů na jednodtky
+        /// - přikazy z fronty ad hoc požadavků 
+        /// - příkaz ObtainUnitStatus, tzn. pravidelné vyčtení stavu
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void SendWorkerDoWork(object sender, DoWorkEventArgs e)
         {
             OpenPort();
@@ -860,7 +894,8 @@ namespace Slevyr.DataAccess.Services
                     Thread.Sleep(1000);
                     continue;
                 }
-               
+
+                //zaradim pozadavek na reset RF (auto)
                 if (_runConfig.IsAutoResetRF)
                 {
                     var rfOk = _unitDictionary.FirstOrDefault().Value.TestCommand();   //provedu test odesláním testovacího paketu na prvni jednotku
@@ -875,6 +910,7 @@ namespace Slevyr.DataAccess.Services
                     }
                 }
 
+                //zaradim pozadavek na reset RF (scheduled)
                 if (_runConfig.IsScheduledResetRF && cycleForResetRf++ >= _runConfig.CycleForScheduledResetRf)
                 {
                     Logger.Info($"*** scheduled Reset RF (cycle={cycleForResetRf})***");
@@ -882,6 +918,16 @@ namespace Slevyr.DataAccess.Services
                     cycleForResetRf = 0;
                     SendResetRf();
                     //continue;
+                }
+
+                //zaradim pozadavek na synchr. casu do vsech jednotek
+                if (_runConfig.IsSyncUnitTimePeriodEnabled && _runConfig.IsSyncUnitTime())
+                {
+                    Logger.Info($"*** scheduled synchr.casu (day={_runConfig.LastSyncDay})***");
+                    foreach (var addr in _runConfig.UnitAddrs)
+                    {
+                        NastavAktualniCas(addr);
+                    }
                 }
 
                 if (_sendBw.CancellationPending)
@@ -1138,6 +1184,40 @@ namespace Slevyr.DataAccess.Services
             {
                 u.UnitStatus.RestoreFromFile(_runConfig.JsonDataFilePath);
             }
+        }
+
+        public static bool SendStartRozhlas()
+        {
+            Logger.Debug("SendStartRozhlas");
+
+            int BuffLength = 10;
+            byte[] _sendBuff = { 0x10 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 };
+
+            SlevyrService.WriteToPort(_sendBuff, _sendBuff.Length);
+            return true;
+        }
+
+        public static bool SendStopRozhlas()
+        {
+            Logger.Debug("SendStopRozhlas");
+
+            int BuffLength = 10;
+            byte[] _sendBuff = { 0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+            SlevyrService.WriteToPort(_sendBuff, _sendBuff.Length);
+            return true;
+        }
+
+        public static void StartRozhlas()
+        {
+            var uc = new UnitCommand(SendStartRozhlas, "StartRozhlas", 0, 0);
+            UnitCommandsQueue.Enqueue(uc);
+        }
+
+        public static void StopRozhlas()
+        {
+            var uc = new UnitCommand(SendStopRozhlas, "StopRozhlas", 0, 0);
+            UnitCommandsQueue.Enqueue(uc);
         }
     }
 }
