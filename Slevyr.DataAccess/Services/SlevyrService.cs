@@ -67,7 +67,9 @@ namespace Slevyr.DataAccess.Services
         public static readonly AutoResetEvent WaitEventTestConfirm = new AutoResetEvent(false);
 
         public static readonly AutoResetEvent WaitEventPriorityCommandResult = new AutoResetEvent(false);
-        
+
+        //public static readonly AutoResetEvent WaitEventStartTransmision = new AutoResetEvent(false);
+
 
         public static RunConfig Config
         {
@@ -353,7 +355,7 @@ namespace Slevyr.DataAccess.Services
             _readAsyncCancellationTokenSource = new CancellationTokenSource();
             _serialPort.DiscardInBuffer();
 
-            while (true)     //TODO opravdu while(true) uvnitr DoWork ?
+            while (true)     
             {
                 //DataSendReceivedLogger.Debug(".");
                 if (_dataReaderBw.CancellationPending)
@@ -510,7 +512,7 @@ namespace Slevyr.DataAccess.Services
         public static void SendResetRf()
         {
             //_resetRfInProgress = true;
-            var uc = new UnitCommand(ResetRf, "ResetRF", -1, -1);
+            var uc = new UnitCommand(ResetRf, "ResetRF", -1, UnitMonitor.CmdResetRf);
             UnitCommandsQueue.Enqueue(uc);
         }
 
@@ -1190,10 +1192,13 @@ namespace Slevyr.DataAccess.Services
         {
             Logger.Debug("SendStartRozhlas");
 
-            int BuffLength = 10;
-            byte[] _sendBuff = { 0x10 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 };
+            byte[] sendBuff = { 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
-            SlevyrService.WriteToPort(_sendBuff, _sendBuff.Length);
+            SlevyrService.WriteToPort(sendBuff, sendBuff.Length);
+
+            Thread.Sleep(RunConfig.DelayAfterStartTransmision);
+            SlevyrService.WaitEventPriorityCommandResult.Set();
+
             return true;
         }
 
@@ -1201,22 +1206,25 @@ namespace Slevyr.DataAccess.Services
         {
             Logger.Debug("SendStopRozhlas");
 
-            int BuffLength = 10;
-            byte[] _sendBuff = { 0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            byte[] sendBuff = { 0x19, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
-            SlevyrService.WriteToPort(_sendBuff, _sendBuff.Length);
+            SlevyrService.WriteToPort(sendBuff, sendBuff.Length);
+
             return true;
         }
 
         public static void StartRozhlas()
         {
-            var uc = new UnitCommand(SendStartRozhlas, "StartRozhlas", 0, 0);
+            var uc = new UnitCommand(SendStartRozhlas, "StartRozhlas", 0, UnitMonitor.CmdStartSoundTransmision);
             UnitCommandsQueue.Enqueue(uc);
+
+            //dava se cas na start zesilobvace, lepe by bylo synchronizovat s vykonanim prikazu SendStartRozhlas
+            Thread.Sleep(RunConfig.DelayAfterStartTransmision);
         }
 
         public static void StopRozhlas()
         {
-            var uc = new UnitCommand(SendStopRozhlas, "StopRozhlas", 0, 0);
+            var uc = new UnitCommand(SendStopRozhlas, "StopRozhlas", 0, UnitMonitor.CmdStopSoundTransmision);
             UnitCommandsQueue.Enqueue(uc);
         }
     }

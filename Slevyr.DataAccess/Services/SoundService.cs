@@ -51,9 +51,6 @@ namespace Slevyr.DataAccess.Services
                 SlevyrService.StartRozhlas();
             }
 
-            //tri sekundy pockat
-            Thread.Sleep(4000);
-
             var task = Task.Run(() => _soundPlayerHlaseniSmen.PlaySync());
             task.Wait(100000);  //cekame 100sec max na prehrati zvuku
 
@@ -88,9 +85,6 @@ namespace Slevyr.DataAccess.Services
                 SlevyrService.StartRozhlas();
             }
 
-            //tri sekundy pockat
-            Thread.Sleep(4000);
-
             var task =  Task.Run(() => _soundPlayerHlaseniPrestavek.PlaySync());
             task.Wait(100000);  //cekame 100sec max na prehrati zvuku
 
@@ -122,9 +116,6 @@ namespace Slevyr.DataAccess.Services
             {
                 SlevyrService.StartRozhlas();
             }
-
-            //tri sekundy pockat
-            Thread.Sleep(4000);
 
             if (_soundPlayerAlarm == null) _soundPlayerAlarm = new SoundPlayer(_runConfig.PoplachSoundFile);
             _soundPlayerAlarm.PlayLooping();

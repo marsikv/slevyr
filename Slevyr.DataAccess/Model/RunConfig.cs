@@ -6,7 +6,7 @@ namespace Slevyr.DataAccess.Model
 {
     public class RunConfig
     {
-        public const string DateTimeFormat = "ddd HH:mm d M yyyy"; //napr.  "Sun 08:30 15 Jun 2008"   
+        private const string DateTimeFormat = "ddd HH:mm d M yyyy"; //napr.  "Sun 08:30 15 Jun 2008"   
 
         public bool IsMockupMode;
         public bool IsRefreshTimerOn; //predava se do HTML strance "LinkaTabule" a aktivuje timer nacitani stavu
@@ -95,6 +95,9 @@ namespace Slevyr.DataAccess.Model
 
         public bool IsPoplachSoundEnabled => !String.IsNullOrWhiteSpace(PoplachSoundFile);
 
+        /// <summary> cekani na spusteni zesilovace po poslani priazu 0x18</summary>
+        public static int DelayAfterStartTransmision = 6000; 
+
         private int _lastSyncDay;
 
 
@@ -130,8 +133,8 @@ namespace Slevyr.DataAccess.Model
             }
             catch (FormatException)
             {
-                Console.WriteLine("{0} is not in the correct format.", dateString);
-                //IsSyncUnitTimePeriodEnabled = false;
+                //sem to pada kdyz se datum nevyhodnoti jako platne
+                //Console.WriteLine("{0} is not in the correct format.", dateString);
             }
 
             return res;

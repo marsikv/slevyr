@@ -31,6 +31,10 @@ namespace Slevyr.DataAccess.Model
 
         #region const pro prikazy
 
+        public const int CmdResetRf = -1; //specialni prikaz nareset RF
+        public const int CmdStartSoundTransmision = -2; //specialni prikaz na spusteni zesilovace
+        public const int CmdStopSoundTransmision = -3; //specialni prikaz na ukonceni zesilovace
+
         public const byte CmdZaklNastaveni = 3; //Zakladni nastaveni
         public const byte CmdSetHodnotyCitacu = 4; //Zapise hodnoty do citacu
         //public const byte CmdSet = 5	; //Vyvola programovaci mod adresy

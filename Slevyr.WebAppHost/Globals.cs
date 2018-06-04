@@ -63,7 +63,7 @@ namespace Slevyr.WebAppHost
 
                 HlaseniPrestavekSoundFile = ConfigurationManager.AppSettings["HlaseniPrestavekSoundFile"],
                 HlaseniSmenSoundFile = ConfigurationManager.AppSettings["HlaseniSmenSoundFile"],
-                PoplachSoundFile = ConfigurationManager.AppSettings["PoplachSoundFile"],              
+                PoplachSoundFile = ConfigurationManager.AppSettings["PoplachSoundFile"]
             };
 
             bool b;
@@ -87,34 +87,19 @@ namespace Slevyr.WebAppHost
 
             if (Int32.TryParse(ConfigurationManager.AppSettings["ReadStopDurationPeriod"], out i)) RunConfig.ReadStopDurationPeriod = i;
 
+            if (Int32.TryParse(ConfigurationManager.AppSettings["DelayAfterStartTransmition"], out i)) RunConfig.DelayAfterStartTransmision = i;            
+
             var dayPattern = ConfigurationManager.AppSettings["SyncUnitTimePeriod"];
             RunConfig.IsSyncUnitTimePeriodEnabled = !string.IsNullOrEmpty(dayPattern);
             if (RunConfig.IsSyncUnitTimePeriodEnabled)
             {
 
-                //otestovat regularnim vyrazem
+                //TODO otestovat regularnim vyrazem
                 //napr. Fri 23:10
-
-                /*
-                var dtn = DateTime.Now;
-                // napr.  "Sun 08:30 15 Jun 2008"   
-                string dateString = $"{dayPattern} {dtn.Day} {dtn.Month} {dtn.Year}";
-
-                try
-                {
-                    var result = DateTime.ParseExact(dateString, RunConfig.DateTimeFormat, CultureInfo.InvariantCulture);
-                }
-                catch (FormatException)
-                {
-                    Console.WriteLine("{0} is not in the correct format.", dateString);
-                    dayPattern = null;
-                }
-                */
-
+                
                 RunConfig.SyncUnitTimePeriod = dayPattern;
             }
-
-           
+          
 
             PortConfig = new SerialPortConfig
             {

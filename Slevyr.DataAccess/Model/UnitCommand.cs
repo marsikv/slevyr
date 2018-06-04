@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using NLog;
 using Slevyr.DataAccess.Services;
@@ -65,7 +66,7 @@ namespace Slevyr.DataAccess.Model
                 CommandStatus = CommandStatus.Completed;
                 Logger.Info($"- InvokeCmd: OK {_description} on {_unitAddr}");
 
-                if (_cmdId != -1)  //tzn. ResetRF
+                if (_cmdId > 0)  //tzn. nejde o specialni prikaz
                    SlevyrService.WaitEventPriorityCommandResult.Set();
             }
             catch (Exception ex)
